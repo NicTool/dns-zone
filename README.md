@@ -2,6 +2,7 @@
 
 DNS zone validator
 
+
 ## SYNOPSIS
 
 DNS zones have numerous rules regarding the records that can exist in them. Examples:
