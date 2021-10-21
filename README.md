@@ -1,4 +1,4 @@
-# dns-zone
+# dns-zone-validator
 
 DNS zone validator
 
