@@ -9,7 +9,7 @@
     "lint": "npx eslint index.js test/*.js",
     "lintfix": "npx eslint --fix index.js test/*.js",
     "postinstall": "npx -p nearley nearleyc src/bind-grammar.ne -o grammar.js",
-    "test": "npx mocha"
+    "test": "npx mocha --exit"
   },
   "repository": {
     "type": "git",
