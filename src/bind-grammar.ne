@@ -1,8 +1,5 @@
 
-#@builtin "number.ne"
 @builtin "string.ne"
-@builtin "whitespace.ne"
-
 
 main            -> (statement eol):+
 
@@ -105,6 +102,11 @@ IPv6v4_comp    -> (IPv6_hex times_3[":" IPv6_hex]):? "::"
                   ip4
                   {% (d) => flat_string(d) %}
 
+# Whitespace: `_` is optional, `__` is mandatory.
+_  -> wschar:* {% function(d) {return null;} %}
+__ -> wschar:+ {% function(d) {return null;} %}
+
+wschar -> [ \t\n\r\v\f] {% id %}
 
 #ALPHA_NUM      -> [0-9A-Za-z]
 #ALPHA_NUM_U    -> [0-9A-Za-z\u0080-\uFFFF] {% id %}
