@@ -12,7 +12,7 @@ eol             -> "\n" | "\r"
 
 blank           -> _
 
-comment         -> ";" [^\n]:*
+comment         -> ";" [^\n\r]:*
 
 ttl             -> "$TTL" __ uint _ (comment):? _
                    {% (d) => ttlAsObject(d) %}
