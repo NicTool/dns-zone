@@ -1,4 +1,4 @@
-@   IN  SOA     VENERA      Action\.domains (
+@   IN  SOA     VENERA      Action.domains (
                                  20     ; SERIAL
                                  7200   ; REFRESH
                                  600    ; RETRY

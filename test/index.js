@@ -8,27 +8,26 @@ describe('parseZoneFile', function () {
 
   it('parses a blank line', async () => {
     const r = zv.parseZoneFile(`\n`)
-    // console.dir(r[0][0][0][0][0], { depth: null })
-    assert.deepStrictEqual(r[0][0][0][0][0], null)
+    // console.dir(r, { depth: null })
+    assert.deepStrictEqual(r, [])
   })
 
   it('parses two blank lines', async () => {
     const r = zv.parseZoneFile(`\n\n`)
-    // console.dir(r[0][0], { depth: null })
-    assert.deepStrictEqual(r[0][0][0][0][0], null)
-    assert.deepStrictEqual(r[0][1][0][0][0], null)
+    // console.dir(r, { depth: null })
+    assert.deepStrictEqual(r, [])
   })
 
   it('parses a $TTL line', async () => {
     const r = zv.parseZoneFile(`$TTL 86400\n`)
     // console.dir(r, { depth: null })
-    assert.deepStrictEqual(r[0][0][0][0], { ttl: 86400 })
+    assert.deepStrictEqual(r[0], { ttl: 86400 })
   })
 
   it('parses a $TTL line with a comment', async () => {
     const r = zv.parseZoneFile(`$TTL 86400; yikers\n`)
     // console.dir(r, { depth: null })
-    assert.deepStrictEqual(r[0][0][0][0], { ttl: 86400 })
+    assert.deepStrictEqual(r[0], { ttl: 86400 })
   })
 
   it(`parses a SOA`, async () => {
@@ -41,7 +40,7 @@ describe('parseZoneFile', function () {
                     )\n`)
 
     // console.dir(r, { depth: null })
-    assert.deepStrictEqual(r[0][0][0][0], {
+    assert.deepStrictEqual(r[0], {
       name   : 'example.com.',
       ttl    : 86400,
       class  : 'IN',
@@ -59,7 +58,7 @@ describe('parseZoneFile', function () {
   it('parses a NS line', async () => {
     const r = zv.parseZoneFile(`cadillac.net.   14400   IN  NS  ns1.cadillac.net.\n`)
     // console.dir(r, { depth: null })
-    assert.deepStrictEqual(r[0][0][0][0], {
+    assert.deepStrictEqual(r[0], {
       name : 'cadillac.net.',
       ttl  : 14400,
       class: 'IN',
@@ -71,7 +70,7 @@ describe('parseZoneFile', function () {
   it('parses an A line', async () => {
     const r = zv.parseZoneFile(`cadillac.net.   86400   IN  A   66.128.51.173\n`)
     // console.dir(r, { depth: null })
-    assert.deepStrictEqual(r[0][0][0][0], {
+    assert.deepStrictEqual(r[0], {
       name   : 'cadillac.net.',
       ttl    : 86400,
       class  : 'IN',
@@ -80,15 +79,25 @@ describe('parseZoneFile', function () {
     })
   })
 
-  it('parses a zone file', async () => {
+  it('parses the cadillac.net zone file', async () => {
     const file = './test/fixtures/zones/cadillac.net'
     fs.readFile(file, (err, buf) => {
       if (err) throw err
 
       const r = zv.parseZoneFile(buf.toString())
-      // console.dir(r[0], { depth: null })
-      assert.equal(r[0].length, 47)
+      // console.dir(r, { depth: null })
+      assert.equal(r.length, 41)
+    })
+  })
+
+  it('parses the isi.edu zone file', async () => {
+    const file = './test/fixtures/zones/isi.edu'
+    fs.readFile(file, (err, buf) => {
+      if (err) throw err
+
+      const r = zv.parseZoneFile(buf.toString())
+      // console.dir(r, { depth: null })
+      assert.equal(r.length, 11)
     })
   })
 })
-

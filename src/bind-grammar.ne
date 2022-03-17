@@ -27,42 +27,42 @@ soa             -> hostname ( __ uint ):? ( __ class ):? __ "SOA"
                        __ uint (_ comment):?
                        __ uint (_ comment):?
                        __ uint (_ comment):?
-                   _ ")" _
-                   {% (d) => soaAsObject(d) %}
+                   _ ")" _ (comment):?
+                   {% (d) => toResourceRecord(d) %}
 
 ns              -> hostname (__ uint):? (__ class):? __ "NS"
                    __ hostname _ (comment):? _
-                   {% (d) => nsAsObject(d) %}
+                   {% (d) => toResourceRecord(d) %}
 
 mx              -> hostname (__ uint):? (__ class):? __ "MX"
                    __ uint __ hostname _ (comment):?
-                   {% (d) => mxAsObject(d) %}
+                   {% (d) => toResourceRecord(d) %}
 
 a               -> hostname (__ uint):? (__ class):? __ "A"
                    __ ip4 _ (comment):? _
-                   {% (d) => aAsObject(d) %}
+                   {% (d) => toResourceRecord(d) %}
 
 txt             -> hostname (__ uint):? (__ class):? __ "TXT"
                    __ (dqstring _):+ (comment):? _
-                   {% (d) => txtAsObject(d) %}
+                   {% (d) => toResourceRecord(d) %}
 
 aaaa            -> hostname (__ uint):? (__ class):? __ "AAAA"
                    __ ip6 _ (comment):? _
-                   {% (d) => aaaaAsObject(d) %}
+                   {% (d) => toResourceRecord(d) %}
 
 cname           -> hostname (__ uint):? (__ class):? __ "CNAME"
                    __ hostname _ (comment):? _
-                   {% (d) => cnameAsObject(d) %}
+                   {% (d) => toResourceRecord(d) %}
 
 dname           -> hostname (__ uint):? (__ class):? __ "DNAME"
                    __ hostname _ (comment):? _
-                   {% (d) => dnameAsObject(d) %}
+                   {% (d) => toResourceRecord(d) %}
 
 uint            -> [0-9]:+ {% (d) => parseInt(d[0].join("")) %}
 
 hostname        -> ALPHA_NUM_DASH_U:* {% (d) => d[0].join("") %}
 
-ALPHA_NUM_DASH_U -> [-0-9A-Za-z\u0080-\uFFFF._] {% id %}
+ALPHA_NUM_DASH_U -> [-0-9A-Za-z\u0080-\uFFFF._@] {% id %}
 
 class           -> "IN" | "CH" | "HS" | "CHAOS" | "ANY"
 
@@ -136,91 +136,48 @@ function originAsObject (d) {
     return { origin: d[2] }
 }
 
-function soaAsObject (d) {
-    return {
-        name   : d[0],
-        ttl    : d[1][1],
-        class  : d[2][1][0],
-        type   : d[4],
-        mname  : d[6],
-        rname  : d[8],
-        serial : d[12],
-        refresh: d[15],
-        retry  : d[18],
-        expire : d[21],
-        minimum: d[24],
-    }
-}
-
-function nsAsObject (d) {
-    return {
+function toResourceRecord (d) {
+    const r = {
         name:  d[0],
-        ttl :  d[1][1],
-        class: d[2][1][0],
+        ttl :  d[1] ? d[1][1]    : d[1],
+        class: d[2] ? d[2][1][0] : d[2],
         type:  d[4],
-        dname: d[6]
     }
-}
 
-function mxAsObject (d) {
-    return {
-        name:  d[0],
-        ttl :  d[1][1],
-        class: d[2][1][0],
-        type:  d[4],
-        preference: d[6],
-        exchange  : d[8]
+    switch (r.type) {
+      case 'A':
+        r.address = d[6]
+        break
+      case 'AAAA':
+        r.address = d[6][0]
+        break
+      case 'CNAME':
+        r.cname = d[6][0]
+        break
+      case 'DNAME':
+        r.target = d[6][0]
+        break
+      case 'MX':
+        r.preference = d[6]
+        r.exchange  = d[8]
+        break
+      case 'NS':
+        r.dname = d[6]
+        break
+      case 'SOA':
+        r.mname   = d[6]
+        r.rname   = d[8]
+        r.serial  = d[12]
+        r.refresh = d[15]
+        r.retry   = d[18]
+        r.expire  = d[21]
+        r.minimum = d[24]
+        break
+      case 'TXT':
+        r.data = d[6].map(e => e[0])
+        break
     }
-}
-
-function aAsObject (d) {
-    return {
-        name   : d[0],
-        ttl    : d[1][1],
-        class  : d[2][1][0],
-        type   : d[4],
-        address: d[6],
-    }
-}
-
-function txtAsObject (d) {
-    return {
-        name  : d[0],
-        ttl   : d[1][1],
-        class : d[2][1][0],
-        type  : d[4],
-        data  : d[6].map(e => e[0]),
-    }
-}
-
-function aaaaAsObject (d) {
-    return {
-        name   : d[0],
-        ttl    : d[1][1],
-        class  : d[2][1][0],
-        type   : d[4],
-        address: d[6][0],
-    }
-}
-
-function cnameAsObject (d) {
-    return {
-        name   : d[0],
-        ttl    : d[1][1],
-        class  : d[2][1][0],
-        type   : d[4],
-        cname  : d[6][0],
-    }
-}
-
-function dnameAsObject (d) {
-    return {
-        name   : d[0],
-        ttl    : d[1][1],
-        class  : d[2][1][0],
-        type   : d[4],
-        target : d[6][0],
-    }
+    return r
 }
 
 %}
