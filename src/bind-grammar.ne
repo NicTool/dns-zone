@@ -4,9 +4,11 @@
 @builtin "whitespace.ne"
 
 
-main            -> (statement "\n"):+
+main            -> (statement eol):+
 
 statement       -> blank | ttl | origin | soa | ns | mx | a | txt | aaaa | cname | dname
+
+eol             -> "\n" | "\r"
 
 blank           -> _
 
