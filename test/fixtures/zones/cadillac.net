@@ -1,0 +1,56 @@
+
+$TTL    86400;
+$ORIGIN cadillac.net.
+cadillac.net.	86400	IN	SOA	ns1.cadillac.net.    hostmaster.cadillac.net. (
+					2021102100    ; serial
+					16384   ; refresh
+					2048     ; retry
+					604800    ; expiry
+					2560   ; minimum
+					)
+
+cadillac.net.	14400	IN	NS	ns1.cadillac.net.
+cadillac.net.	14400	IN	NS	ns2.cadillac.net.
+cadillac.net.	14400	IN	NS	ns3.cadillac.net.
+
+cadillac.net.	86400	IN  MX	0	mail.theartfarm.com.
+cadillac.net.	86400	IN  A	66.128.51.173
+cadillac.net.	86400	IN  TXT	"v=spf1 mx a include:mx.theartfarm.com -all"
+
+ns1	86400	IN  MX	10	ns1.cadillac.net.
+ns1	86400	IN  A	138.210.133.61
+
+ns2	86400	IN  A	192.48.85.146
+ns2	86400	IN  AAAA	2605:7900:0020:000a:0000:0000:0000:0004
+ns2	86400	IN  A	204.11.99.4
+ns2	86400	IN  A	173.45.131.4
+ns2	86400	IN  MX	10	ns2.cadillac.net.
+
+ns3	86400	IN  MX	10	ns3.cadillac.net.
+ns3	86400	IN  AAAA	2605:ae00:0329:0000:0000:0000:0000:000f
+ns3	86400	IN  A	66.128.51.174
+ns3	86400	IN  AAAA	2001:41d0:0302:2100:0000:0000:0000:00a7
+ns3	86400	IN  A	217.182.64.150
+
+ns4	3600	IN  A	208.78.70.12
+ns4	3600	IN  AAAA	2001:0500:0090:0001:0000:0000:0000:0012
+ns4	3600	IN  A	204.13.250.12
+ns4	3600	IN  A	208.78.71.12
+ns4	3600	IN  A	204.13.251.12
+ns4	3600	IN  AAAA	2001:0500:0094:0001:0000:0000:0000:0012
+
+localhost	86400	IN  A	127.0.0.1
+localhost	86400	IN  AAAA	0000:0000:0000:0000:0000:0000:0000:0001
+
+www	28800	IN  CNAME	vhost0.theartfarm.com.
+matt	86400	IN  CNAME	matt.simerson.net.
+dns	3600	IN  A	66.128.51.171
+jaycees	86400	IN  CNAME	www.cadillacjaycees.org.
+kyna	86400	IN  CNAME	vhost0.theartfarm.com.
+_tcp	86400	IN  DNAME	_tcp.theartfarm.com.
+_dmarc	86400	IN  TXT	"v=DMARC1; p=reject; rua=mailto:dmarc-feedback@theartfarm.com; ruf=mailto:dmarc-feedback@theartfarm.com; pct=100"
+apr2013._domainkey	86400	IN  TXT	"v=DKIM1;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA5BgmgaBHxIQSHCzFlkJ8/dCYFgppfpGxQB2mbB/nlspbZZPQPX7JrS8fglt6lVOQ/A82ErayWiABQd6GziiHbe+mA5glQSxG2o2LUtDa1AU269W1sZrgVEFkIq5sZ+T+s3KbcSjca21YOZt8NWxw5UvP1xTRHHO77JbcwUEB4rBAiZOs8eU9kuMLAuh8AQw0w17JW0+tN" "SNSphz0dY5S/5upHSdRqyOVrCJNE/Zuyzo1Ck+T1NIPt4ttd1VPkAMnjqXXjBQWP4BRObVEdmRqCxy4CRfbbiPJiNcut+iV2YezJqsVxBXwPFfsMwVb68aAHKKpdwrBfmNfv/yLdXY6RwIDAQAB"
+_domainkey	86400	IN  TXT	"o=-; t=y; r=postmaster@cadillac.net"
+france.ns3	86400	IN  A	217.182.64.150
+dallas.ns3	86400	IN  A	66.128.51.174
+xn--ber-goa	86400	IN  A	127.0.0.1

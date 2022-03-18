@@ -3,6 +3,10 @@ name: Module Tests
 
 on: [ push ]
 
+env:
+  CI: true
+  NODE_OPTIONS: --max-old-space-size=1536
+
 jobs:
 
   ci-test:
@@ -11,7 +15,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest ]
+        os: [ ubuntu-latest ]
         node-version: [ 14.x, 16.x ]
       fail-fast: false
 
@@ -21,7 +25,7 @@ jobs:
       with:
         fetch-depth: 1
 
-    - uses: actions/setup-node@v1
+    - uses: actions/setup-node@v2
       name: Use Node.js ${{ matrix.node-version }}
       with:
         node-version: ${{ matrix.node-version }}
@@ -31,6 +35,3 @@ jobs:
 
     - name: Run test suite
       run: npm run test
-
-      env:
-        CI: true
