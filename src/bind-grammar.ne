@@ -1,3 +1,5 @@
+# This is a parser, not a validator. Don't go crazy with rules here,
+# we validate after parsing
 
 @builtin "string.ne"
 
@@ -21,7 +23,7 @@ soa             -> hostname ( __ uint ):? ( __ class ):? __ "SOA"
                    __ hostname
                    __ hostname
                    __ "("
-                       __ uint (_ comment):?
+                       _ uint (_ comment):?
                        __ uint (_ comment):?
                        __ uint (_ comment):?
                        __ uint (_ comment):?
@@ -63,13 +65,20 @@ hostname        -> ALPHA_NUM_DASH_U:* {% (d) => d[0].join("") %}
 
 ALPHA_NUM_DASH_U -> [-0-9A-Za-z\u0080-\uFFFF._@] {% id %}
 
-class           -> "IN" | "CH" | "HS" | "CHAOS" | "ANY"
+class           -> "IN" | "CS" | "CH" | "HS" | "NONE" | "ANY"
+
+#not_whitespace  -> [^\n\r] {% id %}
+#host_chars      -> [-0-9A-Za-z\u0080-\uFFFF._@/] {% id %}
 
 times_3[X]      -> $X $X $X
 times_5[X]      -> $X $X $X $X $X
 times_7[X]      -> $X $X $X $X $X $X $X
 
 ip4             -> Snum times_3["."  Snum] {% (d) => flat_string(d) %}
+
+#ip4             -> ([0-9.]):+    {% (d) => flat_string(d) %}
+#ip6             -> (ip6_chars):+ {% (d) => flat_string(d) %}
+#ip6_chars       -> [0-9A-Fa-f:.] {% id %}
 
 ip6             -> IPv6_full | IPv6_comp | IPv6v4_full | IPv6v4_comp
 
@@ -108,36 +117,19 @@ __ -> wschar:+ {% function(d) {return null;} %}
 
 wschar -> [ \t\n\r\v\f] {% id %}
 
-#ALPHA_NUM      -> [0-9A-Za-z]
-#ALPHA_NUM_U    -> [0-9A-Za-z\u0080-\uFFFF] {% id %}
-
-
-# https://datatracker.ietf.org/doc/html/rfc1035#page-12
-#domain      -> subdomain | " "
-#subdomain   -> label | subdomain "." label
-#label       -> letter ldh-str let-dig
-#ldh-str     -> let-dig-hyp | let-dig-hyp ldh-str
-#let-dig-hyp -> let-dig | "-"
-#let-dig     -> letter | digit
-#letter      -> [a-zA-Z]
-#digit       -> [0-9]
-
-
 @{%
 function flat_string(d) {
-  if (d) {
-    if (Array.isArray(d)) return d.flat(Infinity).join("")
-    return d
-  }
-  return ''
+  if (!d) return ''
+  if (Array.isArray(d)) return d.flat(Infinity).join('')
+  return d
 }
 
 function ttlAsObject (d) {
-    return { ttl: d[2] }
+    return { $TTL: d[2] }
 }
 
 function originAsObject (d) {
-    return { origin: d[2] }
+    return { $ORIGIN: d[2] }
 }
 
 function toResourceRecord (d) {
@@ -156,10 +148,10 @@ function toResourceRecord (d) {
         r.address = d[6][0]
         break
       case 'CNAME':
-        r.cname = d[6][0]
+        r.cname = d[6]
         break
       case 'DNAME':
-        r.target = d[6][0]
+        r.target = d[6]
         break
       case 'MX':
         r.preference = d[6]
@@ -180,6 +172,8 @@ function toResourceRecord (d) {
       case 'TXT':
         r.data = d[6].map(e => e[0])
         break
+      default:
+        throw new Error(`undefined type: ${r.type}`)
     }
     return r
 }
