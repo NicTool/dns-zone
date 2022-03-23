@@ -23,11 +23,11 @@ soa             -> hostname ( __ uint ):? ( __ class ):? __ "SOA"
                    __ hostname
                    __ hostname
                    __ "("
-                       _ uint (_ comment):?
-                       __ uint (_ comment):?
-                       __ uint (_ comment):?
-                       __ uint (_ comment):?
-                       __ uint (_ comment):?
+                     _ uint (ws comment):?
+                     __ uint (ws comment):?
+                     __ uint (ws comment):?
+                     __ uint (ws comment):?
+                     __ uint (ws comment):?
                    _ ")" _ (comment):?
                    {% (d) => toResourceRecord(d) %}
 
@@ -114,6 +114,7 @@ IPv6v4_comp    -> (IPv6_hex times_3[":" IPv6_hex]):? "::"
 # Whitespace: `_` is optional, `__` is mandatory.
 _  -> wschar:* {% function(d) {return null;} %}
 __ -> wschar:+ {% function(d) {return null;} %}
+ws -> wschar:* {% id %}
 
 wschar -> [ \t\n\r\v\f] {% id %}
 
@@ -125,57 +126,63 @@ function flat_string(d) {
 }
 
 function ttlAsObject (d) {
-    return { $TTL: d[2] }
+  return { $TTL: d[2] }
 }
 
 function originAsObject (d) {
-    return { $ORIGIN: d[2] }
+  return { $ORIGIN: d[2] }
 }
 
 function toResourceRecord (d) {
-    const r = {
-        name:  d[0],
-        ttl :  d[1] ? d[1][1]    : d[1],
-        class: d[2] ? d[2][1][0] : d[2],
-        type:  d[4],
-    }
+  const r = {
+    name:  d[0],
+    ttl :  d[1] ? d[1][1]    : d[1],
+    class: d[2] ? d[2][1][0] : d[2],
+    type:  d[4],
+  }
 
-    switch (r.type) {
-      case 'A':
-        r.address = d[6]
-        break
-      case 'AAAA':
-        r.address = d[6][0]
-        break
-      case 'CNAME':
-        r.cname = d[6]
-        break
-      case 'DNAME':
-        r.target = d[6]
-        break
-      case 'MX':
-        r.preference = d[6]
-        r.exchange  = d[8]
-        break
-      case 'NS':
-        r.dname = d[6]
-        break
-      case 'SOA':
-        r.mname   = d[6]
-        r.rname   = d[8]
-        r.serial  = d[12]
-        r.refresh = d[15]
-        r.retry   = d[18]
-        r.expire  = d[21]
-        r.minimum = d[24]
-        break
-      case 'TXT':
-        r.data = d[6].map(e => e[0])
-        break
-      default:
-        throw new Error(`undefined type: ${r.type}`)
-    }
-    return r
+  switch (r.type) {
+    case 'A':
+      r.address = d[6]
+      break
+    case 'AAAA':
+      r.address = d[6][0]
+      break
+    case 'CNAME':
+      r.cname = d[6]
+      break
+    case 'DNAME':
+      r.target = d[6]
+      break
+    case 'MX':
+      r.preference = d[6]
+      r.exchange  = d[8]
+      break
+    case 'NS':
+      r.dname = d[6]
+      break
+    case 'SOA':
+      r.comment = {}
+      r.mname   = d[6]
+      r.rname   = d[8]
+      r.serial  = d[12]
+      r.comment.serial = flat_string(d[13])
+      r.refresh = d[15]
+      r.comment.refresh = flat_string(d[16])
+      r.retry   = d[18]
+      r.comment.retry = flat_string(d[19])
+      r.expire  = d[21]
+      r.comment.expire = flat_string(d[22])
+      r.minimum = d[24]
+      r.comment.minimum = flat_string(d[25])
+      break
+    case 'TXT':
+      r.data = d[6].map(e => e[0])
+      break
+    default:
+      throw new Error(`undefined type: ${r.type}`)
+  }
+  return r
 }
 
 %}

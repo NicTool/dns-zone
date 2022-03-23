@@ -19,14 +19,8 @@ console.log(`reading file ${filePath}`)
 fs.readFile(filePath, (err, buf) => {
   if (err) throw err
 
-  let asString = buf.toString()
-
   const base = path.basename(filePath)
-  if (!/^\$ORIGIN/m.test(asString)) {
-    console.log(`inserting $ORIGIN ${base}`)
-    asString = `$ORIGIN ${base}.${os.EOL}${asString}`
-  }
-  // console.log(asString)
+  const asString = fileAsString(buf, base)
 
   dz.parseZoneFile(asString)
     .then(dz.expandShortcuts)
@@ -47,6 +41,17 @@ fs.readFile(filePath, (err, buf) => {
       console.error(e.message)
     })
 })
+
+function fileAsString (buf, base) {
+  let str = buf.toString()
+
+  if (!/^\$ORIGIN/m.test(str)) {
+    console.log(`inserting $ORIGIN ${base}`)
+    str = `$ORIGIN ${base}.${os.EOL}${str}`
+  }
+  // console.log(str)
+  return str
+}
 
 function toBind (zoneArray, origin) {
   for (const rr of zoneArray) {

@@ -40,23 +40,23 @@ exports.expandShortcuts = async zoneArray => {
     const entry = zoneArray[i]
 
     if (entry.$TTL) {
-      ttl = entry.$TTL
-      continue
+      ttl = entry.$TTL; continue
     }
+
     // When a zone is first read, there is an implicit $ORIGIN <zone_name>.
     // note the trailing dot. The current $ORIGIN is appended to the domain
     // specified in the $ORIGIN argument if it is not absolute. -- BIND 9
-    if (entry.implicitOrigin) {
-      implicitOrigin = fullyQualify(entry.implicitOrigin)
-      origin = fullyQualify(entry.implicitOrigin)
+    if (entry.implicitOrigin) {  // zone 'name' in named.conf
+      implicitOrigin = origin = fullyQualify(entry.implicitOrigin)
       continue
     }
-    if (entry.$ORIGIN) {
+    if (entry.$ORIGIN) {  // declared $ORIGIN within zone file
       origin = fullyQualify(entry.$ORIGIN, implicitOrigin)
       continue
     }
     if (!origin) throw new Error(`zone origin ambiguous, cowardly bailing out`)
 
+    if (ttl === 0 && entry.type === 'SOA' && entry.minimum) ttl = entry.minimum
     if (empty.includes(entry.ttl  )) entry.ttl   = ttl
     if (empty.includes(entry.class)) entry.class = 'IN'
 
@@ -76,21 +76,7 @@ exports.expandShortcuts = async zoneArray => {
 
     if (entry.name !== lastName) lastName = entry.name
 
-    // expand rdata shortcuts
-    switch (entry.type) {
-      case 'SOA':
-        for (const f of [ 'mname', 'rname' ]) {
-          entry[f] = fullyQualify(entry[f], origin)
-        }
-        if (entry.minimum && ttl === 0) ttl = entry.minimum
-        break
-      case 'MX':
-        entry.exchange = fullyQualify(entry.exchange, origin)
-        break
-      case 'NS':
-        entry.dname = fullyQualify(entry.dname, origin)
-        break
-    }
+    expandRdata(entry, origin, ttl)
 
     try {
       expanded.push(new RR[entry.type](entry))
@@ -108,4 +94,20 @@ exports.expandShortcuts = async zoneArray => {
 function fullyQualify (hostname, origin) {
   if (hostname.endsWith('.')) return hostname
   return `${hostname}.${origin}`.toLowerCase()
+}
+
+function expandRdata (entry, origin, ttl) {
+  switch (entry.type) {
+    case 'SOA':
+      for (const f of [ 'mname', 'rname' ]) {
+        entry[f] = fullyQualify(entry[f], origin)
+      }
+      break
+    case 'MX':
+      entry.exchange = fullyQualify(entry.exchange, origin)
+      break
+    case 'NS':
+      entry.dname = fullyQualify(entry.dname, origin)
+      break
+  }
 }

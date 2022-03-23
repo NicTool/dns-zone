@@ -53,6 +53,13 @@ describe('parseZoneFile', function () {
       retry  : 2048,
       expire : 604800,
       minimum: 2560,
+      comment: {
+        expire : '    ; expiry',
+        minimum: '   ; minimum',
+        refresh: '   ; refresh',
+        retry  : '     ; retry',
+        serial : '    ; serial',
+      },
     })
   })
 
