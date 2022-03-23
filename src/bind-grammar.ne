@@ -1,3 +1,5 @@
+# This is a parser, not a validator. Don't go crazy with rules here,
+# we validate after parsing
 
 @builtin "string.ne"
 
@@ -21,11 +23,11 @@ soa             -> hostname ( __ uint ):? ( __ class ):? __ "SOA"
                    __ hostname
                    __ hostname
                    __ "("
-                       __ uint (_ comment):?
-                       __ uint (_ comment):?
-                       __ uint (_ comment):?
-                       __ uint (_ comment):?
-                       __ uint (_ comment):?
+                     _ uint (ws comment):?
+                     __ uint (ws comment):?
+                     __ uint (ws comment):?
+                     __ uint (ws comment):?
+                     __ uint (ws comment):?
                    _ ")" _ (comment):?
                    {% (d) => toResourceRecord(d) %}
 
@@ -63,13 +65,20 @@ hostname        -> ALPHA_NUM_DASH_U:* {% (d) => d[0].join("") %}
 
 ALPHA_NUM_DASH_U -> [-0-9A-Za-z\u0080-\uFFFF._@] {% id %}
 
-class           -> "IN" | "CH" | "HS" | "CHAOS" | "ANY"
+class           -> "IN" | "CS" | "CH" | "HS" | "NONE" | "ANY"
+
+#not_whitespace  -> [^\n\r] {% id %}
+#host_chars      -> [-0-9A-Za-z\u0080-\uFFFF._@/] {% id %}
 
 times_3[X]      -> $X $X $X
 times_5[X]      -> $X $X $X $X $X
 times_7[X]      -> $X $X $X $X $X $X $X
 
 ip4             -> Snum times_3["."  Snum] {% (d) => flat_string(d) %}
+
+#ip4             -> ([0-9.]):+    {% (d) => flat_string(d) %}
+#ip6             -> (ip6_chars):+ {% (d) => flat_string(d) %}
+#ip6_chars       -> [0-9A-Fa-f:.] {% id %}
 
 ip6             -> IPv6_full | IPv6_comp | IPv6v4_full | IPv6v4_comp
 
@@ -105,83 +114,75 @@ IPv6v4_comp    -> (IPv6_hex times_3[":" IPv6_hex]):? "::"
 # Whitespace: `_` is optional, `__` is mandatory.
 _  -> wschar:* {% function(d) {return null;} %}
 __ -> wschar:+ {% function(d) {return null;} %}
+ws -> wschar:* {% id %}
 
 wschar -> [ \t\n\r\v\f] {% id %}
 
-#ALPHA_NUM      -> [0-9A-Za-z]
-#ALPHA_NUM_U    -> [0-9A-Za-z\u0080-\uFFFF] {% id %}
-
-
-# https://datatracker.ietf.org/doc/html/rfc1035#page-12
-#domain      -> subdomain | " "
-#subdomain   -> label | subdomain "." label
-#label       -> letter ldh-str let-dig
-#ldh-str     -> let-dig-hyp | let-dig-hyp ldh-str
-#let-dig-hyp -> let-dig | "-"
-#let-dig     -> letter | digit
-#letter      -> [a-zA-Z]
-#digit       -> [0-9]
-
-
 @{%
 function flat_string(d) {
-  if (d) {
-    if (Array.isArray(d)) return d.flat(Infinity).join("")
-    return d
-  }
-  return ''
+  if (!d) return ''
+  if (Array.isArray(d)) return d.flat(Infinity).join('')
+  return d
 }
 
 function ttlAsObject (d) {
-    return { ttl: d[2] }
+  return { $TTL: d[2] }
 }
 
 function originAsObject (d) {
-    return { origin: d[2] }
+  return { $ORIGIN: d[2] }
 }
 
 function toResourceRecord (d) {
-    const r = {
-        name:  d[0],
-        ttl :  d[1] ? d[1][1]    : d[1],
-        class: d[2] ? d[2][1][0] : d[2],
-        type:  d[4],
-    }
+  const r = {
+    name:  d[0],
+    ttl :  d[1] ? d[1][1]    : d[1],
+    class: d[2] ? d[2][1][0] : d[2],
+    type:  d[4],
+  }
 
-    switch (r.type) {
-      case 'A':
-        r.address = d[6]
-        break
-      case 'AAAA':
-        r.address = d[6][0]
-        break
-      case 'CNAME':
-        r.cname = d[6][0]
-        break
-      case 'DNAME':
-        r.target = d[6][0]
-        break
-      case 'MX':
-        r.preference = d[6]
-        r.exchange  = d[8]
-        break
-      case 'NS':
-        r.dname = d[6]
-        break
-      case 'SOA':
-        r.mname   = d[6]
-        r.rname   = d[8]
-        r.serial  = d[12]
-        r.refresh = d[15]
-        r.retry   = d[18]
-        r.expire  = d[21]
-        r.minimum = d[24]
-        break
-      case 'TXT':
-        r.data = d[6].map(e => e[0])
-        break
-    }
-    return r
+  switch (r.type) {
+    case 'A':
+      r.address = d[6]
+      break
+    case 'AAAA':
+      r.address = d[6][0]
+      break
+    case 'CNAME':
+      r.cname = d[6]
+      break
+    case 'DNAME':
+      r.target = d[6]
+      break
+    case 'MX':
+      r.preference = d[6]
+      r.exchange  = d[8]
+      break
+    case 'NS':
+      r.dname = d[6]
+      break
+    case 'SOA':
+      r.comment = {}
+      r.mname   = d[6]
+      r.rname   = d[8]
+      r.serial  = d[12]
+      r.comment.serial = flat_string(d[13])
+      r.refresh = d[15]
+      r.comment.refresh = flat_string(d[16])
+      r.retry   = d[18]
+      r.comment.retry = flat_string(d[19])
+      r.expire  = d[21]
+      r.comment.expire = flat_string(d[22])
+      r.minimum = d[24]
+      r.comment.minimum = flat_string(d[25])
+      break
+    case 'TXT':
+      r.data = d[6].map(e => e[0])
+      break
+    default:
+      throw new Error(`undefined type: ${r.type}`)
+  }
+  return r
 }
 
 %}
