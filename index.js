@@ -47,11 +47,11 @@ exports.expandShortcuts = async zoneArray => {
     // note the trailing dot. The current $ORIGIN is appended to the domain
     // specified in the $ORIGIN argument if it is not absolute. -- BIND 9
     if (entry.implicitOrigin) {  // zone 'name' in named.conf
-      implicitOrigin = origin = fullyQualify(entry.implicitOrigin)
+      implicitOrigin = origin = exports.fullyQualify(entry.implicitOrigin)
       continue
     }
     if (entry.$ORIGIN) {  // declared $ORIGIN within zone file
-      origin = fullyQualify(entry.$ORIGIN, implicitOrigin)
+      origin = exports.fullyQualify(entry.$ORIGIN, implicitOrigin)
       continue
     }
     if (!origin) throw new Error(`zone origin ambiguous, cowardly bailing out`)
@@ -68,7 +68,7 @@ exports.expandShortcuts = async zoneArray => {
     if (entry.name === '' && lastName) entry.name = lastName
 
     if (entry.name) {
-      entry.name = fullyQualify(entry.name, origin)
+      entry.name = exports.fullyQualify(entry.name, origin)
     }
     else {
       entry.name = `${origin}`.toLowerCase()
@@ -91,23 +91,25 @@ exports.expandShortcuts = async zoneArray => {
   return expanded
 }
 
-function fullyQualify (hostname, origin) {
+exports.fullyQualify = function (hostname, origin) {
+  if (!hostname) return hostname // don't append . to empty string
   if (hostname.endsWith('.')) return hostname
-  return `${hostname}.${origin}`.toLowerCase()
+  if (origin) return `${hostname}.${origin}`.toLowerCase()
+  return `${hostname}.`.toLowerCase()
 }
 
 function expandRdata (entry, origin, ttl) {
   switch (entry.type) {
     case 'SOA':
       for (const f of [ 'mname', 'rname' ]) {
-        entry[f] = fullyQualify(entry[f], origin)
+        entry[f] = exports.fullyQualify(entry[f], origin)
       }
       break
     case 'MX':
-      entry.exchange = fullyQualify(entry.exchange, origin)
+      entry.exchange = exports.fullyQualify(entry.exchange, origin)
       break
     case 'NS':
-      entry.dname = fullyQualify(entry.dname, origin)
+      entry.dname = exports.fullyQualify(entry.dname, origin)
       break
   }
 }
