@@ -1,4 +1,14 @@
 
+#### 1.N.N - YYYY-MM-DD
+
+
+#### 0.2.0 - 2022-03-22
+
+- add expandShortcuts
+- added bin/import
+- use async for parseZoneFile and expandShortcuts
+- SOA: capture comments
+
 
 #### 0.1.0 - 2022-03-17
 
