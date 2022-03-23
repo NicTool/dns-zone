@@ -188,4 +188,3 @@ Zisi.edu:venera.isi.edu:action.domains.isi.edu:20:7200:600:3600000:60:60::
         - [x] ALL: name field
         - [x] MX: exchange, CNAME: cname, SOA: mname, rname, NS: dname
 - [ ] validate zone rules
-- [ ] 
