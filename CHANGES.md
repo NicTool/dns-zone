@@ -2,6 +2,14 @@
 #### 1.N.N - YYYY-MM-DD
 
 
+#### 0.3.0 - 2022-03-23
+
+- import: added CLI options
+- pass zone_opts to RR exporter
+- add JSON export
+- README: expand with examples
+
+
 #### 0.2.0 - 2022-03-22
 
 - add expandShortcuts
