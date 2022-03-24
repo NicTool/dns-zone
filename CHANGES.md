@@ -4,13 +4,20 @@
 
 #### 0.3.0 - 2022-03-23
 
-- import: added CLI options
-- import: expanded with tinydns support
-- import: add JSON export
+- import
+    - added CLI options
+    - added tinydns ingest support
+    - encapsulated output logic
 - pass zone_opts to RR exporter
-- README: expand with examples
+- export: add JSON
 - index: import fullyQualify from dns-rr
-- 
+- grammar
+    - improved ip6 compressed parsing
+    - add PTR support in bind zone files
+- test
+    - added zonefile example.com, localhost
+    - added relative CNAME test
+- README: expand with examples
 
 
 #### 0.2.0 - 2022-03-22
