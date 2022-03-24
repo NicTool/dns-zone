@@ -87,7 +87,7 @@ describe('parseZoneFile', function () {
     })
   })
 
-  it('parses a CNAME line', async () => {
+  it('parses a CNAME line, absolute', async () => {
     const r = await zv.parseZoneFile(`www 28800 IN  CNAME vhost0.theartfarm.com.\n`)
     // console.dir(r, { depth: null })
     assert.deepStrictEqual(r[0], {
@@ -97,6 +97,18 @@ describe('parseZoneFile', function () {
       type : 'CNAME',
       cname: 'vhost0.theartfarm.com.',
     })
+  })
+
+  it('parses a CNAME line, relative', async () => {
+    const r = await zv.parseZoneFile(`$ORIGIN theartfarm.com.\nwww 28800 IN  CNAME vhost0\n`).then(zv.expandShortcuts)
+    // console.dir(r, { depth: null })
+    assert.deepStrictEqual(r[0], new RR.CNAME({
+      name : 'www.theartfarm.com.',
+      ttl  : 28800,
+      class: 'IN',
+      type : 'CNAME',
+      cname: 'vhost0.theartfarm.com.',
+    }))
   })
 
   it('parses a DNAME line', async () => {
@@ -131,6 +143,18 @@ describe('parseZoneFile', function () {
       zv.parseZoneFile(buf.toString()).then(zv.expandShortcuts).then(r => {
         // console.dir(r, { depth: null })
         assert.equal(r.length, 11)
+      })
+    })
+  })
+
+  it('parses the example.com zone file', async () => {
+    const file = './test/fixtures/zones/example.com'
+    fs.readFile(file, (err, buf) => {
+      if (err) throw err
+
+      zv.parseZoneFile(buf.toString()).then(zv.expandShortcuts).then(r => {
+        // console.dir(r, { depth: null })
+        assert.equal(r.length, 14)
       })
     })
   })
