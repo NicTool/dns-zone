@@ -5,9 +5,12 @@
 #### 0.3.0 - 2022-03-23
 
 - import: added CLI options
+- import: expanded with tinydns support
+- import: add JSON export
 - pass zone_opts to RR exporter
-- add JSON export
 - README: expand with examples
+- index: import fullyQualify from dns-rr
+- 
 
 
 #### 0.2.0 - 2022-03-22

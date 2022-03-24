@@ -9,6 +9,8 @@ const cmdLineArgs = require('command-line-args')
 const cmdLineUsage = require('command-line-usage')
 
 const dz = require('../index')
+const RR = require('dns-resource-record')
+const rr = new RR.A(null)
 
 // CLI argument processing
 const opts = cmdLineArgs(usageOptions())._all
@@ -16,7 +18,7 @@ if (opts.verbose) console.error(opts)
 if (opts.help) usage()
 
 const zone_opts = {
-  origin: dz.fullyQualify(opts.origin) || '',
+  origin: rr.fullyQualify(opts.origin) || '',
   ttl   : opts.ttl || 0,
   class : opts.class || 'IN',
   hide  : {
@@ -27,45 +29,20 @@ const zone_opts = {
 }
 if (opts.verbose) console.error(zone_opts)
 
-// determine where to ingest data from
-let filePath = opts.import
-if (!filePath) usage()
-if (filePath === 'stdin') {
-  filePath = process.stdin.fd
-}
-else {
-  if (!opts.origin) zone_opts.origin = dz.fullyQualify(path.basename(filePath))
-}
+ingestZoneData()
+  .then(r => {
+    switch (r.type) {
+      case 'tinydns':
+        return dz.parseTinydnsData(r.data)
+      default:
+        return dz.parseZoneFile(r.data).then(dz.expandShortcuts)
+    }
+  })
+  .then(output)
+  .catch(e => {
+    console.error(e.message)
+  })
 
-if (opts.verbose) console.error(`reading file ${filePath}`)
-
-fs.readFile(filePath, (err, buf) => {
-  if (err) throw err
-
-  const origin = zone_opts.origin ? dz.fullyQualify(zone_opts.origin) : ''
-
-  dz.parseZoneFile(fileAsString(buf, origin))
-    .then(dz.expandShortcuts)
-    .then(zoneArray => {
-      // console.error(zoneArray)
-      switch (opts.export.toLowerCase()) {
-        case 'json':
-          toJSON(zoneArray)
-          break
-        case 'bind':
-          toBind(zoneArray, origin)
-          break
-        case 'tinydns':
-          toTinydns(zoneArray)
-          break
-        default:
-          console.log(zoneArray)
-      }
-    })
-    .catch(e => {
-      console.error(e.message)
-    })
-})
 
 function usage () {
   console.error(cmdLineUsage(usageSections()))
@@ -202,15 +179,56 @@ function usageSections () {
   ]
 }
 
-function fileAsString (buf, origin) {
-  let str = buf.toString()
+function ingestZoneData () {
+  return new Promise((resolve, reject) => {
 
-  if (!/^\$ORIGIN/m.test(str)) {
-    if (opts.verbose) console.error(`inserting $ORIGIN ${origin}`)
-    str = `$ORIGIN ${origin}${os.EOL}${str}`
+    const res = { type: 'bind' }
+    if (!opts.import) usage()
+
+    let filePath = opts.import
+
+    if (filePath === 'stdin') {
+      filePath = process.stdin.fd
+    }
+    else if (path.basename(filePath) === 'data'){
+      res.type = 'tinydns'
+    }
+    else {
+      if (!opts.origin) zone_opts.origin = rr.fullyQualify(path.basename(filePath))
+    }
+
+    if (opts.verbose) console.error(`reading file ${filePath}`)
+
+    fs.readFile(filePath, (err, buf) => {
+      if (err) return reject(err)
+
+      res.data = buf.toString()
+
+      if (res.type === 'bind' && !/^\$ORIGIN/m.test(res.data)) {
+        if (opts.verbose) console.error(`inserting $ORIGIN ${zone_opts.origin}`)
+        res.data = `$ORIGIN ${zone_opts.origin}${os.EOL}${res.data}`
+      }
+
+      resolve(res)
+    })
+  })
+}
+
+function output (zoneArray) {
+  // console.error(zoneArray)
+  switch (opts.export.toLowerCase()) {
+    case 'json':
+      toJSON(zoneArray)
+      break
+    case 'bind':
+      toBind(zoneArray, zone_opts.origin)
+      break
+    case 'tinydns':
+      toTinydns(zoneArray)
+      break
+    default:
+      console.log(zoneArray)
   }
-  // console.error(str)
-  return str
 }
 
 function toBind (zoneArray, origin) {

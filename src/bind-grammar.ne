@@ -16,7 +16,7 @@ comment         -> ";" [^\n\r]:*
 ttl             -> "$TTL" __ uint _ (comment):? _
                    {% (d) => ttlAsObject(d) %}
 
-origin          -> "$ORIGIN" __ hostname (comment):? _
+origin          -> "$ORIGIN" __ hostname _ (comment):? _
                    {% (d) => originAsObject(d) %}
 
 soa             -> hostname ( __ uint ):? ( __ class ):? __ "SOA"
@@ -63,7 +63,7 @@ uint            -> [0-9]:+ {% (d) => parseInt(d[0].join("")) %}
 
 hostname        -> ALPHA_NUM_DASH_U:* {% (d) => d[0].join("") %}
 
-ALPHA_NUM_DASH_U -> [-0-9A-Za-z\u0080-\uFFFF._@] {% id %}
+ALPHA_NUM_DASH_U -> [0-9A-Za-z\u0080-\uFFFF\.\-_@] {% id %}
 
 class           -> "IN" | "CS" | "CH" | "HS" | "NONE" | "ANY"
 
@@ -74,42 +74,37 @@ times_3[X]      -> $X $X $X
 times_5[X]      -> $X $X $X $X $X
 times_7[X]      -> $X $X $X $X $X $X $X
 
-ip4             -> Snum times_3["."  Snum] {% (d) => flat_string(d) %}
+ip4             -> int8 times_3["."  int8] {% flatten %}
 
-#ip4             -> ([0-9.]):+    {% (d) => flat_string(d) %}
-#ip6             -> (ip6_chars):+ {% (d) => flat_string(d) %}
-#ip6_chars       -> [0-9A-Fa-f:.] {% id %}
+ip6             -> ip6_full | ip6_compressed | IPv6v4_full | IPv6v4_comp
 
-ip6             -> IPv6_full | IPv6_comp | IPv6v4_full | IPv6v4_comp
-
-Snum            -> DIGIT |
-                 ( [1-9] DIGIT ) |
-                 ( "1" DIGIT DIGIT ) |
-                 ( "2" [0-4] DIGIT ) |
-                 ( "2" "5" [0-5] )
+int8            -> DIGIT |
+                   [1-9] DIGIT |
+                   "1" DIGIT DIGIT |
+                   "2" [0-4] DIGIT |
+                   "25" [0-5]
 
 DIGIT          -> [0-9] {% id %}
 HEXDIG         -> [0-9A-Fa-f] {% id %}
 
 IPv6_hex       -> HEXDIG |
-                ( HEXDIG HEXDIG ) |
-                ( HEXDIG HEXDIG HEXDIG ) |
-                ( HEXDIG HEXDIG HEXDIG HEXDIG )
+                  HEXDIG HEXDIG |
+                  HEXDIG HEXDIG HEXDIG |
+                  HEXDIG HEXDIG HEXDIG HEXDIG
 
-IPv6_full      -> IPv6_hex times_7[":" IPv6_hex]
-                  {% (d) => flat_string(d) %}
+ip6_full       -> IPv6_hex times_7[":" IPv6_hex] {% flatten %}
 
-IPv6_comp      -> (IPv6_hex times_5[":" IPv6_hex]):? "::"
-                  (IPv6_hex times_5[":" IPv6_hex]):?
-                  {% (d) => flat_string(d) %}
+ip6_compressed -> "::"                           {% flatten %} |
+                  "::" IPv6_hex                  {% flatten %} |
+                  IPv6_hex (":" IPv6_hex):* "::" IPv6_hex (":" IPv6_hex):* {% flatten %}
 
 IPv6v4_full    -> IPv6_hex times_5[":" IPv6_hex] ":" ip4
-                  {% (d) => flat_string(d) %}
+                  {% flatten %}
 
 IPv6v4_comp    -> (IPv6_hex times_3[":" IPv6_hex]):? "::"
                   (IPv6_hex times_3[":" IPv6_hex] ":"):?
                   ip4
-                  {% (d) => flat_string(d) %}
+                  {% flatten %}
 
 # Whitespace: `_` is optional, `__` is mandatory.
 _  -> wschar:* {% function(d) {return null;} %}
@@ -119,7 +114,7 @@ ws -> wschar:* {% id %}
 wschar -> [ \t\n\r\v\f] {% id %}
 
 @{%
-function flat_string(d) {
+function flatten (d) {
   if (!d) return ''
   if (Array.isArray(d)) return d.flat(Infinity).join('')
   return d
@@ -166,15 +161,15 @@ function toResourceRecord (d) {
       r.mname   = d[6]
       r.rname   = d[8]
       r.serial  = d[12]
-      r.comment.serial = flat_string(d[13])
+      r.comment.serial = flatten(d[13])
       r.refresh = d[15]
-      r.comment.refresh = flat_string(d[16])
+      r.comment.refresh = flatten(d[16])
       r.retry   = d[18]
-      r.comment.retry = flat_string(d[19])
+      r.comment.retry = flatten(d[19])
       r.expire  = d[21]
-      r.comment.expire = flat_string(d[22])
+      r.comment.expire = flatten(d[22])
       r.minimum = d[24]
-      r.comment.minimum = flat_string(d[25])
+      r.comment.minimum = flatten(d[25])
       break
     case 'TXT':
       r.data = d[6].map(e => e[0])
