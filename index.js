@@ -72,7 +72,7 @@ exports.expandShortcuts = async zoneArray => {
       entry.name = rr.fullyQualify(entry.name, origin)
     }
     else {
-      entry.name = `${origin}`.toLowerCase()
+      entry.name = origin
     }
 
     if (entry.name !== lastName) lastName = entry.name
@@ -90,13 +90,6 @@ exports.expandShortcuts = async zoneArray => {
     }
   }
   return expanded
-}
-
-rr.fullyQualify = function (hostname, origin) {
-  if (!hostname) return hostname // don't append . to empty string
-  if (hostname.endsWith('.')) return hostname
-  if (origin) return `${hostname}.${origin}`.toLowerCase()
-  return `${hostname}.`.toLowerCase()
 }
 
 function expandBindRdata (entry, origin, ttl) {
