@@ -5,7 +5,7 @@
 
 main            -> (statement eol):+
 
-statement       -> blank | ttl | origin | soa | ns | mx | a | txt | aaaa | cname | dname
+statement       -> blank | ttl | origin | soa | ns | mx | a | txt | aaaa | cname | dname | ptr
 
 eol             -> "\n" | "\r"
 
@@ -13,51 +13,42 @@ blank           -> _
 
 comment         -> ";" [^\n\r]:*
 
-ttl             -> "$TTL" __ uint _ (comment):? _
-                   {% (d) => ttlAsObject(d) %}
+ttl             -> "$TTL" __ uint _ (comment):? _           {% asTTL %}
 
-origin          -> "$ORIGIN" __ hostname _ (comment):? _
-                   {% (d) => originAsObject(d) %}
+origin          -> "$ORIGIN" __ hostname _ (comment):? _    {% asOrigin %}
 
 soa             -> hostname ( __ uint ):? ( __ class ):? __ "SOA"
-                   __ hostname
-                   __ hostname
-                   __ "("
+                   __ hostname __ hostname __ "("
                      _ uint (ws comment):?
                      __ uint (ws comment):?
                      __ uint (ws comment):?
                      __ uint (ws comment):?
                      __ uint (ws comment):?
-                   _ ")" _ (comment):?
-                   {% (d) => toResourceRecord(d) %}
+                   _ ")" _ (comment):?                       {% asRR %}
 
 ns              -> hostname (__ uint):? (__ class):? __ "NS"
-                   __ hostname _ (comment):? _
-                   {% (d) => toResourceRecord(d) %}
+                   __ hostname _ (comment):? _               {% asRR %}
 
 mx              -> hostname (__ uint):? (__ class):? __ "MX"
-                   __ uint __ hostname _ (comment):?
-                   {% (d) => toResourceRecord(d) %}
+                   __ uint __ hostname _ (comment):?         {% asRR %}
 
 a               -> hostname (__ uint):? (__ class):? __ "A"
-                   __ ip4 _ (comment):? _
-                   {% (d) => toResourceRecord(d) %}
+                   __ ip4 _ (comment):? _                    {% asRR %}
 
 txt             -> hostname (__ uint):? (__ class):? __ "TXT"
-                   __ (dqstring _):+ (comment):? _
-                   {% (d) => toResourceRecord(d) %}
+                   __ (dqstring _):+ (comment):? _           {% asRR %}
 
 aaaa            -> hostname (__ uint):? (__ class):? __ "AAAA"
-                   __ ip6 _ (comment):? _
-                   {% (d) => toResourceRecord(d) %}
+                   __ ip6 _ (comment):? _                    {% asRR %}
 
 cname           -> hostname (__ uint):? (__ class):? __ "CNAME"
-                   __ hostname _ (comment):? _
-                   {% (d) => toResourceRecord(d) %}
+                   __ hostname _ (comment):? _               {% asRR %}
 
 dname           -> hostname (__ uint):? (__ class):? __ "DNAME"
-                   __ hostname _ (comment):? _
-                   {% (d) => toResourceRecord(d) %}
+                   __ hostname _ (comment):? _               {% asRR %}
+
+ptr             -> hostname (__ uint):? (__ class):? __ "PTR"
+                   __ hostname _ (comment):? _               {% asRR %}
 
 uint            -> [0-9]:+ {% (d) => parseInt(d[0].join("")) %}
 
@@ -74,7 +65,7 @@ times_3[X]      -> $X $X $X
 times_5[X]      -> $X $X $X $X $X
 times_7[X]      -> $X $X $X $X $X $X $X
 
-ip4             -> int8 times_3["."  int8] {% flatten %}
+ip4             -> int8 times_3["."  int8]   {% flatten %}
 
 ip6             -> ip6_full | ip6_compressed | IPv6v4_full | IPv6v4_comp
 
@@ -98,13 +89,10 @@ ip6_compressed -> "::"                           {% flatten %} |
                   "::" IPv6_hex                  {% flatten %} |
                   IPv6_hex (":" IPv6_hex):* "::" IPv6_hex (":" IPv6_hex):* {% flatten %}
 
-IPv6v4_full    -> IPv6_hex times_5[":" IPv6_hex] ":" ip4
-                  {% flatten %}
+IPv6v4_full    -> IPv6_hex times_5[":" IPv6_hex] ":" ip4                   {% flatten %}
 
 IPv6v4_comp    -> (IPv6_hex times_3[":" IPv6_hex]):? "::"
-                  (IPv6_hex times_3[":" IPv6_hex] ":"):?
-                  ip4
-                  {% flatten %}
+                  (IPv6_hex times_3[":" IPv6_hex] ":"):? ip4               {% flatten %}
 
 # Whitespace: `_` is optional, `__` is mandatory.
 _  -> wschar:* {% function(d) {return null;} %}
@@ -120,15 +108,15 @@ function flatten (d) {
   return d
 }
 
-function ttlAsObject (d) {
+function asTTL (d) {
   return { $TTL: d[2] }
 }
 
-function originAsObject (d) {
+function asOrigin (d) {
   return { $ORIGIN: d[2] }
 }
 
-function toResourceRecord (d) {
+function asRR (d) {
   const r = {
     name:  d[0],
     ttl :  d[1] ? d[1][1]    : d[1],
@@ -154,6 +142,9 @@ function toResourceRecord (d) {
       r.exchange  = d[8]
       break
     case 'NS':
+      r.dname = d[6]
+      break
+    case 'PTR':
       r.dname = d[6]
       break
     case 'SOA':
