@@ -184,7 +184,10 @@ Zisi.edu:venera.isi.edu:action.domains.isi.edu:20:7200:600:3600000:60:60::
     - [x] expand `@` to zone name
     - [x] empty names are same as previous RR record
     - [x] missing TTLs inherit zone TTL, or zone MINIMUM
-    - [x] expand hostnames to FQDNs
+    - expand hostnames to FQDNs
         - [x] ALL: name field
-        - [x] MX: exchange, CNAME: cname, SOA: mname, rname, NS: dname
+        - [x] MX: exchange
+        - [x] CNAME: cname,
+        - [x] SOA: mname, rname,
+        - [x] NS,PTR: dname
 - [ ] validate zone rules
