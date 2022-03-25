@@ -5,7 +5,7 @@ const rr = new RR.A(null)
 exports.parseZoneFile = async str => {
 
   const nearley = require('nearley')
-  const grammar = nearley.Grammar.fromCompiled(require('./grammar.js'))
+  const grammar = nearley.Grammar.fromCompiled(require('./lib/grammar.js'))
   grammar.start = 'main'
 
   const parser = new nearley.Parser(grammar)
