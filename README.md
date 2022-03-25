@@ -175,7 +175,7 @@ Zisi.edu:venera.isi.edu:action.domains.isi.edu:20:7200:600:3600000:60:60::
     - [ ] write a named.conf file parser
     - [x] write a bind zone file parser
     - [x] write a tinydns data file parser
-    - [ ] add parsing support for all RRs supported by dns-rr
+    - [ ] add BIND parsing for all RRs supported by dns-rr
 - normalize BIND zone records
     - [x] expand `@` to zone name
     - [x] empty names are same as previous RR record

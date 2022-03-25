@@ -87,6 +87,38 @@ describe('parseZoneFile', function () {
     })
   })
 
+  const testCAAs = [
+    { bind  : 'nocerts.example.com       CAA 0 issue ";"\n',
+      result: {
+        class: null,
+        flags: 0,
+        name : 'nocerts.example.com',
+        tag  : 'issue',
+        ttl  : null,
+        type : 'CAA',
+        value: '";"',
+      },
+    },
+    { bind  : 'certs.example.com       CAA 0 issue "example.net"\n',
+      result: {
+        class: null,
+        flags: 0,
+        name : 'certs.example.com',
+        tag  : 'issue',
+        ttl  : null,
+        type : 'CAA',
+        value: '"example.net"',
+      },
+    },
+  ]
+
+  for (const t of testCAAs) {
+    it(`parses CAA record: ${t.result.name}`, async () => {
+      const r = await zv.parseZoneFile(t.bind)
+      assert.deepStrictEqual(r[0], t.result)
+    })
+  }
+
   it('parses a CNAME line, absolute', async () => {
     const r = await zv.parseZoneFile(`www 28800 IN  CNAME vhost0.theartfarm.com.\n`)
     // console.dir(r, { depth: null })
@@ -120,6 +152,87 @@ describe('parseZoneFile', function () {
       class : 'IN',
       type  : 'DNAME',
       target: '_tcp.theartfarm.com.',
+    })
+  })
+
+  it('parses a DNSKEY record', async () => {
+    const r = await zv.parseZoneFile(
+      `example.com. 86400 IN DNSKEY 256 3 5 ( AQPSKmynfzW4kyBv015MUG2DeIQ3
+                                          Cbl+BBZH4b/0PY1kxkmvHjcZc8no
+                                          kfzj31GajIQKY+5CptLr3buXA10h
+                                          WqTkF7H6RfoRqXQeogmMHfpftf6z
+                                          Mv1LyBUgia7za6ZEzOJBOztyvhjL
+                                          742iU/TpPSEDhm2SNKLijfUppn1U
+                                          aNvv4w==  )\n`)
+    // console.dir(r, { depth: null })
+    assert.deepStrictEqual(r[0], {
+      name     : 'example.com.',
+      ttl      : 86400,
+      class    : 'IN',
+      type     : 'DNSKEY',
+      flags    : 256,
+      protocol : 3,
+      algorithm: 5,
+      publickey: 'AQPSKmynfzW4kyBv015MUG2DeIQ3Cbl+BBZH4b/0PY1kxkmvHjcZc8nokfzj31GajIQKY+5CptLr3buXA10hWqTkF7H6RfoRqXQeogmMHfpftf6zMv1LyBUgia7za6ZEzOJBOztyvhjL742iU/TpPSEDhm2SNKLijfUppn1UaNvv4w==',
+    })
+  })
+
+  it('parses a DS record', async () => {
+    const r = await zv.parseZoneFile(
+      `dskey.example.com. 86400 IN DS 60485 5 1 ( 2BB183AF5F22588179A53B0A
+                                              98631FAD1A292118 )\n`)
+    // console.dir(r, { depth: null })
+    assert.deepStrictEqual(r[0], {
+      name         : 'dskey.example.com.',
+      ttl          : 86400,
+      class        : 'IN',
+      type         : 'DS',
+      'key tag'    : 60485,
+      algorithm    : 5,
+      'digest type': 1,
+      digest       : '2BB183AF5F22588179A53B0A98631FAD1A292118',
+    })
+  })
+
+  it('parses a HINFO line', async () => {
+    const r = await zv.parseZoneFile(`SRI-NIC.ARPA. HINFO   DEC-2060 TOPS20\n`)
+    // console.dir(r, { depth: null })
+    assert.deepStrictEqual(r[0], {
+      name : 'SRI-NIC.ARPA.',
+      ttl  : null,
+      class: null,
+      type : 'HINFO',
+      cpu  : 'DEC-2060',
+      os   : 'TOPS20',
+    })
+  })
+
+  it('parses a LOC line', async () => {
+    const r = await zv.parseZoneFile(`rwy04l.logan-airport.boston. 3600 IN LOC 42 21 28.764 N 71 0 51.617 W -44m 2000m\n`)
+    // console.dir(r, { depth: null })
+    assert.deepStrictEqual(r[0], {
+      name    : 'rwy04l.logan-airport.boston.',
+      ttl     : 3600,
+      class   : 'IN',
+      type    : 'LOC',
+      latitude: {
+        degrees   : 42,
+        hemisphere: 'N',
+        minutes   : 21,
+        seconds   : 28.764,
+      },
+      longitude: {
+        degrees   : 71,
+        hemisphere: 'W',
+        minutes   : 0,
+        seconds   : 51.617,
+      },
+      altitude : '-44m',
+      size     : '2000m',
+      precision: {
+        horizontal: '10000m',
+        vertical  : '10m',
+      },
     })
   })
 

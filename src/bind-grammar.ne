@@ -5,8 +5,10 @@
 
 main            -> (statement eol):+
 
-statement       -> blank | ttl | origin | soa | ns | mx | a | txt | aaaa | cname | dname | ptr
+statement       -> blank | ttl | origin | a | aaaa | caa | cname | dname | dnskey |
+                  ds | hinfo | loc | mx | ns | ptr | soa | txt
 
+times_3[X]      -> $X $X $X
 eol             -> "\n" | "\r"
 
 blank           -> _
@@ -17,6 +19,56 @@ ttl             -> "$TTL" __ uint _ (comment):? _           {% asTTL %}
 
 origin          -> "$ORIGIN" __ hostname _ (comment):? _    {% asOrigin %}
 
+a               -> hostname (__ uint):? (__ class):? __ "A"
+                   __ ip4 _ (comment):? _                    {% asRR %}
+
+aaaa            -> hostname (__ uint):? (__ class):? __ "AAAA"
+                   __ ip6 _ (comment):? _                    {% asRR %}
+
+caa             -> hostname (__ uint):? (__ class):? __ "CAA"
+                   __ uint __ (ALPHA_LC_NUM):+ __ QUOTE_OR_NO_WS _ (comment):? _ {% asRR %}
+
+cname           -> hostname (__ uint):? (__ class):? __ "CNAME"
+                   __ hostname _ (comment):? _               {% asRR %}
+
+dname           -> hostname (__ uint):? (__ class):? __ "DNAME"
+                   __ hostname _ (comment):? _               {% asRR %}
+
+dnskey          -> hostname (__ uint):? (__ class):? __ "DNSKEY"
+                   __ uint __ uint __ uint __
+                   "(" _ (BASE64):+ _ ")" _ (comment):? _    {% asRR %}
+
+ds              -> hostname (__ uint):? (__ class):? __ "DS"
+                   __ uint __ uint __ uint __
+                   "(" _ (HEX_WS):+ _ ")" _ (comment):?   {% asRR %}
+
+hinfo           -> hostname (__ uint):? (__ class):? __ "HINFO"
+                   __ (wordchars):+ __ (wordchars):+
+                   _ (comment):?                             {% asRR %}
+
+loc             -> hostname (__ uint):? (__ class):? __ "LOC"
+                   __ uint (__ uint):? (__ udec __):? ("N" | "S")
+                   __ uint (__ uint):? (__ udec __):? ("E" | "W")
+                   __ (word "m") times_3[(__ (word "m")):?]
+                   _ (comment):?                 {% asRR %}
+
+mx              -> hostname (__ uint):? (__ class):? __ "MX"
+                   __ uint __ hostname _ (comment):?         {% asRR %}
+
+#naptr           -> hostname (__ uint):? (__ class):? __ "NAPTR"
+                   #__ uint __ uint __ QUOTED __ QUOTED
+                   #__ QUOTED __ replacement _ (comment):?   {% asRR %}
+
+ns              -> hostname (__ uint):? (__ class):? __ "NS"
+                   __ hostname _ (comment):? _               {% asRR %}
+
+ptr             -> hostname (__ uint):? (__ class):? __ "PTR"
+                   __ hostname _ (comment):? _               {% asRR %}
+
+#rrsig           -> hostname (__ uint):? (__ class):? __ "RRSIG"
+
+#smimea          -> hostname (__ uint):? (__ class):? __ "SMIMEA"
+
 soa             -> hostname ( __ uint ):? ( __ class ):? __ "SOA"
                    __ hostname __ hostname __ "("
                      _ uint (ws comment):?
@@ -26,42 +78,27 @@ soa             -> hostname ( __ uint ):? ( __ class ):? __ "SOA"
                      __ uint (ws comment):?
                    _ ")" _ (comment):?                       {% asRR %}
 
-ns              -> hostname (__ uint):? (__ class):? __ "NS"
-                   __ hostname _ (comment):? _               {% asRR %}
-
-mx              -> hostname (__ uint):? (__ class):? __ "MX"
-                   __ uint __ hostname _ (comment):?         {% asRR %}
-
-a               -> hostname (__ uint):? (__ class):? __ "A"
-                   __ ip4 _ (comment):? _                    {% asRR %}
+#spf             -> hostname (__ uint):? (__ class):? __ "SPF"
+#srv             -> hostname (__ uint):? (__ class):? __ "SRV"
+#sshfp           -> hostname (__ uint):? (__ class):? __ "SSHFP"
+#tlsa            -> hostname (__ uint):? (__ class):? __ "TLSA"
 
 txt             -> hostname (__ uint):? (__ class):? __ "TXT"
                    __ (dqstring _):+ (comment):? _           {% asRR %}
 
-aaaa            -> hostname (__ uint):? (__ class):? __ "AAAA"
-                   __ ip6 _ (comment):? _                    {% asRR %}
+#uri            -> hostname (__ uint):? (__ class):? __ "URI"
 
-cname           -> hostname (__ uint):? (__ class):? __ "CNAME"
-                   __ hostname _ (comment):? _               {% asRR %}
+uint            -> [0-9]:+                                  {% asUint %}
+udec            -> [0-9]:+ ("." [0-9]:+):?                  {% asUDec %}
 
-dname           -> hostname (__ uint):? (__ class):? __ "DNAME"
-                   __ hostname _ (comment):? _               {% asRR %}
-
-ptr             -> hostname (__ uint):? (__ class):? __ "PTR"
-                   __ hostname _ (comment):? _               {% asRR %}
-
-uint            -> [0-9]:+ {% (d) => parseInt(d[0].join("")) %}
-
-hostname        -> ALPHA_NUM_DASH_U:* {% (d) => d[0].join("") %}
-
-ALPHA_NUM_DASH_U -> [0-9A-Za-z\u0080-\uFFFF\.\-_@] {% id %}
+hostname        -> ALPHA_NUM_DASH_U:* {% asString %}
 
 class           -> "IN" | "CS" | "CH" | "HS" | "NONE" | "ANY"
 
-#not_whitespace  -> [^\n\r] {% id %}
-#host_chars      -> [-0-9A-Za-z\u0080-\uFFFF._@/] {% id %}
+word            -> (wordchars):+   {% flatten %}
+wordchars       -> [^\s] {% id %}
 
-times_3[X]      -> $X $X $X
+#times_3[X]      -> $X $X $X
 times_5[X]      -> $X $X $X $X $X
 times_7[X]      -> $X $X $X $X $X $X $X
 
@@ -75,8 +112,15 @@ int8            -> DIGIT |
                    "2" [0-4] DIGIT |
                    "25" [0-5]
 
-DIGIT          -> [0-9] {% id %}
-HEXDIG         -> [0-9A-Fa-f] {% id %}
+ALPHA_LC_NUM    -> [0-9a-z]                       {% id %}
+ALPHA_NUM_DASH_U-> [0-9A-Za-z\u0080-\uFFFF\.\-_@] {% id %}
+DIGIT           -> [0-9]             {% id %}
+HEXDIG          -> [0-9A-Fa-f]       {% id %}
+HEX_WS          -> [0-9A-Fa-f\s]     {% id %}
+BASE64          -> [A-Za-z0-9+/=\s]  {% id %}
+#BASE64_URL_SAFE-> [A-Za-z0-9_\-=\s]  {% id %}
+QUOTED          -> ("\"" ([^\\"]):+ "\"") | ("'" ([^\\"]):+ "'")
+QUOTE_OR_NO_WS  -> "\"" ([^\\"]):+ "\"" | "'" ([^\\"]):+ "'" | ([^\s]):+
 
 IPv6_hex       -> HEXDIG |
                   HEXDIG HEXDIG |
@@ -95,8 +139,8 @@ IPv6v4_comp    -> (IPv6_hex times_3[":" IPv6_hex]):? "::"
                   (IPv6_hex times_3[":" IPv6_hex] ":"):? ip4               {% flatten %}
 
 # Whitespace: `_` is optional, `__` is mandatory.
-_  -> wschar:* {% function(d) {return null;} %}
-__ -> wschar:+ {% function(d) {return null;} %}
+_  -> wschar:* {% asNull %}
+__ -> wschar:+ {% asNull %}
 ws -> wschar:* {% id %}
 
 wschar -> [ \t\n\r\v\f] {% id %}
@@ -108,13 +152,15 @@ function flatten (d) {
   return d
 }
 
-function asTTL (d) {
-  return { $TTL: d[2] }
+function asNull   (d) { return null; }
+function asString (d) { return d[0].join(''); }
+function asUint   (d) { return parseInt(d[0].join('')) }
+function asUDec   (d) {
+  return parseFloat(d[0].join('') + (d[1] ? `.${d[1][1].join('')}` : ''))
 }
 
-function asOrigin (d) {
-  return { $ORIGIN: d[2] }
-}
+function asTTL    (d) { return { $TTL: parseInt(flatten(d[2]), 10) }; }
+function asOrigin (d) { return { $ORIGIN: d[2] }; }
 
 function asRR (d) {
   const r = {
@@ -131,11 +177,52 @@ function asRR (d) {
     case 'AAAA':
       r.address = d[6][0]
       break
+    case 'CAA':
+      r.flags = d[6]
+      r.tag   = flatten(d[8])
+      r.value = flatten(d[10])
+      break
     case 'CNAME':
       r.cname = d[6]
       break
     case 'DNAME':
       r.target = d[6]
+      break
+    case 'DNSKEY':
+      r.flags  = d[6]
+      r.protocol = d[8]
+      r.algorithm = d[10]
+      r.publickey = flatten(d[14]).split(/\s+/).join('')
+      break
+    case 'DS':
+      r['key tag']     = d[6]
+      r.algorithm      = d[8]
+      r['digest type'] = d[10]
+      r.digest = flatten(d[14]).split(/\s+/).join('')
+      break
+    case 'HINFO':
+      r.cpu = flatten(d[6])
+      r.os  = flatten(d[8])
+      break
+    case 'LOC':
+      r.latitude = {
+        degrees: d[6],
+        minutes: d[7][1] || 0,
+        seconds: d[8][1] || 0,
+        hemisphere: d[9][0],
+      }
+      r.longitude = {
+        degrees: d[11],
+        minutes: d[12][1] || 0,
+        seconds: d[13][1] || 0,
+        hemisphere: d[14][0],  // E | W
+      }
+      r.altitude = flatten(d[16]),
+      r.size     = flatten(d[17]) || '1m',
+      r.precision = {
+        horizontal: flatten(d[18]) || '10000m',
+        vertical:   flatten(d[19]) || '10m',
+      }
       break
     case 'MX':
       r.preference = d[6]
@@ -170,5 +257,4 @@ function asRR (d) {
   }
   return r
 }
-
 %}
