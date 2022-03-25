@@ -234,6 +234,7 @@ function output (zoneArray) {
 function toBind (zoneArray, origin) {
   for (const rr of zoneArray) {
     process.stdout.write(rr.toBind(zone_opts))
+    zone_opts.previousName = rr.get('name')
   }
 }
 

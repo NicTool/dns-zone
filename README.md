@@ -62,50 +62,44 @@ Examples
 ````
 
 
-#### import to JS
+#### import from STDIN to JS
 
 ````
-➜ cat isi.edu | ./bin/import.js --origin=isi.edu
+➜ cat example.com | ./bin/import.js --origin=example.com
 [
   SOA(12) [Map] {
-    'name' => 'isi.edu.',
-    'ttl' => 60,
+    'name' => 'example.com.',
+    'ttl' => 3600,
     'class' => 'IN',
     'type' => 'SOA',
-    'mname' => 'venera.isi.edu.',
-    'rname' => 'action.domains.isi.edu.',
-    'serial' => 20,
+    'mname' => 'ns.example.com.',
+    'rname' => 'username.example.com.',
+    'serial' => 2020091025,
     'refresh' => 7200,
-    'retry' => 600,
-    'expire' => 3600000,
-    'minimum' => 60,
-    'comment' => {
-      serial: '     ; SERIAL',
-      refresh: '   ; REFRESH',
-      retry: '    ; RETRY',
-      expire: '; EXPIRE',
-      minimum: ''
-    }
+    'retry' => 3600,
+    'expire' => 1209600,
+    'minimum' => 3600,
+    'comment' => { serial: '', refresh: '', retry: '', expire: '', minimum: '' }
   },
   NS(5) [Map] {
-    'name' => 'isi.edu.',
-    'ttl' => 60,
+    'name' => 'example.com.',
+    'ttl' => 3600,
     'class' => 'IN',
     'type' => 'NS',
-    'dname' => 'a.isi.edu.'
+    'dname' => 'ns.example.com.'
   },
 ...<snip>...
   A(5) [Map] {
-    'name' => 'vaxa.isi.edu.',
-    'ttl' => 60,
+    'name' => 'mail3.example.com.',
+    'ttl' => 3600,
     'class' => 'IN',
     'type' => 'A',
-    'address' => '128.9.0.33'
+    'address' => '192.0.2.5'
   }
 ]
 ````
 
-#### to bind
+#### from bind file to bind
 
 ````
 ➜ ./bin/import.js -i isi.edu -e bind
@@ -131,7 +125,7 @@ vaxa    60  IN  A   10.2.0.27
 vaxa    60  IN  A   128.9.0.33
 ````
 
-#### to bind (relative)
+#### from bind to bind (relative)
 
 ````
 ➜ ./bin/import.js -i isi.edu -e bind --ttl=60 --hide-ttl --hide-class --hide-origin
@@ -158,7 +152,7 @@ vaxa      A 128.9.0.33
 ````
 
 
-#### to tinydns
+#### from bind to tinydns
 
 ````
 ➜  ./bin/import.js -i isi.edu -e tinydns
@@ -177,10 +171,12 @@ Zisi.edu:venera.isi.edu:action.domains.isi.edu:20:7200:600:3600000:60:60::
 
 ## TODO
 
-- [ ] write a named.conf file parser
-- [x] write a bind zone file parser
-- [ ] write a tinydns data file parser
-- normalize the zone records
+- importing
+    - [ ] write a named.conf file parser
+    - [x] write a bind zone file parser
+    - [x] write a tinydns data file parser
+    - [ ] add parsing support for all RRs supported by dns-rr
+- normalize BIND zone records
     - [x] expand `@` to zone name
     - [x] empty names are same as previous RR record
     - [x] missing TTLs inherit zone TTL, or zone MINIMUM
@@ -190,4 +186,5 @@ Zisi.edu:venera.isi.edu:action.domains.isi.edu:20:7200:600:3600000:60:60::
         - [x] CNAME: cname,
         - [x] SOA: mname, rname,
         - [x] NS,PTR: dname
+    - [x] suppress hostname when identical to previous RR
 - [ ] validate zone rules
