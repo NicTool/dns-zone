@@ -9,6 +9,7 @@ const cmdLineArgs = require('command-line-args')
 const cmdLineUsage = require('command-line-usage')
 
 const dz = require('../index')
+const tinydns = require('../lib/tinydns')
 const RR = require('dns-resource-record')
 const rr = new RR.A(null)
 
@@ -33,7 +34,7 @@ ingestZoneData()
   .then(r => {
     switch (r.type) {
       case 'tinydns':
-        return dz.parseTinydnsData(r.data)
+        return tinydns.parseData(r.data)
       default:
         return dz.parseZoneFile(r.data).then(dz.expandShortcuts)
     }
