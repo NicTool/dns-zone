@@ -1,6 +1,10 @@
 
+const os = require('os')
+
 const RR = require('dns-resource-record')
 const rr = new RR.A(null)
+
+exports.zoneOpts = {}
 
 exports.parseZoneFile = async str => {
 
@@ -10,35 +14,83 @@ exports.parseZoneFile = async str => {
 
   const parser = new nearley.Parser(grammar)
   parser.feed(str)
-  parser.feed(`\n`)  // in case no EOL after last record
+  if (!str.endsWith(os.EOL)) parser.feed(os.EOL) // no EOL after last record
 
   if (parser.length > 1) {
     console.error(`ERROR: ambigious parser rule`)
   }
 
-  // flatten the parser generated array
+  if (parser.results.length === 0) return []
+
   const flat = []
-  for (const e of parser.results[0][0]) {
 
-    // discard blank lines
-    if (Array.isArray(e[0][0]) && e[0][0][0] === null) continue
+  if (Array.isArray(parser.results[0])) {
+    for (const e of parser.results[0].flat(3)) {
 
-    flat.push(e[0][0])
+      if (Array.isArray(e)) {
+        let r = {}
+
+        if (e[0])                    r.name  = e[0]
+        if (e[2] !== undefined)      r.ttl   = e[2]
+        if (e[4] && !isObject(e[4])) r.class = e[4]
+
+        // the rdata location varies on presence of ttl and/or class
+        if      (isObject(e[6])) r = { ...r, ...e[6] }
+        else if (isObject(e[5])) r = { ...r, ...e[5] }
+        else if (isObject(e[4])) r = { ...r, ...e[4] }
+
+        flat.push(r)
+      }
+      else if ('string' === typeof e) {
+        flat.push(e)
+      }
+      else {
+        if (e.$TTL) {
+          exports.zoneOpts.ttl = e.$TTL
+          flat.push(e)
+        }
+        else if (e.$ORIGIN) {
+          exports.zoneOpts.origin = e.$ORIGIN
+          flat.push(e)
+        }
+        else if (e.$INCLUDE) {  // TODO
+          throw new Error(`$INCLUDE support not implemented (yet)`)
+        }
+        else {
+          console.dir(e, { depth: null })
+          throw new Error('unrecognized parser output')
+        }
+      }
+    }
+  }
+  else {
+    console.log(`parser.results:`)
+    console.dir(parser.results, { depth: null })
+    throw new Error(`unsupported parser results`)
   }
   return flat
 }
 
+function isObject (o) {
+  if (Array.isArray(o)) return false
+  if (o === null) return false
+  return 'object' === typeof o
+}
+
 exports.expandShortcuts = async zoneArray => {
-  let ttl = 0
-  let implicitOrigin = ''
-  let origin = ''
+  let ttl = exports.zoneOpts.ttl || 0
   let lastName = ''
+  const implicitOrigin = rr.fullyQualify(exports.zoneOpts.origin) // zone 'name' in named.conf
+  let origin = implicitOrigin
   const expanded = []
   const empty = [ undefined, null ]
-  // console.log(zoneArray)
 
   for (let i = 0; i < zoneArray.length; i++) {
     const entry = zoneArray[i]
+
+    if (entry === '\n') {
+      expanded.push(entry); continue
+    }
 
     if (entry.$TTL) {
       ttl = entry.$TTL; continue
@@ -47,11 +99,7 @@ exports.expandShortcuts = async zoneArray => {
     // When a zone is first read, there is an implicit $ORIGIN <zone_name>.
     // note the trailing dot. The current $ORIGIN is appended to the domain
     // specified in the $ORIGIN argument if it is not absolute. -- BIND 9
-    if (entry.implicitOrigin) {  // zone 'name' in named.conf
-      implicitOrigin = origin = rr.fullyQualify(entry.implicitOrigin)
-      continue
-    }
-    if (entry.$ORIGIN) {  // declared $ORIGIN within zone file
+    if (entry.$ORIGIN) {  // declared $ORIGIN in zone file
       origin = rr.fullyQualify(entry.$ORIGIN, implicitOrigin)
       continue
     }
@@ -83,10 +131,10 @@ exports.expandShortcuts = async zoneArray => {
       expanded.push(new RR[entry.type](entry))
     }
     catch (e) {
-      console.error(`I encounted this error: \n`)
-      console.error(e.message)
+      console.error(`I encounted the error: '${e.message}'\n`)
       console.error(`\nwhile processing this RR: \n`)
       console.log(entry)
+      throw (e)
     }
   }
   return expanded
