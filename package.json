@@ -3,6 +3,9 @@
   "version": "0.5.0",
   "description": "DNS Zone Validator",
   "main": "index.js",
+  "bin": {
+    "dns-zone": "./bin/dns-zone"
+  },
   "scripts": {
     "grammar": "npx -p nearley nearleyc src/zonefile-grammar.ne -o dist/zonefile-grammar.js",
     "lint": "npx eslint index.js lib/*.js test/*.js",

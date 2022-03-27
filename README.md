@@ -19,12 +19,12 @@ Etc, etc, etc..
 This module will input a collection of [dns-resource-records](https://github.com/msimerson/dns-resource-record) and validate that all the zone records can coexist.
 
 
-## BIN/IMPORT
+## bin/dns-zone
 
 #### show help
 
 ````
-➜ dns-zone-validator ✗ ./bin/import.js -h
+➜ ./bin/dnz-zone -h
 
  +-+-+-+ +-+-+-+-+
  |D|N|S| |Z|O|N|E|
@@ -33,30 +33,30 @@ This module will input a collection of [dns-resource-records](https://github.com
 I/O
 
   -i, --import <stdin | file path>            source of DNS zone data (default: stdin) 
-  -e, --export <js | json | bind | tinydns>   zone data export format (default: js)    
+  -e, --export <js | json | bind | tinydns>   zone data export format (default: js)
 
 Zone Settings
 
-  -o, --origin string   zone $ORIGIN             
-  -t, --ttl number      zone default TTL         
-  -c, --class string    zone class (default: IN) 
+  -o, --origin string   zone $ORIGIN
+  -t, --ttl number      zone default TTL
+  -c, --class string    zone class (default: IN)
 
 Output Options
 
   --hide-origin    remove origin from RR domain names (default: false) 
-  --hide-class     hide class (default: false)                         
-  --hide-ttl       hide TTLs (default: false)                          
+  --hide-class     hide class (default: false)
+  --hide-ttl       hide TTLs (default: false)
 
 Misc
 
   -v, --verbose    Show status messages during processing 
-  -h, --help       Display this usage guide               
+  -h, --help       Display this usage guide
 
 Examples
 
-  1. BIND file to tinydns      ./bin/import -i ./isi.edu -e tinydns 
-  2. BIND file to JS objects   ./bin/import -i ./isi.edu            
-  3. tinydns file to BIND      ./bin/import -i ./data -e bind       
+  1. BIND file to tinydns      ./bin/dns-zone -i ./isi.edu -e tinydns
+  2. BIND file to JS objects   ./bin/dns-zone -i ./isi.edu
+  3. tinydns file to BIND      ./bin/dns-zone -i ./data -e bind
 
   Project home: https://github.com/msimerson/dns-zone-validator 
 ````
@@ -65,7 +65,7 @@ Examples
 #### import from STDIN to JS
 
 ````
-➜ cat example.com | ./bin/import.js --origin=example.com
+➜ cat example.com | ./bin/dnz-zone --origin=example.com
 [
   SOA(12) [Map] {
     'name' => 'example.com.',
@@ -102,7 +102,7 @@ Examples
 #### from bind file to bind
 
 ````
-➜ ./bin/import.js -i isi.edu -e bind
+➜ ./bin/dnz-zone -i isi.edu -e bind
 $TTL    60
 $ORIGIN isi.edu.
 isi.edu.    IN  SOA venera.isi.edu. action.domains.isi.edu. (
@@ -128,7 +128,7 @@ vaxa    60  IN  A   128.9.0.33
 #### from bind to bind (relative)
 
 ````
-➜ ./bin/import.js -i isi.edu -e bind --ttl=60 --hide-ttl --hide-class --hide-origin
+➜ ./bin/dnz-zone -i isi.edu -e bind --ttl=60 --hide-ttl --hide-class --hide-origin
 $TTL  60
 $ORIGIN isi.edu.
 @ IN  SOA venera  action.domains (
@@ -155,7 +155,7 @@ vaxa      A 128.9.0.33
 #### from bind to tinydns
 
 ````
-➜  ./bin/import.js -i isi.edu -e tinydns
+➜  ./bin/dnz-zone -i isi.edu -e tinydns
 Zisi.edu:venera.isi.edu:action.domains.isi.edu:20:7200:600:3600000:60:60::
 &isi.edu::A.ISI.EDU:60::
 &isi.edu::venera.isi.edu:60::
