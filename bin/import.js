@@ -8,10 +8,10 @@ const chalk = require('chalk')
 const cmdLineArgs = require('command-line-args')
 const cmdLineUsage = require('command-line-usage')
 
-const dz = require('../index')
+const zf      = require('../lib/zonefile')
 const tinydns = require('../lib/tinydns')
-const RR = require('dns-resource-record')
-const rr = new RR.A(null)
+const RR      = require('dns-resource-record')
+const rr      = new RR.A(null)
 
 // CLI argument processing
 const opts = cmdLineArgs(usageOptions())._all
@@ -37,8 +37,8 @@ ingestZoneData()
       case 'tinydns':
         return tinydns.parseData(r.data)
       default:
-        dz.zoneOpts = zone_opts
-        return dz.parseZoneFile(r.data).then(dz.expandShortcuts)
+        zf.zoneOpts = zone_opts
+        return zf.parseZoneFile(r.data).then(zf.expandShortcuts)
     }
   })
   .then(output)
