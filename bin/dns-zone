@@ -170,12 +170,12 @@ function usageSections () {
       header : 'Examples',
       content: [
         {
-          desc   : '1. BIND file to tinydns',
-          example: './bin/dns-zone -i ./isi.edu -e tinydns',
+          desc   : '1. BIND file to human',
+          example: './bin/dns-zone -i ./isi.edu',
         },
         {
-          desc   : '2. BIND file to JS objects',
-          example: './bin/dns-zone -i ./isi.edu',
+          desc   : '2. BIND file to tinydns',
+          example: './bin/dns-zone -i ./isi.edu -e tinydns',
         },
         {
           desc   : '3. tinydns file to BIND',
@@ -184,7 +184,7 @@ function usageSections () {
       ],
     },
     {
-      content: 'Project home: {underline https://github.com/msimerson/dns-zone-validator}',
+      content: 'Project home: {underline https://github.com/msimerson/dns-zone}',
     },
   ]
 }

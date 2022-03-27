@@ -1,7 +1,7 @@
 {
   "name": "dns-zone-validator",
   "version": "0.5.0",
-  "description": "DNS Zone Validator",
+  "description": "DNS Zone",
   "main": "index.js",
   "bin": {
     "dns-zone": "./bin/dns-zone"
@@ -16,20 +16,23 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/msimerson/dns-zone-validator.git"
+    "url": "git+ssh://git@github.com/msimerson/dns-zone.git"
   },
   "keywords": [
-    "DNS",
+    "dns",
     "zone",
+    "convert",
+    "import",
+    "export",
     "validator",
     "validation"
   ],
   "author": "Matt Simerson <matt@tnpi.net>",
   "license": "BSD-3-Clause",
   "bugs": {
-    "url": "https://github.com/msimerson/dns-zone-validator/issues"
+    "url": "https://github.com/msimerson/dns-zone/issues"
   },
-  "homepage": "https://github.com/msimerson/dns-zone-validator#readme",
+  "homepage": "https://github.com/msimerson/dns-zone#readme",
   "devDependencies": {
     "eslint": "^8.11.0",
     "mocha": "^9.2.2"
