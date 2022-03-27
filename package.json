@@ -16,7 +16,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/msimerson/dns-zone.git"
+    "url": "git+ssh://git@github.com/nictool/dns-zone.git"
   },
   "keywords": [
     "dns",
@@ -30,9 +30,9 @@
   "author": "Matt Simerson <matt@tnpi.net>",
   "license": "BSD-3-Clause",
   "bugs": {
-    "url": "https://github.com/msimerson/dns-zone/issues"
+    "url": "https://github.com/nictool/dns-zone/issues"
   },
-  "homepage": "https://github.com/msimerson/dns-zone#readme",
+  "homepage": "https://github.com/nictool/dns-zone#readme",
   "devDependencies": {
     "eslint": "^8.11.0",
     "mocha": "^9.2.2"
