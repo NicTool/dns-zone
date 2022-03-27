@@ -175,7 +175,7 @@ Zisi.edu:venera.isi.edu:action.domains.isi.edu:20:7200:600:3600000:60:60::
     - [ ] write a named.conf file parser
     - [x] write a bind zone file parser
     - [x] write a tinydns data file parser
-    - [ ] add BIND parsing for all RRs supported by dns-rr
+    - [x] add BIND parsing for all RRs supported by dns-rr
     - [ ] add support for $INCLUDE (RFC 1035)
 - normalize BIND zone records
     - [x] expand `@` to zone name
@@ -189,3 +189,5 @@ Zisi.edu:venera.isi.edu:action.domains.isi.edu:20:7200:600:3600000:60:60::
         - [x] NS,PTR: dname
     - [x] suppress hostname when identical to previous RR
 - [ ] validate zone rules
+- [ ] make it easy to add test cases: eg, test/fixtures/rr/{mx|a|*}/*
+- [ ] 
