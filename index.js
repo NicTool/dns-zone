@@ -10,27 +10,23 @@ class ZONE extends Map {
     this.setTTL(opts.ttl)
   }
 
-  addRR (rr = {}) {
-    // TODO: assure origin is set
-    // TODO: All RRs in the file should have the same class.
+  addRR (rr) {
+
     const type = rr.get('type')
 
+    // assure origin is set
     if ('SOA' !== type && !this.SOA.name) throw new Error('SOA must be set first!')
+
+    if (rr.get('class') !== this.SOA.class)
+      throw new Error('All RRs in a file should have the same class')
+
+    this.isNotDuplicate(rr)
+    this.itMatchesSetTTL(rr)
 
     switch (type) {
       case 'SOA': return this.setSOA(rr)
-      case 'NS' : return this.addNS(rr)
+      default:
     }
-    // do checks
-
-    // if they pass, add to array
-    this.RRS.push(rr)
-  }
-
-  addNS (rr) {
-    this.isNotDuplicate(rr)
-    this.itMatchesSetTTL(rr)
-    // TODO: not a type collision
 
     this.RR.push(rr)
   }

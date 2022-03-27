@@ -341,68 +341,68 @@ describe('zonefile', function () {
     it('parses SMIMEA line', async () => {
       const r = await zf.parseZoneFile(`_443._tcp.www.example.com.  3600    IN    SMIMEA    0 0  1   ( d2abde240d7cd3ee6b4b28c54df034b9 7983a1d16e8a410e4561cb106618e971 )`)
       assert.deepStrictEqual(r[0], {
-        name : '_443._tcp.www.example.com.',
-        ttl  : 3600,
-        class: 'IN',
-        type : 'SMIMEA',
+        name                          : '_443._tcp.www.example.com.',
+        ttl                           : 3600,
+        class                         : 'IN',
+        type                          : 'SMIMEA',
         'certificate association data': 'd2abde240d7cd3ee6b4b28c54df034b97983a1d16e8a410e4561cb106618e971',
-        'certificate usage': 0,
-        'matching type': 1,
-        'selector': 0,
+        'certificate usage'           : 0,
+        'matching type'               : 1,
+        'selector'                    : 0,
       })
     })
 
     it('parses SSHFP line', async () => {
       const r = await zf.parseZoneFile(`mail.example.com.   86400    IN    SSHFP 1  1   ed8c6e16fdae4f633eee6a7b8f64fdd356bbb32841d535565d777014c9ea4c26`)
       assert.deepStrictEqual(r[0], {
-        name : 'mail.example.com.',
-        ttl  : 86400,
-        class: 'IN',
-        type : 'SSHFP',
-        algorithm: 1,
+        name       : 'mail.example.com.',
+        ttl        : 86400,
+        class      : 'IN',
+        type       : 'SSHFP',
+        algorithm  : 1,
         fingerprint: 'ed8c6e16fdae4f633eee6a7b8f64fdd356bbb32841d535565d777014c9ea4c26',
-        fptype: 1,
+        fptype     : 1,
       })
     })
 
     it('parses SRV line', async () => {
       const r = await zf.parseZoneFile(`_imaps._tcp.example.com.    3600  IN  SRV 1  0   993    mail.example.com.`)
       assert.deepStrictEqual(r[0], {
-        name : '_imaps._tcp.example.com.',
-        class: 'IN',
-        ttl  : 3600,
-        type : 'SRV',
-        port : 0,
+        name    : '_imaps._tcp.example.com.',
+        class   : 'IN',
+        ttl     : 3600,
+        type    : 'SRV',
+        port    : 0,
         priority: 1,
-        target: 'mail.example.com.',
-        weight: 993,
+        target  : 'mail.example.com.',
+        weight  : 993,
       })
     })
 
     it('parses TLSA line', async () => {
       const r = await zf.parseZoneFile(`_443._tcp.www.example.com. 3600 IN TLSA 0 0 1 ( d2abde240d7cd3ee6b4b28c54df034b9 7983a1d16e8a410e4561cb106618e971 )`)
       assert.deepStrictEqual(r[0], {
-        name: '_443._tcp.www.example.com.',
-        ttl: 3600,
-        class: 'IN',
-        type: 'TLSA',
+        name                          : '_443._tcp.www.example.com.',
+        ttl                           : 3600,
+        class                         : 'IN',
+        type                          : 'TLSA',
         'certificate association data': 'd2abde240d7cd3ee6b4b28c54df034b97983a1d16e8a410e4561cb106618e971',
-        'certificate usage': 0,
-        'matching type': 1,
-        selector: 0,
+        'certificate usage'           : 0,
+        'matching type'               : 1,
+        selector                      : 0,
       })
     })
 
     it('parses URI line', async () => {
       const r = await zf.parseZoneFile(`www.example.com. 3600 IN URI 1 0 "www2.example.com."`)
       assert.deepStrictEqual(r[0], {
-        name: 'www.example.com.',
-        ttl: 3600,
-        class: 'IN',
-        type: 'URI',
+        name    : 'www.example.com.',
+        ttl     : 3600,
+        class   : 'IN',
+        type    : 'URI',
         priority: 1,
-        weight: 0,
-        target: 'www2.example.com.',
+        weight  : 0,
+        target  : 'www2.example.com.',
       })
     })
 
