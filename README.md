@@ -8,8 +8,9 @@ DNS zone tool
 DNS zones have numerous rules regarding the records that can exist in them. Examples:
 
 - serial numbers must increment when changes are made
-- multiple identical RRs are not allowed - RFC 2181
+- [x] multiple identical RRs are not allowed - RFC 2181
     - CAA takes tag into account, SRV: port
+- [x] RFC 2181: RR sets (identical label, class, type) must have identical TTL
 - multiple CNAMES with the same name are not allowed
 - CNAME cannot coexist with SIG,NXT,KEY,RRSIG,NSEC,A,AAAA
 - MX and NS records cannot point to CNAME
