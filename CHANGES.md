@@ -2,6 +2,19 @@
 #### 1.N.N - YYYY-MM-DD
 
 
+#### 0.4.0 - 2022-03-26
+
+- move compiled grammar.js into ./lib
+- pass previousName into RR
+- tinydns: move functions into lib/tinydns
+- add: bind rr parsing for CAA, DNSKEY, DS, HINFO, LOC 
+- import: add option hide-same-name
+- rewrite the parser grammar
+    - parser uses (mostly) BNFs from RFCs 🎉
+- add parsing for RRs: naptr, rrsig, smimea, sshfp, spf, srv, tlsa, uri, TYPE{N} (generic)
+- tests: added tests for MX, NS, PTR, SOA, TXT
+
+
 #### 0.3.0 - 2022-03-24
 
 - import

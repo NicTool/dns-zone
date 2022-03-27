@@ -9,6 +9,7 @@ const cmdLineArgs = require('command-line-args')
 const cmdLineUsage = require('command-line-usage')
 
 const dz = require('../index')
+const tinydns = require('../lib/tinydns')
 const RR = require('dns-resource-record')
 const rr = new RR.A(null)
 
@@ -22,9 +23,10 @@ const zone_opts = {
   ttl   : opts.ttl || 0,
   class : opts.class || 'IN',
   hide  : {
-    class : opts['hide-class'],
-    ttl   : opts['hide-ttl'],
-    origin: opts['hide-origin'],
+    class   : opts['hide-class'],
+    ttl     : opts['hide-ttl'],
+    origin  : opts['hide-origin'],
+    sameName: opts['hide-same-name'],
   },
 }
 if (opts.verbose) console.error(zone_opts)
@@ -33,8 +35,9 @@ ingestZoneData()
   .then(r => {
     switch (r.type) {
       case 'tinydns':
-        return dz.parseTinydnsData(r.data)
+        return tinydns.parseData(r.data)
       default:
+        dz.zoneOpts = zone_opts
         return dz.parseZoneFile(r.data).then(dz.expandShortcuts)
     }
   })
@@ -113,6 +116,13 @@ function usageOptions () {
       type        : Boolean,
       // typeLabel   : '',
       description : 'hide TTLs (default: false)',
+      group       : 'out',
+    },
+    {
+      name        : 'hide-same-name',
+      defaultValue: false,
+      type        : Boolean,
+      description : 'hide name when same as previous RR',
       group       : 'out',
     },
     {
@@ -204,11 +214,6 @@ function ingestZoneData () {
 
       res.data = buf.toString()
 
-      if (res.type === 'bind' && !/^\$ORIGIN/m.test(res.data)) {
-        if (opts.verbose) console.error(`inserting $ORIGIN ${zone_opts.origin}`)
-        res.data = `$ORIGIN ${zone_opts.origin}${os.EOL}${res.data}`
-      }
-
       resolve(res)
     })
   })
@@ -231,21 +236,31 @@ function output (zoneArray) {
   }
 }
 
+function isBlank (rr) {
+  if (rr === os.EOL) {
+    process.stdout.write(rr)
+    return true
+  }
+}
+
 function toBind (zoneArray, origin) {
   for (const rr of zoneArray) {
+    if (isBlank(rr)) continue
     process.stdout.write(rr.toBind(zone_opts))
+    zone_opts.previousName = rr.get('name')
   }
 }
 
 function toTinydns (zoneArray) {
   for (const rr of zoneArray) {
+    if (isBlank(rr)) continue
     process.stdout.write(rr.toTinydns())
   }
 }
 
 function toJSON (zoneArray) {
   for (const rr of zoneArray) {
-    // console.error(rr)
+    if (isBlank(rr)) continue
     if (rr.get('comment')) rr.delete('comment')
     process.stdout.write(JSON.stringify(Object.fromEntries(rr)))
   }

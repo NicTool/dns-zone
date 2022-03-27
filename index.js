@@ -1,44 +1,96 @@
 
+const os = require('os')
+
 const RR = require('dns-resource-record')
 const rr = new RR.A(null)
+
+exports.zoneOpts = {}
 
 exports.parseZoneFile = async str => {
 
   const nearley = require('nearley')
-  const grammar = nearley.Grammar.fromCompiled(require('./grammar.js'))
+  const grammar = nearley.Grammar.fromCompiled(require('./lib/grammar.js'))
   grammar.start = 'main'
 
   const parser = new nearley.Parser(grammar)
   parser.feed(str)
-  parser.feed(`\n`)  // in case no EOL after last record
+  if (!str.endsWith(os.EOL)) parser.feed(os.EOL) // no EOL after last record
 
   if (parser.length > 1) {
     console.error(`ERROR: ambigious parser rule`)
   }
 
-  // flatten the parser generated array
+  if (parser.results.length === 0) return []
+
   const flat = []
-  for (const e of parser.results[0][0]) {
 
-    // discard blank lines
-    if (Array.isArray(e[0][0]) && e[0][0][0] === null) continue
+  if (Array.isArray(parser.results[0])) {
+    for (const e of parser.results[0].flat(3)) {
 
-    flat.push(e[0][0])
+      if (Array.isArray(e)) {
+        let r = {}
+
+        if (e[0])                    r.name  = e[0]
+        if (e[2] !== undefined)      r.ttl   = e[2]
+        if (e[4] && !isObject(e[4])) r.class = e[4]
+
+        // the rdata location varies on presence of ttl and/or class
+        if      (isObject(e[6])) r = { ...r, ...e[6] }
+        else if (isObject(e[5])) r = { ...r, ...e[5] }
+        else if (isObject(e[4])) r = { ...r, ...e[4] }
+
+        flat.push(r)
+      }
+      else if ('string' === typeof e) {
+        flat.push(e)
+      }
+      else {
+        if (e.$TTL) {
+          exports.zoneOpts.ttl = e.$TTL
+          flat.push(e)
+        }
+        else if (e.$ORIGIN) {
+          exports.zoneOpts.origin = e.$ORIGIN
+          flat.push(e)
+        }
+        else if (e.$INCLUDE) {  // TODO
+          throw new Error(`$INCLUDE support not implemented (yet)`)
+        }
+        else {
+          console.dir(e, { depth: null })
+          throw new Error('unrecognized parser output')
+        }
+      }
+    }
+  }
+  else {
+    console.log(`parser.results:`)
+    console.dir(parser.results, { depth: null })
+    throw new Error(`unsupported parser results`)
   }
   return flat
 }
 
+function isObject (o) {
+  if (Array.isArray(o)) return false
+  if (o === null) return false
+  return 'object' === typeof o
+}
+
 exports.expandShortcuts = async zoneArray => {
-  let ttl = 0
-  let implicitOrigin = ''
-  let origin = ''
+  let ttl = exports.zoneOpts.ttl || 0
   let lastName = ''
+  const implicitOrigin = rr.fullyQualify(exports.zoneOpts.origin) // zone 'name' in named.conf
+  let origin = implicitOrigin
   const expanded = []
   const empty = [ undefined, null ]
-  // console.log(zoneArray)
 
   for (let i = 0; i < zoneArray.length; i++) {
     const entry = zoneArray[i]
+
+    if (entry === '\n') {
+      expanded.push(entry); continue
+    }
 
     if (entry.$TTL) {
       ttl = entry.$TTL; continue
@@ -47,11 +99,7 @@ exports.expandShortcuts = async zoneArray => {
     // When a zone is first read, there is an implicit $ORIGIN <zone_name>.
     // note the trailing dot. The current $ORIGIN is appended to the domain
     // specified in the $ORIGIN argument if it is not absolute. -- BIND 9
-    if (entry.implicitOrigin) {  // zone 'name' in named.conf
-      implicitOrigin = origin = rr.fullyQualify(entry.implicitOrigin)
-      continue
-    }
-    if (entry.$ORIGIN) {  // declared $ORIGIN within zone file
+    if (entry.$ORIGIN) {  // declared $ORIGIN in zone file
       origin = rr.fullyQualify(entry.$ORIGIN, implicitOrigin)
       continue
     }
@@ -83,10 +131,10 @@ exports.expandShortcuts = async zoneArray => {
       expanded.push(new RR[entry.type](entry))
     }
     catch (e) {
-      console.error(`I encounted this error: \n`)
-      console.error(e.message)
+      console.error(`I encounted the error: '${e.message}'\n`)
       console.error(`\nwhile processing this RR: \n`)
       console.log(entry)
+      throw (e)
     }
   }
   return expanded
@@ -111,232 +159,3 @@ function expandBindRdata (entry, origin, ttl) {
   }
 }
 
-exports.parseTinydnsData = async str => {
-  // https://cr.yp.to/djbdns/tinydns-data.html
-  const rrs = []
-
-  for (const line of str.split('\n')) {
-    if (line === '') continue // "Blank lines are ignored"
-    if (/^#/.test(line)) continue // "Comment line. The line is ignored."
-    switch (line[0]) {  // first char of line
-      case '%':  // location
-        break
-      case '-':  // ignored
-        break
-      case '.':  // NS, A, SOA
-        rrs.push(...parseTinyDot(line))
-        break
-      case '&':  // NS, A
-        rrs.push(...parseTinyAmpersand(line))
-        break
-      case '=':  // A, PTR
-        rrs.push(...parseTinyEquals(line))
-        break
-      case '+':  // A
-        rrs.push(new RR.A({ tinyline: line }))
-        break
-      case '@':  // MX, A
-        rrs.push(...parseTinyAt(line))
-        break
-      case '\'': // TXT
-        rrs.push(new RR.TXT({ tinyline: line }))
-        break
-      case '^':  // PTR
-        rrs.push(new RR.PTR({ tinyline: line }))
-        break
-      case 'C':  // CNAME
-        rrs.push(new RR.CNAME({ tinyline: line }))
-        break
-      case 'Z':  // SOA
-        rrs.push(new RR.SOA({ tinyline: line }))
-        break
-      case ':':  // generic
-        rrs.push(parseTinyGeneric(line))
-        break
-      case '3':
-        rrs.push(new RR.AAAA({ tinyline: line }))
-        break
-      case '6':
-        rrs.push(...parseTinySix(line))
-        break
-      case 'S':  // SRV
-        rrs.push(new RR.SRV({ tinyline: line }))
-        break
-      default:
-        throw new Error(`garbage found in tinydns data: ${line}`)
-    }
-    // console.log(line)
-  }
-
-  return rrs
-}
-
-function parseTinyDot (str) {
-  /*
-  * .fqdn:ip:x:ttl:timestamp:lo
-  * an NS (``name server'') record showing x.ns.fqdn as a name server for fqdn;
-  * an A (``address'') record showing ip as the IP address of x.ns.fqdn; and
-  * an SOA (``start of authority'') record for fqdn listing x.ns.fqdn as the primary name server and hostmaster@fqdn as the contact address.
-  */
-  const [ fqdn, ip, mname, ttl, ts, loc ] = str.substring(1).split(':')
-  const rrs = []
-
-  rrs.push(new RR.NS({
-    type     : 'NS',
-    name     : rr.fullyQualify(fqdn),
-    dname    : rr.fullyQualify(/\./.test(mname) ? mname : `${mname}.ns.${fqdn}`),
-    ttl      : parseInt(ttl, 10),
-    timestamp: ts,
-    location : loc !== '' && loc !== '\n' ? loc : '',
-  }))
-
-  if (ip) {
-    rrs.push(new RR.A({
-      name     : rr.fullyQualify(/\./.test(mname) ? mname : `${mname}.ns.${fqdn}`),
-      type     : 'A',
-      address  : ip,
-      ttl      : parseInt(ttl, 10),
-      timestamp: ts,
-      location : loc !== '' && loc !== '\n' ? loc : '',
-    }))
-  }
-
-  rrs.push(new RR.SOA({
-    type     : 'SOA',
-    name     : rr.fullyQualify(fqdn),
-    mname    : rr.fullyQualify(/\./.test(mname) ? mname : `${mname}.ns.${fqdn}`),
-    rname    : rr.fullyQualify(`hostmaster.{fqdn}`),
-    serial   : 1647927758,  // TODO, format is epoch seconds
-    refresh  : 16384,
-    retry    : 2048,
-    expire   : 1048576,
-    minimum  : 2560,
-    ttl      : parseInt(ttl, 10),
-    timestamp: parseInt(ts) || '',
-    location : loc !== '' && loc !== '\n' ? loc : '',
-  }))
-  return rrs
-}
-
-function parseTinyAmpersand (str) {
-  // &fqdn:ip:x:ttl:timestamp:lo
-
-  const [ fqdn, ip, dname, ttl, ts, loc ] = str.substring(1).split(':')
-  const rrs = []
-
-  rrs.push(new RR.NS({
-    type     : 'NS',
-    name     : rr.fullyQualify(fqdn),
-    dname    : rr.fullyQualify(/\./.test(dname) ? dname : `${dname}.ns.${fqdn}`),
-    ttl      : parseInt(ttl, 10),
-    timestamp: ts,
-    location : loc !== '' && loc !== '\n' ? loc : '',
-  }))
-
-  if (ip) {
-    rrs.push(new RR.A({
-      name     : rr.fullyQualify(/\./.test(dname) ? dname : `${dname}.ns.${fqdn}`),
-      type     : 'A',
-      address  : ip,
-      ttl      : parseInt(ttl, 10),
-      timestamp: ts,
-      location : loc !== '' && loc !== '\n' ? loc : '',
-    }))
-  }
-
-  return rrs
-}
-
-function parseTinyEquals (str) {
-  // =fqdn:ip:ttl:timestamp:lo
-  const rrs = [ new RR.A({ tinyline: str }) ]
-
-  const [ fqdn, ip, ttl, ts, loc ] = str.substring(1).split(':')
-  rrs.push(new RR.PTR({
-    type     : 'PTR',
-    name     : `${ip.split('.').reverse().join('.')}.in-addr.arpa`,
-    dname    : rr.fullyQualify(fqdn),
-    ttl      : parseInt(ttl, 10),
-    timestamp: ts,
-    location : loc !== '' && loc !== '\n' ? loc : '',
-  }))
-
-  return rrs
-}
-
-function parseTinyAt (str) {
-  // MX, A  @fqdn:ip:x:dist:ttl:timestamp:lo
-  const rrs = [ new RR.MX({ tinyline: str }) ]
-
-  // eslint-disable-next-line no-unused-vars
-  const [ fqdn, ip, x, preference, ttl, ts, loc ] = str.substring(1).split(':')
-  if (ip) {
-    rrs.push(new RR.A({
-      name     : rr.fullyQualify(/\./.test(x) ? x : `${x}.mx.${fqdn}`),
-      type     : 'A',
-      address  : ip,
-      ttl      : parseInt(ttl, 10),
-      timestamp: ts,
-      location : loc !== '' && loc !== '\n' ? loc : '',
-    }))
-  }
-
-  return rrs
-}
-
-function parseTinySix (str) {
-  // AAAA,PTR =>  6 fqdn:ip:x:ttl:timestamp:lo
-  const rrs = [ new RR.AAAA({ tinyline: str }) ]
-
-  const [ fqdn, rdata, , ttl, ts, loc ] = str.substring(1).split(':')
-
-  rrs.push(new RR.PTR({
-    type     : 'PTR',
-    name     : `${rdata.split('').reverse().join('.')}.ip6.arpa.`,
-    dname    : rr.fullyQualify(fqdn),
-    ttl      : parseInt(ttl, 10),
-    timestamp: ts,
-    location : loc !== '' && loc !== '\n' ? loc : '',
-  }))
-  return rrs
-}
-
-function parseTinyGeneric (str) {
-  // generic, :fqdn:n:rdata:ttl:timestamp:lo
-
-  const [ , n, , , , ] = str.substring(1).split(':')
-
-  switch (parseInt(n, 10)) {
-    case 13:
-      return new RR.HINFO({ tinyline: str })
-    case 28:
-      return new RR.AAAA({ tinyline: str })
-    case 29:
-      return new RR.LOC({ tinyline: str })
-    case 33:
-      return new RR.SRV({ tinyline: str })
-    case 35:
-      return new RR.NAPTR({ tinyline: str })
-    case 39:
-      return new RR.DNAME({ tinyline: str })
-    case 43:
-      return new RR.DS({ tinyline: str })
-    case 44:
-      return new RR.SSHFP({ tinyline: str })
-    case 48:
-      return new RR.DNSKEY({ tinyline: str })
-    case 52:
-      return new RR.TLSA({ tinyline: str })
-    case 53:
-      return new RR.SMIMEA({ tinyline: str })
-    case 99:
-      return new RR.SPF({ tinyline: str })
-    case 256:
-      return new RR.URI({ tinyline: str })
-    case 257:
-      return new RR.CAA({ tinyline: str })
-    default:
-      console.log(str)
-      throw new Error(`unsupported tinydns generic record (${n})`)
-  }
-}

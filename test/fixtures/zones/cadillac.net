@@ -1,7 +1,7 @@
 
 $TTL    86400;
 $ORIGIN cadillac.net.
-cadillac.net.	86400	IN	SOA	ns1.cadillac.net.    hostmaster.cadillac.net. (
+@	86400	IN	SOA	ns1    hostmaster (
 					2021102100    ; serial
 					16384   ; refresh
 					2048     ; retry
@@ -9,24 +9,24 @@ cadillac.net.	86400	IN	SOA	ns1.cadillac.net.    hostmaster.cadillac.net. (
 					2560   ; minimum
 					)
 
-cadillac.net.	14400	IN	NS	ns1.cadillac.net.
-cadillac.net.	14400	IN	NS	ns2.cadillac.net.
-cadillac.net.	14400	IN	NS	ns3.cadillac.net.
+@	14400	IN	NS	ns1
+@	14400	IN	NS	ns2
+@	14400	IN	NS	ns3
 
-cadillac.net.	86400	IN  MX	0	mail.theartfarm.com.
-cadillac.net.	86400	IN  A	66.128.51.173
-cadillac.net.	86400	IN  TXT	"v=spf1 mx a include:mx.theartfarm.com -all"
+@	86400	IN  MX	0	mail
+@	86400	IN  A	66.128.51.173
+@	86400	IN  TXT	"v=spf1 mx a include:mx.theartfarm.com -all"
 
-ns1	86400	IN  MX	10	ns1.cadillac.net.
+ns1	86400	IN  MX	10	ns1
 ns1	86400	IN  A	138.210.133.61
 
 ns2	86400	IN  A	192.48.85.146
 ns2	86400	IN  AAAA	2605:7900:0020:000a:0000:0000:0000:0004
 ns2	86400	IN  A	204.11.99.4
 ns2	86400	IN  A	173.45.131.4
-ns2	86400	IN  MX	10	ns2.cadillac.net.
+ns2	86400	IN  MX	10	ns2
 
-ns3	86400	IN  MX	10	ns3.cadillac.net.
+ns3	86400	IN  MX	10	ns3
 ns3	86400	IN  AAAA	2605:ae00:0329:0000:0000:0000:0000:000f
 ns3	86400	IN  A	66.128.51.174
 ns3	86400	IN  AAAA	2001:41d0:0302:2100:0000:0000:0000:00a7

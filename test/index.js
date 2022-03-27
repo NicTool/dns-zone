@@ -5,18 +5,40 @@ const fs     = require('fs')
 const RR = require('dns-resource-record')
 const zv = require('../index')
 
+beforeEach(function () {
+  zv.zoneOpts = {}
+})
+
 describe('parseZoneFile', function () {
 
   it('parses a blank line', async () => {
     const r = await zv.parseZoneFile(`\n`)
-    // console.dir(r, { depth: null })
-    assert.deepStrictEqual(r, [])
+    // console.dir(r[0], { depth: null })
+    assert.deepStrictEqual(r, [ '\n' ])
   })
 
   it('parses two blank lines', async () => {
     const r = await zv.parseZoneFile(`\n\n`)
     // console.dir(r, { depth: null })
-    assert.deepStrictEqual(r, [])
+    assert.deepStrictEqual(r, [ '\n', '\n' ])
+  })
+
+  it('parses a line with only whitespace', async () => {
+    const r = await zv.parseZoneFile(` \t\n`)
+    // console.dir(r, { depth: null })
+    assert.deepStrictEqual(r, [ ' \t\n' ])
+  })
+
+  it('parses a comment line', async () => {
+    const r = await zv.parseZoneFile(`; blank comment\n`)
+    // console.dir(r, { depth: null })
+    assert.deepStrictEqual(r, [ '; blank comment\n' ])
+  })
+
+  it('parses a comment line with leading ws', async () => {
+    const r = await zv.parseZoneFile(` ; blank comment with leading ws\n`)
+    // console.dir(r, { depth: null })
+    assert.deepStrictEqual(r, [ '; blank comment with leading ws\n' ])
   })
 
   it('parses a $TTL line', async () => {
@@ -28,7 +50,7 @@ describe('parseZoneFile', function () {
   it('parses a $TTL line with a comment', async () => {
     const r = await zv.parseZoneFile(`$TTL 86400; yikers\n`)
     // console.dir(r, { depth: null })
-    assert.deepStrictEqual(r[0], { $TTL: 86400 })
+    assert.deepStrictEqual(r[0], { $TTL: 86400, comment: '; yikers' })
   })
 
   it(`parses a SOA`, async () => {
@@ -87,6 +109,36 @@ describe('parseZoneFile', function () {
     })
   })
 
+  const testCAAs = [
+    { bind  : 'nocerts.example.com       CAA 0 issue ";"\n',
+      result: {
+        flags: 0,
+        name : 'nocerts.example.com',
+        tag  : 'issue',
+        ttl  : null,
+        type : 'CAA',
+        value: '";"',
+      },
+    },
+    { bind  : 'certs.example.com       CAA 0 issue "example.net"\n',
+      result: {
+        flags: 0,
+        name : 'certs.example.com',
+        tag  : 'issue',
+        ttl  : null,
+        type : 'CAA',
+        value: '"example.net"',
+      },
+    },
+  ]
+
+  for (const t of testCAAs) {
+    it(`parses CAA record: ${t.result.name}`, async () => {
+      const r = await zv.parseZoneFile(t.bind)
+      assert.deepStrictEqual(r[0], t.result)
+    })
+  }
+
   it('parses a CNAME line, absolute', async () => {
     const r = await zv.parseZoneFile(`www 28800 IN  CNAME vhost0.theartfarm.com.\n`)
     // console.dir(r, { depth: null })
@@ -100,7 +152,8 @@ describe('parseZoneFile', function () {
   })
 
   it('parses a CNAME line, relative', async () => {
-    const r = await zv.parseZoneFile(`$ORIGIN theartfarm.com.\nwww 28800 IN  CNAME vhost0\n`).then(zv.expandShortcuts)
+    zv.zoneOpts = { origin: 'theartfarm.com' }
+    const r = await zv.parseZoneFile(`www 28800 IN  CNAME vhost0\n`).then(zv.expandShortcuts)
     // console.dir(r, { depth: null })
     assert.deepStrictEqual(r[0], new RR.CNAME({
       name : 'www.theartfarm.com.',
@@ -122,6 +175,172 @@ describe('parseZoneFile', function () {
       target: '_tcp.theartfarm.com.',
     })
   })
+
+  it('parses a DNSKEY record', async () => {
+    const r = await zv.parseZoneFile(
+      `example.com. 86400 IN DNSKEY 256 3 5 ( AQPSKmynfzW4kyBv015MUG2DeIQ3
+                                          Cbl+BBZH4b/0PY1kxkmvHjcZc8no
+                                          kfzj31GajIQKY+5CptLr3buXA10h
+                                          WqTkF7H6RfoRqXQeogmMHfpftf6z
+                                          Mv1LyBUgia7za6ZEzOJBOztyvhjL
+                                          742iU/TpPSEDhm2SNKLijfUppn1U
+                                          aNvv4w==  )\n`)
+    // console.dir(r, { depth: null })
+    assert.deepStrictEqual(r[0], {
+      name     : 'example.com.',
+      ttl      : 86400,
+      class    : 'IN',
+      type     : 'DNSKEY',
+      flags    : 256,
+      protocol : 3,
+      algorithm: 5,
+      publickey: 'AQPSKmynfzW4kyBv015MUG2DeIQ3Cbl+BBZH4b/0PY1kxkmvHjcZc8nokfzj31GajIQKY+5CptLr3buXA10hWqTkF7H6RfoRqXQeogmMHfpftf6zMv1LyBUgia7za6ZEzOJBOztyvhjL742iU/TpPSEDhm2SNKLijfUppn1UaNvv4w==',
+    })
+  })
+
+  it('parses a DS record', async () => {
+    const r = await zv.parseZoneFile(
+      `dskey.example.com. 86400 IN DS 60485 5 1 ( 2BB183AF5F22588179A53B0A
+                                              98631FAD1A292118 )\n`)
+    // console.dir(r, { depth: null })
+    assert.deepStrictEqual(r[0], {
+      name         : 'dskey.example.com.',
+      ttl          : 86400,
+      class        : 'IN',
+      type         : 'DS',
+      'key tag'    : 60485,
+      algorithm    : 5,
+      'digest type': 1,
+      digest       : '2BB183AF5F22588179A53B0A98631FAD1A292118',
+    })
+  })
+
+  it('parses a HINFO line', async () => {
+    const r = await zv.parseZoneFile(`SRI-NIC.ARPA. HINFO   DEC-2060 TOPS20\n`)
+    // console.dir(r, { depth: null })
+    assert.deepStrictEqual(r[0], {
+      name: 'SRI-NIC.ARPA.',
+      ttl : null,
+      type: 'HINFO',
+      cpu : 'DEC-2060',
+      os  : 'TOPS20',
+    })
+  })
+
+  it('parses a LOC line', async () => {
+    const r = await zv.parseZoneFile(`rwy04l.logan-airport.boston. 3600 IN LOC 42 21 28.764 N 71 0 51.617 W -44m 2000m\n`)
+    // console.dir(r, { depth: null })
+    assert.deepStrictEqual(r[0], {
+      name    : 'rwy04l.logan-airport.boston.',
+      ttl     : 3600,
+      class   : 'IN',
+      type    : 'LOC',
+      latitude: {
+        degrees   : 42,
+        hemisphere: 'N',
+        minutes   : 21,
+        seconds   : 28.764,
+      },
+      longitude: {
+        degrees   : 71,
+        hemisphere: 'W',
+        minutes   : 0,
+        seconds   : 51.617,
+      },
+      altitude : '-44m',
+      size     : '2000m',
+      precision: {
+        horizontal: '10000m',
+        vertical  : '10m',
+      },
+    })
+  })
+
+  it('parses a MX line', async () => {
+    const r = await zv.parseZoneFile(`test.example.com. 3600 IN MX 0  mail.example.com.\n`)
+    assert.deepStrictEqual(r[0], {
+      class     : 'IN',
+      exchange  : 'mail.example.com.',
+      name      : 'test.example.com.',
+      preference: 0,
+      ttl       : 3600,
+      type      : 'MX',
+    })
+  })
+
+  // cid.urn.arpa.   86400    IN    NAPTR 100    10    ""    ""    "!^urn:cid:.+@([^\\.]+\\.)(.*)$!\x02!i"   .
+
+  it('parses a NS line', async () => {
+    const r = await zv.parseZoneFile(`example.com.  3600  IN  NS  ns1.example.com.\n`)
+    assert.deepStrictEqual(r[0], {
+      class: 'IN',
+      dname: 'ns1.example.com.',
+      name : 'example.com.',
+      ttl  : 3600,
+      type : 'NS',
+    })
+  })
+
+  it('parses a PTR line', async () => {
+    const r = await zv.parseZoneFile(`2.2.0.192.in-addr.arpa. 86400  IN  PTR dhcp.example.com.\n`)
+    assert.deepStrictEqual(r[0], {
+      class: 'IN',
+      dname: 'dhcp.example.com.',
+      name : '2.2.0.192.in-addr.arpa.',
+      ttl  : 86400,
+      type : 'PTR',
+    })
+  })
+
+  it('parses a SOA line', async () => {
+    zv.zoneOpts = { origin: 'example.com', ttl: 3600 }
+    const r = await zv.parseZoneFile(`example.com.  IN  SOA ns1.example.com. matt.example.com. (
+    1
+    7200
+    3600
+    1209600
+    3600
+    )\n`)
+    assert.deepStrictEqual(r[0], {
+      name   : 'example.com.',
+      ttl    : null,
+      type   : 'SOA',
+      mname  : 'ns1.example.com.',
+      rname  : 'matt.example.com.',
+      serial : 1,
+      refresh: 7200,
+      retry  : 3600,
+      expire : 1209600,
+      minimum: 3600,
+      comment: {
+        expire : '',
+        minimum: '',
+        refresh: '',
+        retry  : '',
+        serial : '',
+      },
+    })
+  })
+
+  it('parses a TXT line', async () => {
+    const r = await zv.parseZoneFile(`oct2021._domainkey.example.com. 86400  IN  TXT "v=DKIM1;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoyUzGOTSOmakY8BcxXgi0mN/nFegLBPs7aaGQUtjHfa8yUrt9T2j6GSXgdjLuG3R43WjePQv3RHzc+bwwOkdw0XDOXiztn5mhrlaflbVr5PMSTrv64/cpFQKLtgQx8Vgqp7Dh3jw13rLomRTqJFgMrMHdhIibZEa69gtuAfDqoeXo6QDSGk5JuBAeRHEH27FriHulg5ob" "4F4lmh7fMFVsDGkQEF6jaIVYqvRjDyyQed3R3aTJX3fpb3QrtRqvfn/LAf+3kzW58AjsERpsNCSTD2RquxbnyoR/1wdGKb8cUlD/EXvqtvpVnOzHeSeMEqex3kQI8HOGsEehWZlKd+GqwIDAQAB"\n`)
+    assert.deepStrictEqual(r[0], {
+      name : 'oct2021._domainkey.example.com.',
+      ttl  : 86400,
+      class: 'IN',
+      type : 'TXT',
+      data : [
+        'v=DKIM1;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoyUzGOTSOmakY8BcxXgi0mN/nFegLBPs7aaGQUtjHfa8yUrt9T2j6GSXgdjLuG3R43WjePQv3RHzc+bwwOkdw0XDOXiztn5mhrlaflbVr5PMSTrv64/cpFQKLtgQx8Vgqp7Dh3jw13rLomRTqJFgMrMHdhIibZEa69gtuAfDqoeXo6QDSGk5JuBAeRHEH27FriHulg5ob',
+        '4F4lmh7fMFVsDGkQEF6jaIVYqvRjDyyQed3R3aTJX3fpb3QrtRqvfn/LAf+3kzW58AjsERpsNCSTD2RquxbnyoR/1wdGKb8cUlD/EXvqtvpVnOzHeSeMEqex3kQI8HOGsEehWZlKd+GqwIDAQAB',
+      ],
+    })
+  })
+
+  // _443._tcp.www.example.com.  3600    IN    SMIMEA    0 0  1   ( d2abde240d7cd3ee6b4b28c54df034b9 7983a1d16e8a410e4561cb106618e971 )
+  // mail.example.com.   86400    IN    SSHFP 1  1   ed8c6e16fdae4f633eee6a7b8f64fdd356bbb32841d535565d777014c9ea4c26
+  // _imaps._tcp.example.com.    3600  IN  SRV 1  0   993    mail.example.com.
+  // _443._tcp.www.example.com. 3600 IN TLSA 0 0 1 ( d2abde240d7cd3ee6b4b28c54df034b9 7983a1d16e8a410e4561cb106618e971 )
+  // www.example.com. 3600 IN URI 1 0 "www2.example.com."
 
   it('parses the cadillac.net zone file', async () => {
     const file = './test/fixtures/zones/cadillac.net'
@@ -152,10 +371,15 @@ describe('parseZoneFile', function () {
     fs.readFile(file, (err, buf) => {
       if (err) throw err
 
-      zv.parseZoneFile(buf.toString()).then(zv.expandShortcuts).then(r => {
-        // console.dir(r, { depth: null })
-        assert.equal(r.length, 14)
-      })
+      zv.parseZoneFile(buf.toString())
+        .then(zv.expandShortcuts)
+        .then(r => {
+          // console.dir(r, { depth: null })
+          assert.equal(r.length, 15)
+        })
+        .catch(e => {
+          console.error(e)
+        })
     })
   })
 })
@@ -222,12 +446,11 @@ describe('expandShortcuts', function () {
   })
 
   it('expands TTL to zone minimum', async () => {
-    const input = JSON.parse(JSON.stringify(testCase))
-    input[0] = input[1]
-    const r = await zv.parseZoneFile(`@ 55 IN  SOA ns1.cadillac.net. hostmaster.cadillac.net. (2021102100 16384 2048 604800 2560)\n`)
-    input[1] = r[0]
+    let input = JSON.parse(JSON.stringify(testCase))
+    input = input.filter(e => !e.$TTL)
 
-    const out = await zv.expandShortcuts(input)
+    const r = await zv.parseZoneFile(`@ 55 IN  SOA ns1.cadillac.net. hostmaster.cadillac.net. (2021102100 16384 2048 604800 2560)\n`)
+    const out = await zv.expandShortcuts([ input[0], r[0], input[1] ])
     assert.deepEqual(out[1], new RR.A({
       address: '1.2.3.4',
       class  : 'IN',
