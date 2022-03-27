@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "grammar": "npx -p nearley nearleyc src/zonefile-grammar.ne -o dist/zonefile-grammar.js",
-    "lint": "npx eslint index.js test/*.js",
-    "lintfix": "npx eslint --fix index.js test/*.js",
+    "lint": "npx eslint index.js lib/*.js test/*.js",
+    "lintfix": "npx eslint --fix index.js lib/*.js test/*.js",
     "postinstall": "npx -p nearley nearleyc src/zonefile-grammar.ne -o dist/zonefile-grammar.js",
     "test": "npx mocha",
     "versions": "npx dependency-version-checker check"
