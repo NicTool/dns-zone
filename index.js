@@ -9,7 +9,7 @@ exports.zoneOpts = {}
 exports.parseZoneFile = async str => {
 
   const nearley = require('nearley')
-  const grammar = nearley.Grammar.fromCompiled(require('./lib/grammar.js'))
+  const grammar = nearley.Grammar.fromCompiled(require('./dist/zonefile-grammar.js'))
   grammar.start = 'main'
 
   const parser = new nearley.Parser(grammar)

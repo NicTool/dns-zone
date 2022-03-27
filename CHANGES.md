@@ -2,6 +2,12 @@
 #### 1.N.N - YYYY-MM-DD
 
 
+#### 0.5.0 - 2022-03-26
+
+- move compiled grammars into ./dist
+-
+
+
 #### 0.4.0 - 2022-03-26
 
 - move compiled grammar.js into ./lib
