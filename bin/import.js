@@ -222,17 +222,11 @@ function ingestZoneData () {
 function output (zoneArray) {
   // console.error(zoneArray)
   switch (opts.export.toLowerCase()) {
-    case 'json':
-      toJSON(zoneArray)
-      break
-    case 'bind':
-      toBind(zoneArray, zone_opts.origin)
-      break
-    case 'tinydns':
-      toTinydns(zoneArray)
-      break
+    case 'json'   : return toJSON(zoneArray)
+    case 'bind'   : return toBind(zoneArray, zone_opts.origin)
+    case 'tinydns': return toTinydns(zoneArray)
     default:
-      console.log(zoneArray)
+      toHuman(zoneArray)
   }
 }
 
@@ -253,7 +247,7 @@ function toBind (zoneArray, origin) {
 
 function toTinydns (zoneArray) {
   for (const rr of zoneArray) {
-    if (isBlank(rr)) continue
+    if (rr === os.EOL) continue
     process.stdout.write(rr.toTinydns())
   }
 }
@@ -264,4 +258,45 @@ function toJSON (zoneArray) {
     if (rr.get('comment')) rr.delete('comment')
     process.stdout.write(JSON.stringify(Object.fromEntries(rr)))
   }
+}
+
+function toHuman (zoneArray) {
+  const widest = { name: 0, ttl: 0, type: 0, rdata: 0 }
+  const fields = [ 'name', 'ttl', 'type' ]
+  zoneArray.map(r => {
+    if (r === os.EOL) return
+    for (const f of fields) {
+      if (getWidth(r.get(f)) > widest[f]) widest[f] = getWidth(r.get(f))
+    }
+    const rdataLen = r.getRdataFields().map(f => r.get(f)).join(' ').length
+    if (rdataLen > widest.rdata) widest.rdata = rdataLen
+  })
+
+  // console.log(widest)
+  let rdataWidth = process.stdout.columns - widest.name - widest.type - 10
+  if (!zone_opts.hide.ttl) rdataWidth -= widest.ttl
+
+  for (const r of zoneArray) {
+    if (isBlank(r)) continue
+
+    process.stdout.write(r.get('name').padEnd(widest.name + 2, ' '))
+
+    if (!zone_opts.hide.ttl) {
+      process.stdout.write(r.get('ttl').toString().padStart(widest.ttl, ' ') + '  ')
+    }
+
+    process.stdout.write(r.get('type').padEnd(widest.type + 2, ' '))
+
+    const rdata = r.getRdataFields().map(f => r.get(f)).join(' ')
+    process.stdout.write(rdata.substring(0, rdataWidth))
+    if (rdata.length > rdataWidth) process.stdout.write('...')
+
+    process.stdout.write('\n')
+  }
+}
+
+function getWidth (str) {
+  // console.log(str)
+  if ('number' === typeof (str)) return str.toString().length
+  return str.length
 }
