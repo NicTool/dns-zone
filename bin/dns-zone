@@ -18,7 +18,7 @@ const opts = cmdLineArgs(usageOptions())._all
 if (opts.verbose) console.error(opts)
 if (opts.help) usage()
 
-const zone_opts = {
+zf.zoneOpts = {
   origin: rr.fullyQualify(opts.origin) || '',
   ttl   : opts.ttl || 0,
   class : opts.class || 'IN',
@@ -29,7 +29,7 @@ const zone_opts = {
     sameOwner: opts['hide-same-owner'],
   },
 }
-if (opts.verbose) console.error(zone_opts)
+if (opts.verbose) console.error(zf.zoneOpts)
 
 ingestZoneData()
   .then(r => {
@@ -37,7 +37,6 @@ ingestZoneData()
       case 'tinydns':
         return tinydns.parseData(r.data)
       default:
-        zf.zoneOpts = zone_opts
         return zf.parseZoneFile(r.data).then(zf.expandShortcuts)
     }
   })
@@ -99,7 +98,7 @@ function usageOptions () {
       defaultValue: false,
       type        : Boolean,
       // typeLabel   : '',
-      description : 'remove origin from RR domain names (default: false)',
+      description : 'remove origin from RR domain names',
       group       : 'out',
     },
     {
@@ -107,7 +106,7 @@ function usageOptions () {
       defaultValue: false,
       type        : Boolean,
       // typeLabel   : '',
-      description : 'hide class (default: false)',
+      description : 'hide class',
       group       : 'out',
     },
     {
@@ -115,14 +114,14 @@ function usageOptions () {
       defaultValue: false,
       type        : Boolean,
       // typeLabel   : '',
-      description : 'hide TTLs (default: false)',
+      description : 'hide TTLs',
       group       : 'out',
     },
     {
-      name        : 'hide-same-name',
+      name        : 'hide-same-owner',
       defaultValue: false,
       type        : Boolean,
-      description : 'hide name when same as previous RR',
+      description : 'hide owner when same as previous RR',
       group       : 'out',
     },
     {
@@ -204,7 +203,7 @@ function ingestZoneData () {
       res.type = 'tinydns'
     }
     else {
-      if (!opts.origin) zone_opts.origin = rr.fullyQualify(path.basename(filePath))
+      if (!opts.origin) zf.zoneOpts.origin = rr.fullyQualify(path.basename(filePath))
     }
 
     if (opts.verbose) console.error(`reading file ${filePath}`)
@@ -223,7 +222,7 @@ function output (zoneArray) {
   // console.error(zoneArray)
   switch (opts.export.toLowerCase()) {
     case 'json'   : return toJSON(zoneArray)
-    case 'bind'   : return toBind(zoneArray, zone_opts.origin)
+    case 'bind'   : return toBind(zoneArray, zf.zoneOpts.origin)
     case 'tinydns': return toTinydns(zoneArray)
     default:
       toHuman(zoneArray)
@@ -240,8 +239,8 @@ function isBlank (rr) {
 function toBind (zoneArray, origin) {
   for (const rr of zoneArray) {
     if (isBlank(rr)) continue
-    process.stdout.write(rr.toBind(zone_opts))
-    zone_opts.previousName = rr.get('owner')
+    process.stdout.write(rr.toBind(zf.zoneOpts))
+    zf.zoneOpts.previousOwner = rr.get('owner')
   }
 }
 
@@ -274,14 +273,14 @@ function toHuman (zoneArray) {
 
   // console.log(widest)
   let rdataWidth = process.stdout.columns - widest.owner - widest.type - 10
-  if (!zone_opts.hide.ttl) rdataWidth -= widest.ttl
+  if (!zf.zoneOpts.hide.ttl) rdataWidth -= widest.ttl
 
   for (const r of zoneArray) {
     if (isBlank(r)) continue
 
     process.stdout.write(r.get('owner').padEnd(widest.owner + 2, ' '))
 
-    if (!zone_opts.hide.ttl) {
+    if (!zf.zoneOpts.hide.ttl) {
       process.stdout.write(r.get('ttl').toString().padStart(widest.ttl, ' ') + '  ')
     }
 

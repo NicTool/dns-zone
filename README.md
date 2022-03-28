@@ -2,27 +2,10 @@
 
 DNS zone tool
 
-
 ## SYNOPSIS
 
-DNS zones have numerous rules regarding the records that can exist in them. Examples:
+Import and export DNS data to and from common zone file formats. Normalize, validate, and optionally apply transformations at the same time.
 
-- serial numbers must increment when changes are made
-- [x] multiple identical RRs are not allowed - RFC 2181
-    - [x] CAA takes tag into account, SRV: port
-- [x] RFC 2181: RR sets (identical label, class, type) must have identical TTL
-- [x] multiple CNAMES with the same name are not allowed
-- [x] CNAME label cannot coexist except for SIG,NXT,KEY,RRSIG,NSEC
-- MX and NS records cannot point to CNAME
-
-Etc, etc, etc..
-
-This module will input a collection of [dns-resource-records](https://github.com/nictool/dns-resource-record) and validate that all the zone records can coexist.
-
-
-## bin/dns-zone
-
-#### show help
 
 ````
 ➜ ./bin/dns-zone -h
@@ -44,9 +27,10 @@ Zone Settings
 
 Output Options
 
-  --hide-origin    remove origin from RR domain names (default: false)
-  --hide-class     hide class (default: false)
-  --hide-ttl       hide TTLs (default: false)
+  --hide-origin        remove origin from RR domain names
+  --hide-class         hide class
+  --hide-ttl           hide TTLs
+  --hide-same-owner    hide owner when same as previous RR
 
 Misc
 
@@ -62,8 +46,9 @@ Examples
   Project home: https://github.com/nictool/dns-zone
 ````
 
+## bin/dns-zone
 
-#### import from STDIN to JS
+#### import from STDIN to human
 
 ````
 ➜ cat example.com | ./bin/dns-zone --origin=example.com
@@ -153,6 +138,23 @@ Zisi.edu:venera.isi.edu:action.domains.isi.edu:20:7200:600:3600000:60:60::
 +vaxa.isi.edu:10.2.0.27:60::
 +vaxa.isi.edu:128.9.0.33:60::
 ````
+
+## VALIDATION
+
+DNS zones have numerous rules regarding the records that can exist in them. Examples:
+
+- serial numbers must increment when changes are made
+- [x] multiple identical RRs are not allowed - RFC 2181
+    - [x] CAA takes tag into account, SRV: port
+- [x] RFC 2181: RR sets (identical label, class, type) must have identical TTL
+- [x] multiple CNAMES with the same name are not allowed
+- [x] CNAME label cannot coexist except for SIG,NXT,KEY,RRSIG,NSEC
+- MX and NS records cannot point to CNAME
+
+Etc, etc, etc..
+
+This module will input a collection of [dns-resource-records](https://github.com/nictool/dns-resource-record) and validate that all the zone records can coexist.
+
 
 ## TODO
 
