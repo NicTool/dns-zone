@@ -14,8 +14,8 @@ class           -> "IN" | "CS" | "CH" | "HS" | "NONE" | "ANY" | "CLASS" uint
 rr              -> (hostname __) (ttl __):? (class __):? rr_type  {% flat %}
 
 rr_type         -> a | aaaa | caa | cname | dname | dnskey | ds
-                 | hinfo | loc | mx | naptr | ns | ptr | rrsig
-                 | smimea | sshfp | soa | spf | srv
+                 | hinfo | loc | mx | naptr | ns | nsec | nsec3
+                 | ptr | rrsig | smimea | sshfp | soa | spf | srv
                  | tlsa | txt | uri | "TYPE" uint
 
 # MACROS
@@ -50,45 +50,47 @@ ip6             -> ip6_chars                 {% flatten %}
 int8            -> digit | [1-9] digit | "1" digit digit | "2" [0-4] digit | "25" [0-5]
 
 
-a        -> "A"      __ ip4 _ (comment):? _ eol                   {% asRR %}
-aaaa     -> "AAAA"   __ ip6 _ (comment):? _ eol                   {% asRR %}
-caa      -> "CAA"    __ uint __ alpha_NUM __ QUOTE_OR_NO_WS
-                     _ (comment):? _ eol                          {% asRR %}
-cname    -> "CNAME"  __ hostname _ (comment):? _ eol              {% asRR %}
-dname    -> "DNAME"  __ hostname _ (comment):? _ eol              {% asRR %}
-dnskey   -> "DNSKEY" __ uint __ uint __ uint __
-                     "(" _ (BASE64):+ _ ")" _ (comment):? _ eol   {% asRR %}
-ds       -> "DS"     __ uint __ uint __ uint __
-                     "(" _ (HEX_WS):+ _ ")" _ (comment):? _ eol   {% asRR %}
-hinfo    -> "HINFO"  __ (wordchars):+ __ (wordchars):+
-                     _ (comment):? eol                            {% asRR %}
-loc      -> "LOC"    __ uint (__ uint):? (__ udec __):? ("N" | "S")
-                     __ uint (__ uint):? (__ udec __):? ("E" | "W")
-                     __ (word "m") times_3[(__ (word "m")):?]
-                     _ (comment):? eol                            {% asRR %}
-mx       -> "MX"     __ uint __ hostname _ (comment):? eol        {% asRR %}
-naptr    -> "NAPTR"  __ uint __ uint __ dqstring __ dqstring
-                     __ word __ word _ (comment):? eol            {% asRR %}
-ns       -> "NS"     __ hostname _ (comment):? _ eol              {% asRR %}
-ptr      -> "PTR"    __ hostname _ (comment):? _ eol              {% asRR %}
-rrsig    -> "RRSIG"  __ word __ word __ uint __ ttl __ uint __ "("
-                     _ uint __ uint __ hostname __ (BASE64):+
-                    _ ")" _ (comment):? _ eol                     {% asRR %}
-smimea   -> "SMIMEA" __ uint __ uint __ uint __ "(" _ (HEX_WS):+
-                     _ ")" _ (comment):? _ eol                    {% asRR %}
-soa      -> "SOA"    __ hostname __ hostname __ "("
-                     ws uint (ws comment):?
-                     ws uint (ws comment):?
-                     ws uint (ws comment):?
-                     ws uint (ws comment):?
-                     ws uint (ws comment):?
-                     ws ")" (ws comment):? eol                       {% asRR %}
-spf      -> "SPF"    __ (dqstring _):+ (comment):? _ eol            {% asRR %}
-srv      -> "SRV"    __ uint __ uint __ uint __ hostname _ (comment):? _ eol {% asRR %}
-sshfp    -> "SSHFP"  __ uint __ uint (HEX_WS):+ _ (comment):? _ eol {% asRR %}
-tlsa     -> "TLSA"   __ uint __ uint __ uint __ "(" _ (HEX_WS):+ _ ")" _ (comment):? _ eol {% asRR %}
-txt      -> "TXT"    __ (dqstring _):+ (comment):? _ eol            {% asRR %}
-uri      -> "URI"    __ uint __ uint __ dqstring (comment):? _ eol  {% asRR %}
+a        -> "A"       __ ip4 _ (comment):? _ eol                   {% asRR %}
+aaaa     -> "AAAA"    __ ip6 _ (comment):? _ eol                   {% asRR %}
+caa      -> "CAA"     __ uint __ alpha_NUM __ QUOTE_OR_NO_WS
+                      _ (comment):? _ eol                          {% asRR %}
+cname    -> "CNAME"   __ hostname _ (comment):? _ eol              {% asRR %}
+dname    -> "DNAME"   __ hostname _ (comment):? _ eol              {% asRR %}
+dnskey   -> "DNSKEY"  __ uint __ uint __ uint __
+                      "(" _ (BASE64):+ _ ")" _ (comment):? _ eol   {% asRR %}
+ds       -> "DS"      __ uint __ uint __ uint __
+                      "(" _ (HEX_WS):+ _ ")" _ (comment):? _ eol   {% asRR %}
+hinfo    -> "HINFO"   __ (wordchars):+ __ (wordchars):+
+                      _ (comment):? eol                            {% asRR %}
+loc      -> "LOC"     __ uint (__ uint):? (__ udec __):? ("N" | "S")
+                      __ uint (__ uint):? (__ udec __):? ("E" | "W")
+                      __ (word "m") times_3[(__ (word "m")):?]
+                      _ (comment):? eol                            {% asRR %}
+mx       -> "MX"      __ uint __ hostname _ (comment):? eol        {% asRR %}
+naptr    -> "NAPTR"   __ uint __ uint __ dqstring __ dqstring
+                      __ word __ word _ (comment):? eol            {% asRR %}
+ns       -> "NS"      __ hostname _ (comment):? _ eol              {% asRR %}
+nsec     -> "NSEC"    __ hostname __     eol
+nsec3    -> "NSEC3"   __ hostname __     eol
+ptr      -> "PTR"     __ hostname _ (comment):? _ eol              {% asRR %}
+rrsig    -> "RRSIG"   __ word __ word __ uint __ ttl __ uint __ "("
+                      _ uint __ uint __ hostname __ (BASE64):+
+                      _ ")" _ (comment):? _ eol                    {% asRR %}
+smimea   -> "SMIMEA"  __ uint __ uint __ uint __ "(" _ (HEX_WS):+
+                      _ ")" _ (comment):? _ eol                    {% asRR %}
+soa      -> "SOA"     __ hostname __ hostname __ "("
+                      ws uint (ws comment):?
+                      ws uint (ws comment):?
+                      ws uint (ws comment):?
+                      ws uint (ws comment):?
+                      ws uint (ws comment):?
+                      ws ")" (ws comment):? eol                      {% asRR %}
+spf      -> "SPF"     __ (dqstring _):+ (comment):? _ eol            {% asRR %}
+srv      -> "SRV"     __ uint __ uint __ uint __ hostname _ (comment):? _ eol {% asRR %}
+sshfp    -> "SSHFP"   __ uint __ uint (HEX_WS):+ _ (comment):? _ eol {% asRR %}
+tlsa     -> "TLSA"    __ uint __ uint __ uint __ "(" _ (HEX_WS):+ _ ")" _ (comment):? _ eol {% asRR %}
+txt      -> "TXT"     __ (dqstring _):+ (comment):? _ eol            {% asRR %}
+uri      -> "URI"     __ uint __ uint __ dqstring (comment):? _ eol  {% asRR %}
 
 
 

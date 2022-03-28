@@ -1,6 +1,6 @@
-# dns-zone-validator
+# dns-zone
 
-DNS zone validator
+DNS zone tool
 
 
 ## SYNOPSIS
@@ -8,23 +8,24 @@ DNS zone validator
 DNS zones have numerous rules regarding the records that can exist in them. Examples:
 
 - serial numbers must increment when changes are made
-- multiple identical RRs are not allowed - RFC 2181
-    - CAA takes tag into account, SRV: port
-- multiple CNAMES with the same name are not allowed
-- CNAME cannot coexist with SIG,NXT,KEY,RRSIG,NSEC,A,AAAA
+- [x] multiple identical RRs are not allowed - RFC 2181
+    - [x] CAA takes tag into account, SRV: port
+- [x] RFC 2181: RR sets (identical label, class, type) must have identical TTL
+- [x] multiple CNAMES with the same name are not allowed
+- [x] CNAME label cannot coexist except for SIG,NXT,KEY,RRSIG,NSEC
 - MX and NS records cannot point to CNAME
 
 Etc, etc, etc..
 
-This module will input a collection of [dns-resource-records](https://github.com/msimerson/dns-resource-record) and validate that all the zone records can coexist.
+This module will input a collection of [dns-resource-records](https://github.com/nictool/dns-resource-record) and validate that all the zone records can coexist.
 
 
-## BIN/IMPORT
+## bin/dns-zone
 
 #### show help
 
 ````
-➜ dns-zone-validator ✗ ./bin/import.js -h
+➜ ./bin/dns-zone -h
 
  +-+-+-+ +-+-+-+-+
  |D|N|S| |Z|O|N|E|
@@ -32,77 +33,61 @@ This module will input a collection of [dns-resource-records](https://github.com
 
 I/O
 
-  -i, --import <stdin | file path>            source of DNS zone data (default: stdin) 
-  -e, --export <js | json | bind | tinydns>   zone data export format (default: js)    
+  -i, --import <stdin | file path>        source of DNS zone data (default: stdin)
+  -e, --export <json | bind | tinydns>    zone data export format
 
 Zone Settings
 
-  -o, --origin string   zone $ORIGIN             
-  -t, --ttl number      zone default TTL         
-  -c, --class string    zone class (default: IN) 
+  -o, --origin string   zone $ORIGIN
+  -t, --ttl number      zone default TTL
+  -c, --class string    zone class (default: IN)
 
 Output Options
 
-  --hide-origin    remove origin from RR domain names (default: false) 
-  --hide-class     hide class (default: false)                         
-  --hide-ttl       hide TTLs (default: false)                          
+  --hide-origin    remove origin from RR domain names (default: false)
+  --hide-class     hide class (default: false)
+  --hide-ttl       hide TTLs (default: false)
 
 Misc
 
-  -v, --verbose    Show status messages during processing 
-  -h, --help       Display this usage guide               
+  -v, --verbose    Show status messages during processing
+  -h, --help       Display this usage guide
 
 Examples
 
-  1. BIND file to tinydns      ./bin/import -i ./isi.edu -e tinydns 
-  2. BIND file to JS objects   ./bin/import -i ./isi.edu            
-  3. tinydns file to BIND      ./bin/import -i ./data -e bind       
+  1. BIND file to human        ./bin/dns-zone -i ./isi.edu
+  2. tinydns file to BIND      ./bin/dns-zone -i ./data -e bind
+  3. BIND file to tinydns      ./bin/dns-zone -i ./isi.edu -e tinydns
 
-  Project home: https://github.com/msimerson/dns-zone-validator 
+  Project home: https://github.com/nictool/dns-zone
 ````
 
 
 #### import from STDIN to JS
 
 ````
-➜ cat example.com | ./bin/import.js --origin=example.com
-[
-  SOA(12) [Map] {
-    'name' => 'example.com.',
-    'ttl' => 3600,
-    'class' => 'IN',
-    'type' => 'SOA',
-    'mname' => 'ns.example.com.',
-    'rname' => 'username.example.com.',
-    'serial' => 2020091025,
-    'refresh' => 7200,
-    'retry' => 3600,
-    'expire' => 1209600,
-    'minimum' => 3600,
-    'comment' => { serial: '', refresh: '', retry: '', expire: '', minimum: '' }
-  },
-  NS(5) [Map] {
-    'name' => 'example.com.',
-    'ttl' => 3600,
-    'class' => 'IN',
-    'type' => 'NS',
-    'dname' => 'ns.example.com.'
-  },
-...<snip>...
-  A(5) [Map] {
-    'name' => 'mail3.example.com.',
-    'ttl' => 3600,
-    'class' => 'IN',
-    'type' => 'A',
-    'address' => '192.0.2.5'
-  }
-]
+➜ cat example.com | ./bin/dns-zone --origin=example.com
+example.com.          3600  SOA    ns.example.com. username.example.com. 2020091025 7200 3600 1209600 3600
+example.com.          3600  NS     ns.example.com.
+example.com.          3600  NS     ns.somewhere.example.
+example.com.          3600  MX     10 mail.example.com.
+example.com.          3600  MX     20 mail2.example.com.
+example.com.          3600  MX     50 mail3.example.com.
+example.com.          3600  A      192.0.2.1
+example.com.          3600  AAAA   2001:0db8:0010:0000:0000:0000:0000:0001
+ns.example.com.       3600  A      192.0.2.2
+example.com.          3600  AAAA   2001:0db8:0010:0000:0000:0000:0000:0002
+www.example.com.      3600  CNAME  example.com.
+wwwtest.example.com.  3600  CNAME  www.example.com.
+mail.example.com.     3600  A      192.0.2.3
+mail2.example.com.    3600  A      192.0.2.4
+mail3.example.com.    3600  A      192.0.2.5
 ````
 
 #### from bind file to bind
 
 ````
-➜ ./bin/import.js -i isi.edu -e bind
+➜ ./bin/dns-zone -i isi.edu -e bind
 $TTL    60
 $ORIGIN isi.edu.
 isi.edu.    IN  SOA venera.isi.edu. action.domains.isi.edu. (
@@ -128,7 +113,7 @@ vaxa    60  IN  A   128.9.0.33
 #### from bind to bind (relative)
 
 ````
-➜ ./bin/import.js -i isi.edu -e bind --ttl=60 --hide-ttl --hide-class --hide-origin
+➜ ./bin/dns-zone -i isi.edu -e bind --ttl=60 --hide-ttl --hide-class --hide-origin
 $TTL  60
 $ORIGIN isi.edu.
 @ IN  SOA venera  action.domains (
@@ -155,7 +140,7 @@ vaxa      A 128.9.0.33
 #### from bind to tinydns
 
 ````
-➜  ./bin/import.js -i isi.edu -e tinydns
+➜  ./bin/dns-zone -i isi.edu -e tinydns
 Zisi.edu:venera.isi.edu:action.domains.isi.edu:20:7200:600:3600000:60:60::
 &isi.edu::A.ISI.EDU:60::
 &isi.edu::venera.isi.edu:60::
@@ -190,4 +175,3 @@ Zisi.edu:venera.isi.edu:action.domains.isi.edu:20:7200:600:3600000:60:60::
     - [x] suppress hostname when identical to previous RR
 - [ ] validate zone rules
 - [ ] make it easy to add test cases: eg, test/fixtures/rr/{mx|a|*}/*
-- [ ] 

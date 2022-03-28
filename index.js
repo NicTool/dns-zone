@@ -1,161 +1,130 @@
 
-const os = require('os')
+class ZONE extends Map {
+  constructor (opts = {}) {
+    super()
 
-const RR = require('dns-resource-record')
-const rr = new RR.A(null)
+    this.RR = []
+    this.SOA = {}
 
-exports.zoneOpts = {}
-
-exports.parseZoneFile = async str => {
-
-  const nearley = require('nearley')
-  const grammar = nearley.Grammar.fromCompiled(require('./lib/grammar.js'))
-  grammar.start = 'main'
-
-  const parser = new nearley.Parser(grammar)
-  parser.feed(str)
-  if (!str.endsWith(os.EOL)) parser.feed(os.EOL) // no EOL after last record
-
-  if (parser.length > 1) {
-    console.error(`ERROR: ambigious parser rule`)
+    this.setOrigin(opts.origin)
+    this.setTTL(opts.ttl)
   }
 
-  if (parser.results.length === 0) return []
+  addRR (rr) {
 
-  const flat = []
+    const type = rr.get('type')
 
-  if (Array.isArray(parser.results[0])) {
-    for (const e of parser.results[0].flat(3)) {
+    // assure origin is set
+    if ('SOA' !== type && !this.SOA.owner) throw new Error('SOA must be set first!')
 
-      if (Array.isArray(e)) {
-        let r = {}
+    if (rr.get('class') !== this.SOA.class)
+      throw new Error('All RRs in a file should have the same class')
 
-        if (e[0])                    r.name  = e[0]
-        if (e[2] !== undefined)      r.ttl   = e[2]
-        if (e[4] && !isObject(e[4])) r.class = e[4]
+    this.isNotDuplicate(rr)
+    this.itMatchesSetTTL(rr)
+    this.hasNoConflictingLabels(rr)
 
-        // the rdata location varies on presence of ttl and/or class
-        if      (isObject(e[6])) r = { ...r, ...e[6] }
-        else if (isObject(e[5])) r = { ...r, ...e[5] }
-        else if (isObject(e[4])) r = { ...r, ...e[4] }
-
-        flat.push(r)
-      }
-      else if ('string' === typeof e) {
-        flat.push(e)
-      }
-      else {
-        if (e.$TTL) {
-          exports.zoneOpts.ttl = e.$TTL
-          flat.push(e)
-        }
-        else if (e.$ORIGIN) {
-          exports.zoneOpts.origin = e.$ORIGIN
-          flat.push(e)
-        }
-        else if (e.$INCLUDE) {  // TODO
-          throw new Error(`$INCLUDE support not implemented (yet)`)
-        }
-        else {
-          console.dir(e, { depth: null })
-          throw new Error('unrecognized parser output')
-        }
-      }
+    switch (type) {
+      case 'SOA'  : return this.setSOA(rr)
+      case 'CNAME': return this.addCname(rr)
+      default:
     }
+
+    this.RR.push(rr)
   }
-  else {
-    console.log(`parser.results:`)
-    console.dir(parser.results, { depth: null })
-    throw new Error(`unsupported parser results`)
+
+  addCname (rr) {
+
+    const ownerMatches = this.getOwnerMatches(rr)
+
+    const bothMatch = ownerMatches.filter(r => r.get('type') === 'CNAME').length
+    if (bothMatch) throw new Error('multiple CNAME records with the same owner are NOT allowed, RFC 1034')
+
+    // RFC 2181: An alias name (label of a CNAME record) may, if DNSSEC is
+    // in use, have SIG, NXT, and KEY RRs, but may have no other data.
+    // RFC 4035: If a CNAME RRset is present at a name in a signed zone,
+    // appropriate RRSIG and NSEC RRsets are REQUIRED at that name.
+    const compatibleTypes = 'SIG NXT KEY NSEC RRSIG'.split(' ')
+    const conflicts = ownerMatches.filter(r => {
+      return !compatibleTypes.includes(r.get('type'))
+    }).length
+    if (conflicts) throw new Error(`owner already exists, CNAME not allowed, RFC 1034, 2181, & 4035`)
+
+    this.RR.push(rr)
   }
-  return flat
-}
 
-function isObject (o) {
-  if (Array.isArray(o)) return false
-  if (o === null) return false
-  return 'object' === typeof o
-}
+  getRR (rr) {
+    const fields = rr.getFields()
 
-exports.expandShortcuts = async zoneArray => {
-  let ttl = exports.zoneOpts.ttl || 0
-  let lastName = ''
-  const implicitOrigin = rr.fullyQualify(exports.zoneOpts.origin) // zone 'name' in named.conf
-  let origin = implicitOrigin
-  const expanded = []
-  const empty = [ undefined, null ]
+    return this.RR.filter(r => {
 
-  for (let i = 0; i < zoneArray.length; i++) {
-    const entry = zoneArray[i]
+      const fieldDiffs = fields.map(f => {
+        return r.get(f) === rr.get(f)
+      }).filter(m => m === false).length
 
-    if (entry === '\n') {
-      expanded.push(entry); continue
-    }
-
-    if (entry.$TTL) {
-      ttl = entry.$TTL; continue
-    }
-
-    // When a zone is first read, there is an implicit $ORIGIN <zone_name>.
-    // note the trailing dot. The current $ORIGIN is appended to the domain
-    // specified in the $ORIGIN argument if it is not absolute. -- BIND 9
-    if (entry.$ORIGIN) {  // declared $ORIGIN in zone file
-      origin = rr.fullyQualify(entry.$ORIGIN, implicitOrigin)
-      continue
-    }
-    if (!origin) throw new Error(`zone origin ambiguous, cowardly bailing out`)
-
-    if (ttl === 0 && entry.type === 'SOA' && entry.minimum) ttl = entry.minimum
-    if (empty.includes(entry.ttl  )) entry.ttl   = ttl
-    if (empty.includes(entry.class)) entry.class = 'IN'
-
-    // expand NAME shortcuts
-    if (entry.name === '@') entry.name = origin
-
-    // "If a line begins with a blank, then the owner is assumed to be the
-    // same as that of the previous RR" -- BIND 9 manual
-    if (entry.name === '' && lastName) entry.name = lastName
-
-    if (entry.name) {
-      entry.name = rr.fullyQualify(entry.name, origin)
-    }
-    else {
-      entry.name = origin
-    }
-
-    if (entry.name !== lastName) lastName = entry.name
-
-    expandBindRdata(entry, origin, ttl)
-
-    try {
-      expanded.push(new RR[entry.type](entry))
-    }
-    catch (e) {
-      console.error(`I encounted the error: '${e.message}'\n`)
-      console.error(`\nwhile processing this RR: \n`)
-      console.log(entry)
-      throw (e)
-    }
+      if (!fieldDiffs) return r
+    })
   }
-  return expanded
-}
 
-function expandBindRdata (entry, origin, ttl) {
-  switch (entry.type) {
-    case 'SOA':
-      for (const f of [ 'mname', 'rname' ]) {
-        entry[f] = rr.fullyQualify(entry[f], origin)
-      }
-      break
-    case 'MX':
-      entry.exchange = rr.fullyQualify(entry.exchange, origin)
-      break
-    case 'NS':
-      entry.dname = rr.fullyQualify(entry.dname, origin)
-      break
-    case 'CNAME':
-      entry.cname = rr.fullyQualify(entry.cname, origin)
-      break
+  hasNoConflictingLabels (rr) {
+
+    const ownerMatches = this.getOwnerMatches(rr)
+    if (ownerMatches.length === 0) return
+
+    // CNAME conflicts with almost everything, assure no CNAME at this name
+    if (!'CNAME SIG NXT KEY NSEC RRSIG'.split(' ').includes(rr.get('type'))) {
+      const conflicts = ownerMatches.filter(r => {
+        return r.get('type') === 'CNAME'
+      }).length
+      if (conflicts) throw new Error(`owner exists as CNAME, not allowed, RFC 1034, 2181, & 4035`)
+    }
+
+
+  }
+
+  isNotDuplicate (rr) {
+    if (this.getRR(rr).length)
+      throw new Error('multiple identical RRs are not allowed, RFC 2181')
+  }
+
+  itMatchesSetTTL (rr) {
+    // a Resource Record Set exists...with the same label, class, type (different data)
+    const matches = this.RR.filter(r => {
+
+      const diffs = [ 'owner', 'class', 'type' ].map(f => {
+        return r.get(f) === rr.get(f)
+      }).filter(m => m === false).length
+
+      if (!diffs) return r
+    })
+    if (!matches.length) return true
+    if (matches[0].get('ttl') === rr.get('ttl')) return true
+    throw new Error('Records with identical label, class, and type must have identical TTL, RFC 2181')
+  }
+
+  getOwnerMatches (rr) {
+    const owner = rr.get('owner')
+    return this.RR.filter(r => {
+      return r.get('owner') === owner
+    })
+  }
+
+  setOrigin (val) {
+    if (!val) throw new Error('origin is required!')
+    this.set('origin', val)
+  }
+
+  setSOA (rr) {
+    if (this.SOA.owner)
+      throw new Error('Exactly one SOA RR should be present at the top!, RFC 1035')
+
+    rr.getFields().map(f => this.SOA[f] = rr.get(f))
+  }
+
+  setTTL (val) {
+    if (!val) return
+    this.set('ttl', val)
   }
 }
 
+module.exports = { ZONE }
