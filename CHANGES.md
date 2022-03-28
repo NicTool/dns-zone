@@ -20,7 +20,7 @@
 #### 0.4.0 - 2022-03-26
 
 - move compiled grammar.js into ./lib
-- pass previousName into RR
+- pass previousOwner into RR
 - tinydns: move functions into lib/tinydns
 - add: bind rr parsing for CAA, DNSKEY, DS, HINFO, LOC 
 - import: add option hide-same-name
