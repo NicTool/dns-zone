@@ -5,7 +5,7 @@ const DNSZONE = require('../index').ZONE
 const RR      = require('dns-resource-record')
 
 const testSOA = new RR.SOA({
-  name   : 'example.com.',
+  owner  : 'example.com.',
   ttl    : 3600,
   class  : 'IN',
   type   : 'SOA',
@@ -33,7 +33,7 @@ describe('dns-zone', function () {
 
     it('sets the zones SOA', function () {
       this.zone.setSOA(testSOA)
-      assert.equal(this.zone.SOA.name, 'example.com.')
+      assert.equal(this.zone.SOA.owner, 'example.com.')
     })
 
     it('rejects a second SOA', function () {
@@ -54,7 +54,7 @@ describe('dns-zone', function () {
     })
 
     const ns1 = new RR.NS({
-      name : 'example.com.',
+      owner: 'example.com.',
       ttl  : 3600,
       class: 'IN',
       type : 'NS',
@@ -71,7 +71,7 @@ describe('dns-zone', function () {
 
     it('adds ns2 to a zone', function () {
       const ns2 = new RR.NS({
-        name : 'example.com.',
+        owner: 'example.com.',
         ttl  : 3600,
         class: 'IN',
         type : 'NS',
@@ -96,7 +96,7 @@ describe('dns-zone', function () {
     it('rejects matching RRset with different TTL', function () {
       assert.throws(() => {
         this.zone.addRR(new RR.NS({
-          name : 'example.com.',
+          owner: 'example.com.',
           ttl  : 7200,
           class: 'IN',
           type : 'NS',
@@ -109,7 +109,7 @@ describe('dns-zone', function () {
     })
 
     const a1 = new RR.A({
-      name   : 'a1.example.com.',
+      owner  : 'a1.example.com.',
       ttl    : 3600,
       class  : 'IN',
       type   : 'A',
@@ -126,7 +126,7 @@ describe('dns-zone', function () {
 
     it('adds a2 to a zone', function () {
       const a2 = new RR.A({
-        name   : 'a2.example.com.',
+        owner  : 'a2.example.com.',
         ttl    : 3600,
         class  : 'IN',
         type   : 'NS',
@@ -147,7 +147,66 @@ describe('dns-zone', function () {
         message: 'multiple identical RRs are not allowed, RFC 2181',
       })
     })
+
+    const cn1 = new RR.CNAME({
+      owner: 'www2.example.com.',
+      ttl  : 3600,
+      class: 'IN',
+      type : 'CNAME',
+      cname: 'www.example.com.',
+    })
+
+    it('adds cname1 to a zone', function () {
+      this.zone.addRR(cn1)
+      const matches = this.zone.getRR(cn1)
+      assert.equal(matches.length, 1)
+      assert.deepEqual(matches[0], cn1)
+    })
+
+    it('fails to add CNAME with matching owner', function () {
+      assert.throws(() => {
+        this.zone.addRR(new RR.CNAME({
+          owner: 'www2.example.com.',
+          ttl  : 3600,
+          class: 'IN',
+          type : 'CNAME',
+          cname: 'diff.example.com.',
+        }))
+      },
+      {
+        message: `multiple CNAME records with the same owner are NOT allowed, RFC 1034`,
+      })
+    })
+
+    it('fails to add CNAME with matching owner and incompatible type', function () {
+      assert.throws(() => {
+        this.zone.addRR(new RR.CNAME({
+          owner: 'example.com.',
+          ttl  : 3600,
+          class: 'IN',
+          type : 'CNAME',
+          cname: 'diff.example.com.',
+        }))
+      },
+      {
+        message: `owner already exists, CNAME not allowed, RFC 1034, 2181, & 4035`,
+      })
+    })
+
+    it('fails to add AAAA adjacent to CNAME', function () {
+      assert.throws(() => {
+        this.zone.addRR(new RR.AAAA({
+          owner  : 'www2.example.com.',
+          ttl    : 3600,
+          class  : 'IN',
+          type   : 'AAAA',
+          address: '2001:0db8:0020:000a:0000:0000:0000:0004',
+        }))
+      },
+      {
+        message: `owner exists as CNAME, not allowed, RFC 1034, 2181, & 4035`,
+      })
+    })
+
   })
-
-
 })

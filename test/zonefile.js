@@ -66,7 +66,7 @@ describe('zonefile', function () {
 
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r[0], {
-        name   : 'example.com.',
+        owner  : 'example.com.',
         ttl    : 86400,
         class  : 'IN',
         type   : 'SOA',
@@ -91,7 +91,7 @@ describe('zonefile', function () {
       const r = await zf.parseZoneFile(`cadillac.net.   14400   IN  NS  ns1.cadillac.net.\n`)
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r[0], {
-        name : 'cadillac.net.',
+        owner: 'cadillac.net.',
         ttl  : 14400,
         class: 'IN',
         type : 'NS',
@@ -103,7 +103,7 @@ describe('zonefile', function () {
       const r = await zf.parseZoneFile(`cadillac.net.   86400   IN  A   66.128.51.173\n`)
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r[0], {
-        name   : 'cadillac.net.',
+        owner  : 'cadillac.net.',
         ttl    : 86400,
         class  : 'IN',
         type   : 'A',
@@ -115,7 +115,7 @@ describe('zonefile', function () {
       { bind  : 'nocerts.example.com       CAA 0 issue ";"\n',
         result: {
           flags: 0,
-          name : 'nocerts.example.com',
+          owner: 'nocerts.example.com',
           tag  : 'issue',
           ttl  : null,
           type : 'CAA',
@@ -125,7 +125,7 @@ describe('zonefile', function () {
       { bind  : 'certs.example.com       CAA 0 issue "example.net"\n',
         result: {
           flags: 0,
-          name : 'certs.example.com',
+          owner: 'certs.example.com',
           tag  : 'issue',
           ttl  : null,
           type : 'CAA',
@@ -135,7 +135,7 @@ describe('zonefile', function () {
     ]
 
     for (const t of testCAAs) {
-      it(`parses CAA record: ${t.result.name}`, async () => {
+      it(`parses CAA record: ${t.result.owner}`, async () => {
         const r = await zf.parseZoneFile(t.bind)
         assert.deepStrictEqual(r[0], t.result)
       })
@@ -145,7 +145,7 @@ describe('zonefile', function () {
       const r = await zf.parseZoneFile(`www 28800 IN  CNAME vhost0.theartfarm.com.\n`)
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r[0], {
-        name : 'www',
+        owner: 'www',
         ttl  : 28800,
         class: 'IN',
         type : 'CNAME',
@@ -158,7 +158,7 @@ describe('zonefile', function () {
       const r = await zf.parseZoneFile(`www 28800 IN  CNAME vhost0\n`).then(zf.expandShortcuts)
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r[0], new RR.CNAME({
-        name : 'www.theartfarm.com.',
+        owner: 'www.theartfarm.com.',
         ttl  : 28800,
         class: 'IN',
         type : 'CNAME',
@@ -170,7 +170,7 @@ describe('zonefile', function () {
       const r = await zf.parseZoneFile(`_tcp 86400 IN  DNAME _tcp.theartfarm.com.\n`)
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r[0], {
-        name  : '_tcp',
+        owner : '_tcp',
         ttl   : 86400,
         class : 'IN',
         type  : 'DNAME',
@@ -189,7 +189,7 @@ describe('zonefile', function () {
                                             aNvv4w==  )\n`)
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r[0], {
-        name     : 'example.com.',
+        owner    : 'example.com.',
         ttl      : 86400,
         class    : 'IN',
         type     : 'DNSKEY',
@@ -206,7 +206,7 @@ describe('zonefile', function () {
                                                 98631FAD1A292118 )\n`)
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r[0], {
-        name         : 'dskey.example.com.',
+        owner        : 'dskey.example.com.',
         ttl          : 86400,
         class        : 'IN',
         type         : 'DS',
@@ -221,11 +221,11 @@ describe('zonefile', function () {
       const r = await zf.parseZoneFile(`SRI-NIC.ARPA. HINFO   DEC-2060 TOPS20\n`)
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r[0], {
-        name: 'SRI-NIC.ARPA.',
-        ttl : null,
-        type: 'HINFO',
-        cpu : 'DEC-2060',
-        os  : 'TOPS20',
+        owner: 'SRI-NIC.ARPA.',
+        ttl  : null,
+        type : 'HINFO',
+        cpu  : 'DEC-2060',
+        os   : 'TOPS20',
       })
     })
 
@@ -233,7 +233,7 @@ describe('zonefile', function () {
       const r = await zf.parseZoneFile(`rwy04l.logan-airport.boston. 3600 IN LOC 42 21 28.764 N 71 0 51.617 W -44m 2000m\n`)
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r[0], {
-        name    : 'rwy04l.logan-airport.boston.',
+        owner   : 'rwy04l.logan-airport.boston.',
         ttl     : 3600,
         class   : 'IN',
         type    : 'LOC',
@@ -263,7 +263,7 @@ describe('zonefile', function () {
       assert.deepStrictEqual(r[0], {
         class     : 'IN',
         exchange  : 'mail.example.com.',
-        name      : 'test.example.com.',
+        owner     : 'test.example.com.',
         preference: 0,
         ttl       : 3600,
         type      : 'MX',
@@ -277,7 +277,7 @@ describe('zonefile', function () {
       assert.deepStrictEqual(r[0], {
         class: 'IN',
         dname: 'ns1.example.com.',
-        name : 'example.com.',
+        owner: 'example.com.',
         ttl  : 3600,
         type : 'NS',
       })
@@ -288,7 +288,7 @@ describe('zonefile', function () {
       assert.deepStrictEqual(r[0], {
         class: 'IN',
         dname: 'dhcp.example.com.',
-        name : '2.2.0.192.in-addr.arpa.',
+        owner: '2.2.0.192.in-addr.arpa.',
         ttl  : 86400,
         type : 'PTR',
       })
@@ -304,7 +304,7 @@ describe('zonefile', function () {
       3600
       )\n`)
       assert.deepStrictEqual(r[0], {
-        name   : 'example.com.',
+        owner  : 'example.com.',
         ttl    : null,
         type   : 'SOA',
         mname  : 'ns1.example.com.',
@@ -327,7 +327,7 @@ describe('zonefile', function () {
     it('parses TXT line', async () => {
       const r = await zf.parseZoneFile(`oct2021._domainkey.example.com. 86400  IN  TXT "v=DKIM1;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoyUzGOTSOmakY8BcxXgi0mN/nFegLBPs7aaGQUtjHfa8yUrt9T2j6GSXgdjLuG3R43WjePQv3RHzc+bwwOkdw0XDOXiztn5mhrlaflbVr5PMSTrv64/cpFQKLtgQx8Vgqp7Dh3jw13rLomRTqJFgMrMHdhIibZEa69gtuAfDqoeXo6QDSGk5JuBAeRHEH27FriHulg5ob" "4F4lmh7fMFVsDGkQEF6jaIVYqvRjDyyQed3R3aTJX3fpb3QrtRqvfn/LAf+3kzW58AjsERpsNCSTD2RquxbnyoR/1wdGKb8cUlD/EXvqtvpVnOzHeSeMEqex3kQI8HOGsEehWZlKd+GqwIDAQAB"\n`)
       assert.deepStrictEqual(r[0], {
-        name : 'oct2021._domainkey.example.com.',
+        owner: 'oct2021._domainkey.example.com.',
         ttl  : 86400,
         class: 'IN',
         type : 'TXT',
@@ -341,7 +341,7 @@ describe('zonefile', function () {
     it('parses SMIMEA line', async () => {
       const r = await zf.parseZoneFile(`_443._tcp.www.example.com.  3600    IN    SMIMEA    0 0  1   ( d2abde240d7cd3ee6b4b28c54df034b9 7983a1d16e8a410e4561cb106618e971 )`)
       assert.deepStrictEqual(r[0], {
-        name                          : '_443._tcp.www.example.com.',
+        owner                         : '_443._tcp.www.example.com.',
         ttl                           : 3600,
         class                         : 'IN',
         type                          : 'SMIMEA',
@@ -355,7 +355,7 @@ describe('zonefile', function () {
     it('parses SSHFP line', async () => {
       const r = await zf.parseZoneFile(`mail.example.com.   86400    IN    SSHFP 1  1   ed8c6e16fdae4f633eee6a7b8f64fdd356bbb32841d535565d777014c9ea4c26`)
       assert.deepStrictEqual(r[0], {
-        name       : 'mail.example.com.',
+        owner      : 'mail.example.com.',
         ttl        : 86400,
         class      : 'IN',
         type       : 'SSHFP',
@@ -368,7 +368,7 @@ describe('zonefile', function () {
     it('parses SRV line', async () => {
       const r = await zf.parseZoneFile(`_imaps._tcp.example.com.    3600  IN  SRV 1  0   993    mail.example.com.`)
       assert.deepStrictEqual(r[0], {
-        name    : '_imaps._tcp.example.com.',
+        owner   : '_imaps._tcp.example.com.',
         class   : 'IN',
         ttl     : 3600,
         type    : 'SRV',
@@ -382,7 +382,7 @@ describe('zonefile', function () {
     it('parses TLSA line', async () => {
       const r = await zf.parseZoneFile(`_443._tcp.www.example.com. 3600 IN TLSA 0 0 1 ( d2abde240d7cd3ee6b4b28c54df034b9 7983a1d16e8a410e4561cb106618e971 )`)
       assert.deepStrictEqual(r[0], {
-        name                          : '_443._tcp.www.example.com.',
+        owner                         : '_443._tcp.www.example.com.',
         ttl                           : 3600,
         class                         : 'IN',
         type                          : 'TLSA',
@@ -396,7 +396,7 @@ describe('zonefile', function () {
     it('parses URI line', async () => {
       const r = await zf.parseZoneFile(`www.example.com. 3600 IN URI 1 0 "www2.example.com."`)
       assert.deepStrictEqual(r[0], {
-        name    : 'www.example.com.',
+        owner   : 'www.example.com.',
         ttl     : 3600,
         class   : 'IN',
         type    : 'URI',
@@ -452,49 +452,49 @@ describe('zonefile', function () {
     const testCase = [
       { $TTL: 3600 },
       { $ORIGIN: 'test.example.com.' },
-      { name: '@', type: 'A', address: '1.2.3.4' },
+      { owner: '@', type: 'A', address: '1.2.3.4' },
     ]
 
-    it('expands @ name to $ORIGIN', async () => {
+    it('expands @ owner to $ORIGIN', async () => {
       const input = JSON.parse(JSON.stringify(testCase))
-      input[2].name = '@'
+      input[2].owner = '@'
       const out = await zf.expandShortcuts(input)
       assert.deepEqual(out, [ new RR.A({
-        address: '1.2.3.4',
-        class  : 'IN',
-        name   : 'test.example.com.',
+        owner  : 'test.example.com.',
         ttl    : 3600,
+        class  : 'IN',
         type   : 'A',
+        address: '1.2.3.4',
       }) ])
     })
 
-    it('expands empty name to $ORIGIN', async () => {
+    it('expands empty owner to $ORIGIN', async () => {
       const input = JSON.parse(JSON.stringify(testCase))
-      input[2].name = ''
+      input[2].owner = ''
 
       const out = await zf.expandShortcuts(input)
       assert.deepEqual(out, [ new RR.A({
-        address: '1.2.3.4',
-        class  : 'IN',
-        name   : 'test.example.com.',
+        owner  : 'test.example.com.',
         ttl    : 3600,
+        class  : 'IN',
         type   : 'A',
+        address: '1.2.3.4',
       }) ])
     })
 
-    it('expands empty name to previous', async () => {
+    it('expands empty owner to previous', async () => {
       const input = JSON.parse(JSON.stringify(testCase))
       input[2] = {
-        address: '1.2.3.4',
-        class  : 'IN',
-        name   : 'previous.example.com.',
+        owner  : 'previous.example.com.',
         ttl    : 3600,
+        class  : 'IN',
         type   : 'A',
+        address: '1.2.3.4',
       }
       input[3] = {
         address: '1.2.3.4',
         class  : 'IN',
-        name   : '',
+        owner  : '',
         ttl    : 3600,
         type   : 'A',
       }
@@ -503,7 +503,7 @@ describe('zonefile', function () {
       assert.deepEqual(out[1], new RR.A({
         address: '1.2.3.4',
         class  : 'IN',
-        name   : 'previous.example.com.',
+        owner  : 'previous.example.com.',
         ttl    : 3600,
         type   : 'A',
       }))
@@ -518,7 +518,7 @@ describe('zonefile', function () {
       assert.deepEqual(out[1], new RR.A({
         address: '1.2.3.4',
         class  : 'IN',
-        name   : 'test.example.com.',
+        owner  : 'test.example.com.',
         ttl    : 2560,
         type   : 'A',
       }))

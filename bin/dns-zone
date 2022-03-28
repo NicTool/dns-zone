@@ -23,10 +23,10 @@ const zone_opts = {
   ttl   : opts.ttl || 0,
   class : opts.class || 'IN',
   hide  : {
-    class   : opts['hide-class'],
-    ttl     : opts['hide-ttl'],
-    origin  : opts['hide-origin'],
-    sameName: opts['hide-same-name'],
+    class    : opts['hide-class'],
+    ttl      : opts['hide-ttl'],
+    origin   : opts['hide-origin'],
+    sameOwner: opts['hide-same-owner'],
   },
 }
 if (opts.verbose) console.error(zone_opts)
@@ -241,7 +241,7 @@ function toBind (zoneArray, origin) {
   for (const rr of zoneArray) {
     if (isBlank(rr)) continue
     process.stdout.write(rr.toBind(zone_opts))
-    zone_opts.previousName = rr.get('name')
+    zone_opts.previousName = rr.get('owner')
   }
 }
 
@@ -261,8 +261,8 @@ function toJSON (zoneArray) {
 }
 
 function toHuman (zoneArray) {
-  const widest = { name: 0, ttl: 0, type: 0, rdata: 0 }
-  const fields = [ 'name', 'ttl', 'type' ]
+  const widest = { owner: 0, ttl: 0, type: 0, rdata: 0 }
+  const fields = [ 'owner', 'ttl', 'type' ]
   zoneArray.map(r => {
     if (r === os.EOL) return
     for (const f of fields) {
@@ -273,13 +273,13 @@ function toHuman (zoneArray) {
   })
 
   // console.log(widest)
-  let rdataWidth = process.stdout.columns - widest.name - widest.type - 10
+  let rdataWidth = process.stdout.columns - widest.owner - widest.type - 10
   if (!zone_opts.hide.ttl) rdataWidth -= widest.ttl
 
   for (const r of zoneArray) {
     if (isBlank(r)) continue
 
-    process.stdout.write(r.get('name').padEnd(widest.name + 2, ' '))
+    process.stdout.write(r.get('owner').padEnd(widest.owner + 2, ' '))
 
     if (!zone_opts.hide.ttl) {
       process.stdout.write(r.get('ttl').toString().padStart(widest.ttl, ' ') + '  ')

@@ -9,10 +9,10 @@ DNS zones have numerous rules regarding the records that can exist in them. Exam
 
 - serial numbers must increment when changes are made
 - [x] multiple identical RRs are not allowed - RFC 2181
-    - CAA takes tag into account, SRV: port
+    - [x] CAA takes tag into account, SRV: port
 - [x] RFC 2181: RR sets (identical label, class, type) must have identical TTL
-- multiple CNAMES with the same name are not allowed
-- CNAME cannot coexist with SIG,NXT,KEY,RRSIG,NSEC,A,AAAA
+- [x] multiple CNAMES with the same name are not allowed
+- [x] CNAME label cannot coexist except for SIG,NXT,KEY,RRSIG,NSEC
 - MX and NS records cannot point to CNAME
 
 Etc, etc, etc..
