@@ -2,6 +2,14 @@
 #### 1.N.N - YYYY-MM-DD
 
 
+#### 0.5.1 - 2022-03-27
+
+- hostnames: add \ to allowed chars
+- dns-zone: use zf.zoneOpts directly
+- zonefile: track lastOwner, so blank entries have correct name
+- README: move -h output into synopsis, ## validation
+
+
 #### 0.5.0 - 2022-03-27
 
 - rr.name -> rr.owner
