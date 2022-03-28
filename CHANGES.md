@@ -2,10 +2,19 @@
 #### 1.N.N - YYYY-MM-DD
 
 
-#### 0.5.0 - 2022-03-26
+#### 0.5.0 - 2022-03-27
 
+- rr.name -> rr.owner
+- ZONE: add addCname, hasNoConflictingLabels, getOwnerMatches
+- ZONE: add tests for A, SMIMEA, SSHFP, SRV, TLSA, URI
+- index: add class ZONE, addRR, addNS, getRR, itMatchesSetTTL, setOrigin, setSOA, setTTL
+- repo: move from msimerson -> nictool org
+- package rename: remove -validator
+- dns-zone: added toHuman
+- rename: bin/import -> bin/dns-zone
+- grammar: start of nsec,nsec3
+- move BIND specific fns from ./index to lib/zonefile
 - move compiled grammars into ./dist
--
 
 
 #### 0.4.0 - 2022-03-26
