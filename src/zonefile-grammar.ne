@@ -42,7 +42,7 @@ QUOTE_OR_NO_WS  -> "\"" ([^\\"]):+ "\"" | "'" ([^\\"]):+ "'" | ([^\s]):+
 
 domain_name     -> host_char:*         {% asString %}
 hostname        -> host_char:*         {% asString %}
-host_char       -> [0-9A-Za-z\u0080-\uFFFF\.\-_@] {% id %}
+host_char       -> [0-9A-Za-z\u0080-\uFFFF\.\-_@\\] {% id %}
 word            -> (wordchars):+       {% flatten %}
 
 ip4             -> int8 times_3["."  int8]   {% flatten %}
