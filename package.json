@@ -7,14 +7,11 @@
     "dns-zone": "./bin/dns-zone"
   },
   "scripts": {
-    "grammar": "npx -p nearley nearleyc src/zonefile-grammar.ne -o dist/zonefile-grammar.js",
-    "csv2": "npx -p nearley nearleyc src/csv2.ne -o dist/csv2-grammar.js",
+    "grammar": "npx -p nearley nearleyc src/bind.ne -o dist/bind.js",
+    "mara": "npx -p nearley nearleyc src/mara.ne -o dist/mara.js",
     "lint": "npx eslint index.js lib/*.js test/*.js",
     "lintfix": "npx eslint --fix index.js lib/*.js test/*.js",
-    "postinstall": [
-      "npx -p nearley nearleyc src/zonefile-grammar.ne -o dist/zonefile-grammar.js",
-      "npx -p nearley nearleyc src/csv2.ne -o dist/csv2-grammar.js"
-    ],
+    "postinstall": "npm run grammar && npm run mara",
     "test": "npx mocha",
     "versions": "npx dependency-version-checker check"
   },

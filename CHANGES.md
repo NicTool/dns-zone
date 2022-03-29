@@ -4,6 +4,7 @@
 
 #### 0.6.0 - 2022-03-NN
 
+- rename: zonefile -> bind
 - maradns
     - csv2 format parser
     - exporter
@@ -18,7 +19,7 @@
 
 - hostnames: add \ to allowed chars
 - dns-zone: use zf.zoneOpts directly
-- zonefile: track lastOwner, so blank entries have correct name
+- bind: track lastOwner, so blank entries have correct name
 - README: move -h output into synopsis, ## validation
 
 
@@ -33,7 +34,7 @@
 - dns-zone: added toHuman
 - rename: bin/import -> bin/dns-zone
 - grammar: start of nsec,nsec3
-- move BIND specific fns from ./index to lib/zonefile
+- move BIND specific fns from ./index to lib/bind
 - move compiled grammars into ./dist
 
 
@@ -64,7 +65,7 @@
     - improved ip6 compressed parsing
     - add PTR support in bind zone files
 - test
-    - added zonefile example.com, localhost
+    - added bind example.com, localhost
     - added relative CNAME test
 - README: expand with examples
 

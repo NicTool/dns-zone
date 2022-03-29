@@ -3,13 +3,13 @@ const assert = require('assert')
 const fs     = require('fs')
 
 const RR = require('dns-resource-record')
-const zf = require('../lib/zonefile')
+const zf = require('../lib/bind')
 
 beforeEach(function () {
   zf.zoneOpts = {}
 })
 
-describe('zonefile', function () {
+describe('bind', function () {
 
   describe('parseZoneFile', function () {
 
@@ -422,7 +422,7 @@ describe('zonefile', function () {
     })
 
     it('parses cadillac.net zone file', async () => {
-      const file = './test/fixtures/zones/cadillac.net'
+      const file = './test/fixtures/bind/cadillac.net'
       fs.readFile(file, (err, buf) => {
         if (err) throw err
 
@@ -434,7 +434,7 @@ describe('zonefile', function () {
     })
 
     it('parses isi.edu zone file', async () => {
-      const file = './test/fixtures/zones/isi.edu'
+      const file = './test/fixtures/bind/isi.edu'
       fs.readFile(file, (err, buf) => {
         if (err) throw err
 
@@ -446,7 +446,7 @@ describe('zonefile', function () {
     })
 
     it('parses example.com zone file', async () => {
-      const file = './test/fixtures/zones/example.com'
+      const file = './test/fixtures/bind/example.com'
       fs.readFile(file, (err, buf) => {
         if (err) throw err
 
