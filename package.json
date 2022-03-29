@@ -1,6 +1,6 @@
 {
   "name": "dns-zone-validator",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "DNS Zone",
   "main": "index.js",
   "bin": {
@@ -8,9 +8,13 @@
   },
   "scripts": {
     "grammar": "npx -p nearley nearleyc src/zonefile-grammar.ne -o dist/zonefile-grammar.js",
+    "csv2": "npx -p nearley nearleyc src/csv2.ne -o dist/csv2-grammar.js",
     "lint": "npx eslint index.js lib/*.js test/*.js",
     "lintfix": "npx eslint --fix index.js lib/*.js test/*.js",
-    "postinstall": "npx -p nearley nearleyc src/zonefile-grammar.ne -o dist/zonefile-grammar.js",
+    "postinstall": [
+      "npx -p nearley nearleyc src/zonefile-grammar.ne -o dist/zonefile-grammar.js",
+      "npx -p nearley nearleyc src/csv2.ne -o dist/csv2-grammar.js"
+    ],
     "test": "npx mocha",
     "versions": "npx dependency-version-checker check"
   },

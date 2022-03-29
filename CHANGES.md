@@ -2,6 +2,18 @@
 #### 1.N.N - YYYY-MM-DD
 
 
+#### 0.6.0 - 2022-03-NN
+
+- maradns
+    - csv2 format parser
+    - exporter
+- bin/dns-zone
+    - added checkZone (zone validator)
+    - make import format explicit (-i)
+    - make input (stdin vs file) explicit (-f)
+- bind: add NAPTR test
+
+
 #### 0.5.1 - 2022-03-27
 
 - hostnames: add \ to allowed chars
@@ -32,9 +44,10 @@
 - tinydns: move functions into lib/tinydns
 - add: bind rr parsing for CAA, DNSKEY, DS, HINFO, LOC 
 - import: add option hide-same-name
-- rewrite the parser grammar
+- bind grammar (parser):
+    - rewrite
     - parser uses (mostly) BNFs from RFCs 🎉
-- add parsing for RRs: naptr, rrsig, smimea, sshfp, spf, srv, tlsa, uri, TYPE{N} (generic)
+    - add RRs: naptr, rrsig, smimea, sshfp, spf, srv, tlsa, uri, TYPE{N} (generic)
 - tests: added tests for MX, NS, PTR, SOA, TXT
 
 

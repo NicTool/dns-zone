@@ -1,4 +1,6 @@
 
+const os = require('os')
+
 class ZONE extends Map {
   constructor (opts = {}) {
     super()
@@ -8,17 +10,28 @@ class ZONE extends Map {
 
     this.setOrigin(opts.origin)
     this.setTTL(opts.ttl)
+
+    if (opts.RR) {
+      for (const r of opts.RR) {
+        this.addRR(r)
+      }
+    }
   }
 
   addRR (rr) {
 
+    if (rr === os.EOL) return
+
     const type = rr.get('type')
 
     // assure origin is set
-    if ('SOA' !== type && !this.SOA.owner) throw new Error('SOA must be set first!')
+    if (type !== 'SOA') {
+      if (!this.SOA.owner) throw new Error('SOA must be set first!')
 
-    if (rr.get('class') !== this.SOA.class)
-      throw new Error('All RRs in a file should have the same class')
+      const c = rr.get('class')
+      if (c !== this.SOA.class)
+        throw new Error('All RRs in a file should have the same class')
+    }
 
     this.isNotDuplicate(rr)
     this.itMatchesSetTTL(rr)
@@ -27,6 +40,7 @@ class ZONE extends Map {
     switch (type) {
       case 'SOA'  : return this.setSOA(rr)
       case 'CNAME': return this.addCname(rr)
+      // any types with additional validation go here
       default:
     }
 
@@ -78,8 +92,6 @@ class ZONE extends Map {
       }).length
       if (conflicts) throw new Error(`owner exists as CNAME, not allowed, RFC 1034, 2181, & 4035`)
     }
-
-
   }
 
   isNotDuplicate (rr) {

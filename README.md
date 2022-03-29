@@ -4,7 +4,7 @@ DNS zone tool
 
 ## SYNOPSIS
 
-Import and export DNS data to and from common zone file formats. Normalize, validate, and optionally apply transformations at the same time.
+Import and export DNS data to and from common nameserver formats. Normalize, validate, and optionally apply transformations at the same time.
 
 
 ````
@@ -16,14 +16,15 @@ Import and export DNS data to and from common zone file formats. Normalize, vali
 
 I/O
 
-  -i, --import <stdin | file path>        source of DNS zone data (default: stdin)
-  -e, --export <json | bind | tinydns>    zone data export format
+  -i, --import <json | bind | maradns | tinydns>   zone data format
+  -e, --export <json | bind | maradns | tinydns>   zone data format
+  -f, --file <stdin | file path>                   source of DNS zone data (stdin)
 
 Zone Settings
 
   -o, --origin string   zone $ORIGIN
   -t, --ttl number      zone default TTL
-  -c, --class string    zone class (default: IN)
+  -c, --class string    zone class (IN)
 
 Output Options
 
@@ -39,9 +40,9 @@ Misc
 
 Examples
 
-  1. BIND file to human        ./bin/dns-zone -i ./isi.edu
-  2. tinydns file to BIND      ./bin/dns-zone -i ./data -e bind
-  3. BIND file to tinydns      ./bin/dns-zone -i ./isi.edu -e tinydns
+  1. BIND file to human     ./bin/dns-zone -i ./isi.edu
+  2. BIND file to tinydns   ./bin/dns-zone -i ./isi.edu -e tinydns
+  3. tinydns file to BIND   ./bin/dns-zone -i ./data -e bind
 
   Project home: https://github.com/nictool/dns-zone
 ````
@@ -72,7 +73,7 @@ mail3.example.com.    3600  A      192.0.2.5
 #### from bind file to bind
 
 ````
-➜ ./bin/dns-zone -i isi.edu -e bind
+➜ ./bin/dns-zone -f isi.edu -i import -e bind
 $TTL    60
 $ORIGIN isi.edu.
 isi.edu.    IN  SOA venera.isi.edu. action.domains.isi.edu. (
@@ -98,35 +99,39 @@ vaxa    60  IN  A   128.9.0.33
 #### from bind to bind (relative)
 
 ````
-➜ ./bin/dns-zone -i isi.edu -e bind --ttl=60 --hide-ttl --hide-class --hide-origin
-$TTL  60
+➜ ./bin/dns-zone -f isi.edu -i bind -e bind --ttl=60 \
+  --hide-ttl --hide-class --hide-origin --hide-same-owner
+$TTL    60
 $ORIGIN isi.edu.
-@ IN  SOA venera  action.domains (
-    20     ; SERIAL
-    7200   ; REFRESH
-    600    ; RETRY
-    3600000; EXPIRE
-    60
-    )
+@   IN  SOA venera  action\.domains (
+        20     ; SERIAL
+        7200   ; REFRESH
+        600    ; RETRY
+        3600000; EXPIRE
+        60
+        )
 
-@     NS  a
-@     NS  venera
-@     NS  vaxa
-@     MX  10  venera
-@     MX  20  vaxa
-a     A 26.3.0.103
-venera      A 10.1.0.52
-venera      A 128.9.0.32
-vaxa      A 10.2.0.27
-vaxa      A 128.9.0.33
+            NS  a
+            NS  venera
+            NS  vaxa
+            MX  10  venera
+            MX  20  vaxa
+
+a           A   26.3.0.103
+
+venera      A   10.1.0.52
+            A   128.9.0.32
+
+vaxa        A   10.2.0.27
+            A   128.9.0.33
 ````
 
 
 #### from bind to tinydns
 
 ````
-➜  ./bin/dns-zone -i isi.edu -e tinydns
-Zisi.edu:venera.isi.edu:action.domains.isi.edu:20:7200:600:3600000:60:60::
+➜  ./bin/dns-zone -f isi.edu -i bind -e tinydns
+Zisi.edu:venera.isi.edu:action\.domains.isi.edu:20:7200:600:3600000:60:60::
 &isi.edu::A.ISI.EDU:60::
 &isi.edu::venera.isi.edu:60::
 &isi.edu::vaxa.isi.edu:60::
@@ -164,6 +169,7 @@ This module will input a collection of [dns-resource-records](https://github.com
     - [x] write a tinydns data file parser
     - [x] add BIND parsing for all RRs supported by dns-rr
     - [ ] add support for $INCLUDE (RFC 1035)
+    - [ ] write a maradns parser
 - normalize BIND zone records
     - [x] expand `@` to zone name
     - [x] empty names are same as previous RR record
@@ -175,5 +181,5 @@ This module will input a collection of [dns-resource-records](https://github.com
         - [x] SOA: mname, rname,
         - [x] NS,PTR: dname
     - [x] suppress hostname when identical to previous RR
-- [ ] validate zone rules
+- [x] validate zone rules
 - [ ] make it easy to add test cases: eg, test/fixtures/rr/{mx|a|*}/*

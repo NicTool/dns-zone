@@ -87,18 +87,6 @@ describe('zonefile', function () {
       })
     })
 
-    it('parses NS line', async () => {
-      const r = await zf.parseZoneFile(`cadillac.net.   14400   IN  NS  ns1.cadillac.net.\n`)
-      // console.dir(r, { depth: null })
-      assert.deepStrictEqual(r[0], {
-        owner: 'cadillac.net.',
-        ttl  : 14400,
-        class: 'IN',
-        type : 'NS',
-        dname: 'ns1.cadillac.net.',
-      })
-    })
-
     it('parses A line', async () => {
       const r = await zf.parseZoneFile(`cadillac.net.   86400   IN  A   66.128.51.173\n`)
       // console.dir(r, { depth: null })
@@ -270,7 +258,34 @@ describe('zonefile', function () {
       })
     })
 
-    // cid.urn.arpa.   86400    IN    NAPTR 100    10    ""    ""    "!^urn:cid:.+@([^\\.]+\\.)(.*)$!\x02!i"   .
+    it('parses NAPTR line', async () => {
+      const r = await zf.parseZoneFile(`cid.urn.arpa.   86400    IN    NAPTR 100    10    ""    ""    "!^urn:cid:.+@([^\\.]+\\.)(.*)$!\x02!i"   .\n`)
+      // console.dir(r, { depth: null })
+      assert.deepStrictEqual(r[0], {
+        owner      : 'cid.urn.arpa.',
+        ttl        : 86400,
+        class      : 'IN',
+        type       : 'NAPTR',
+        flags      : '',
+        service    : '',
+        order      : 100,
+        preference : 10,
+        regexp     : '"!^urn:cid:.+@([^\\.]+\\.)(.*)$!\x02!i"',
+        replacement: '.',
+      })
+    })
+
+    it('parses NS line', async () => {
+      const r = await zf.parseZoneFile(`cadillac.net.   14400   IN  NS  ns1.cadillac.net.\n`)
+      // console.dir(r, { depth: null })
+      assert.deepStrictEqual(r[0], {
+        owner: 'cadillac.net.',
+        ttl  : 14400,
+        class: 'IN',
+        type : 'NS',
+        dname: 'ns1.cadillac.net.',
+      })
+    })
 
     it('parses NS line', async () => {
       const r = await zf.parseZoneFile(`example.com.  3600  IN  NS  ns1.example.com.\n`)
