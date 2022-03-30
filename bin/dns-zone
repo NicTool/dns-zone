@@ -8,8 +8,10 @@ const chalk = require('chalk')
 const cmdLineArgs = require('command-line-args')
 const cmdLineUsage = require('command-line-usage')
 
-const zf      = require('../lib/zonefile')
+const ZONE    = require('../index').ZONE
+const bind    = require('../lib/bind')
 const tinydns = require('../lib/tinydns')
+const maradns = require('../lib/maradns')
 const RR      = require('dns-resource-record')
 const rr      = new RR.A(null)
 
@@ -18,7 +20,7 @@ const opts = cmdLineArgs(usageOptions())._all
 if (opts.verbose) console.error(opts)
 if (opts.help) usage()
 
-zf.zoneOpts = {
+bind.zoneOpts = maradns.zoneOpts = {
   origin: rr.fullyQualify(opts.origin) || '',
   ttl   : opts.ttl || 0,
   class : opts.class || 'IN',
@@ -28,16 +30,20 @@ zf.zoneOpts = {
     origin   : opts['hide-origin'],
     sameOwner: opts['hide-same-owner'],
   },
+  verbose: opts.verbose,
 }
-if (opts.verbose) console.error(zf.zoneOpts)
+
+if (opts.verbose) console.error(bind.zoneOpts)
 
 ingestZoneData()
   .then(r => {
     switch (r.type) {
       case 'tinydns':
-        return tinydns.parseData(r.data)
+        return tinydns.parseData(r.data).then(checkZone)
+      case 'maradns':
+        return maradns.parseZoneFile(r.data).then(maradns.expandShortcuts).then(checkZone)
       default:
-        return zf.parseZoneFile(r.data).then(zf.expandShortcuts)
+        return bind.parseZoneFile(r.data).then(bind.expandShortcuts).then(checkZone)
     }
   })
   .then(output)
@@ -45,6 +51,22 @@ ingestZoneData()
     console.error(e.message)
   })
 
+
+function checkZone (zoneArray) {
+  return new Promise((resolve, reject) => {
+    try {
+      new ZONE({
+        ttl: bind.zoneOpts.ttl, origin: bind.zoneOpts.origin, RR: zoneArray,
+      })
+      // console.log(z)
+      resolve(zoneArray)
+    }
+    catch (e) {
+      console.error(e)
+      reject(e)
+    }
+  })
+}
 
 function usage () {
   console.error(cmdLineUsage(usageSections()))
@@ -56,10 +78,10 @@ function usageOptions () {
     {
       name        : 'import',
       alias       : 'i',
-      defaultValue: 'stdin',
+      defaultValue: 'bind',
       type        : String,
-      typeLabel   : '<stdin | file path>',
-      description : 'source of DNS zone data (default: stdin)',
+      typeLabel   : '<json | bind | maradns | tinydns>',
+      description : 'zone data format',
       group       : 'io',
     },
     {
@@ -67,8 +89,17 @@ function usageOptions () {
       alias       : 'e',
       defaultValue: 'js',
       type        : String,
-      typeLabel   : '<js | json | bind | tinydns>',
-      description : 'zone data export format (default: js)',
+      typeLabel   : '<json | bind | maradns | tinydns>',
+      description : 'zone data format',
+      group       : 'io',
+    },
+    {
+      name        : 'file',
+      alias       : 'f',
+      defaultValue: 'stdin',
+      type        : String,
+      typeLabel   : '<stdin | file path>',
+      description : 'source of DNS zone data (stdin)',
       group       : 'io',
     },
     {
@@ -90,7 +121,7 @@ function usageOptions () {
       alias       : 'c',
       defaultValue: 'IN',
       type        : String,
-      description : 'zone class (default: IN)',
+      description : 'zone class (IN)',
       group       : 'main',
     },
     {
@@ -183,7 +214,7 @@ function usageSections () {
       ],
     },
     {
-      content: 'Project home: {underline https://github.com/nictool/dns-zone}',
+      content: 'Project home: {underline https://github.com/NicTool/dns-zone}',
     },
   ]
 }
@@ -191,19 +222,16 @@ function usageSections () {
 function ingestZoneData () {
   return new Promise((resolve, reject) => {
 
-    const res = { type: 'bind' }
+    const res = { type: opts.import }
     if (!opts.import) usage()
 
-    let filePath = opts.import
+    let filePath = opts.file || 'stdin'
 
     if (filePath === 'stdin') {
       filePath = process.stdin.fd
     }
-    else if (path.basename(filePath) === 'data'){
-      res.type = 'tinydns'
-    }
     else {
-      if (!opts.origin) zf.zoneOpts.origin = rr.fullyQualify(path.basename(filePath))
+      if (!opts.origin) bind.zoneOpts.origin = rr.fullyQualify(path.basename(filePath))
     }
 
     if (opts.verbose) console.error(`reading file ${filePath}`)
@@ -222,8 +250,9 @@ function output (zoneArray) {
   // console.error(zoneArray)
   switch (opts.export.toLowerCase()) {
     case 'json'   : return toJSON(zoneArray)
-    case 'bind'   : return toBind(zoneArray, zf.zoneOpts.origin)
+    case 'bind'   : return toBind(zoneArray, bind.zoneOpts.origin)
     case 'tinydns': return toTinydns(zoneArray)
+    case 'maradns': return toMaraDNS(zoneArray)
     default:
       toHuman(zoneArray)
   }
@@ -239,8 +268,8 @@ function isBlank (rr) {
 function toBind (zoneArray, origin) {
   for (const rr of zoneArray) {
     if (isBlank(rr)) continue
-    process.stdout.write(rr.toBind(zf.zoneOpts))
-    zf.zoneOpts.previousOwner = rr.get('owner')
+    process.stdout.write(rr.toBind(bind.zoneOpts))
+    bind.zoneOpts.previousOwner = rr.get('owner')
   }
 }
 
@@ -273,14 +302,14 @@ function toHuman (zoneArray) {
 
   // console.log(widest)
   let rdataWidth = process.stdout.columns - widest.owner - widest.type - 10
-  if (!zf.zoneOpts.hide.ttl) rdataWidth -= widest.ttl
+  if (!bind.zoneOpts.hide.ttl) rdataWidth -= widest.ttl
 
   for (const r of zoneArray) {
     if (isBlank(r)) continue
 
     process.stdout.write(r.get('owner').padEnd(widest.owner + 2, ' '))
 
-    if (!zf.zoneOpts.hide.ttl) {
+    if (!bind.zoneOpts.hide.ttl) {
       process.stdout.write(r.get('ttl').toString().padStart(widest.ttl, ' ') + '  ')
     }
 
@@ -291,6 +320,13 @@ function toHuman (zoneArray) {
     if (rdata.length > rdataWidth) process.stdout.write('...')
 
     process.stdout.write('\n')
+  }
+}
+
+function toMaraDNS (zoneArray) {
+  for (const rr of zoneArray) {
+    if (rr === os.EOL) continue
+    process.stdout.write(rr.toMaraDNS())
   }
 }
 

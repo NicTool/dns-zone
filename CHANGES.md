@@ -2,11 +2,25 @@
 #### 1.N.N - YYYY-MM-DD
 
 
+#### 0.6.0 - 2022-03-29
+
+- rename: zonefile -> bind
+- maradns
+    - csv2 format parser
+    - shortcut expansion
+    - exporter
+- bin/dns-zone
+    - added checkZone (zone validator)
+    - make import format explicit (-i)
+    - make input (stdin vs file) explicit (-f)
+- bind: add NAPTR test
+
+
 #### 0.5.1 - 2022-03-27
 
 - hostnames: add \ to allowed chars
 - dns-zone: use zf.zoneOpts directly
-- zonefile: track lastOwner, so blank entries have correct name
+- bind: track lastOwner, so blank entries have correct name
 - README: move -h output into synopsis, ## validation
 
 
@@ -16,12 +30,12 @@
 - ZONE: add addCname, hasNoConflictingLabels, getOwnerMatches
 - ZONE: add tests for A, SMIMEA, SSHFP, SRV, TLSA, URI
 - index: add class ZONE, addRR, addNS, getRR, itMatchesSetTTL, setOrigin, setSOA, setTTL
-- repo: move from msimerson -> nictool org
+- repo: move from msimerson -> NicTool org
 - package rename: remove -validator
 - dns-zone: added toHuman
 - rename: bin/import -> bin/dns-zone
 - grammar: start of nsec,nsec3
-- move BIND specific fns from ./index to lib/zonefile
+- move BIND specific fns from ./index to lib/bind
 - move compiled grammars into ./dist
 
 
@@ -32,9 +46,10 @@
 - tinydns: move functions into lib/tinydns
 - add: bind rr parsing for CAA, DNSKEY, DS, HINFO, LOC 
 - import: add option hide-same-name
-- rewrite the parser grammar
+- bind grammar (parser):
+    - rewrite
     - parser uses (mostly) BNFs from RFCs 🎉
-- add parsing for RRs: naptr, rrsig, smimea, sshfp, spf, srv, tlsa, uri, TYPE{N} (generic)
+    - add RRs: naptr, rrsig, smimea, sshfp, spf, srv, tlsa, uri, TYPE{N} (generic)
 - tests: added tests for MX, NS, PTR, SOA, TXT
 
 
@@ -51,7 +66,7 @@
     - improved ip6 compressed parsing
     - add PTR support in bind zone files
 - test
-    - added zonefile example.com, localhost
+    - added bind example.com, localhost
     - added relative CNAME test
 - README: expand with examples
 

@@ -1,22 +1,23 @@
 {
   "name": "dns-zone-validator",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "DNS Zone",
   "main": "index.js",
   "bin": {
     "dns-zone": "./bin/dns-zone"
   },
   "scripts": {
-    "grammar": "npx -p nearley nearleyc src/zonefile-grammar.ne -o dist/zonefile-grammar.js",
+    "grammar": "npx -p nearley nearleyc src/bind.ne -o dist/bind.js",
+    "mara": "npx -p nearley nearleyc src/mara.ne -o dist/mara.js",
     "lint": "npx eslint index.js lib/*.js test/*.js",
     "lintfix": "npx eslint --fix index.js lib/*.js test/*.js",
-    "postinstall": "npx -p nearley nearleyc src/zonefile-grammar.ne -o dist/zonefile-grammar.js",
+    "postinstall": "npm run grammar && npm run mara",
     "test": "npx mocha",
     "versions": "npx dependency-version-checker check"
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/nictool/dns-zone.git"
+    "url": "git+ssh://git@github.com/NicTool/dns-zone.git"
   },
   "keywords": [
     "dns",
@@ -30,9 +31,9 @@
   "author": "Matt Simerson <matt@tnpi.net>",
   "license": "BSD-3-Clause",
   "bugs": {
-    "url": "https://github.com/nictool/dns-zone/issues"
+    "url": "https://github.com/NicTool/dns-zone/issues"
   },
-  "homepage": "https://github.com/nictool/dns-zone#readme",
+  "homepage": "https://github.com/NicTool/dns-zone#readme",
   "devDependencies": {
     "eslint": "^8.11.0",
     "mocha": "^9.2.2"
@@ -40,7 +41,7 @@
   "dependencies": {
     "command-line-args": "^5.2.1",
     "command-line-usage": "^6.1.1",
-    "dns-resource-record": "^0.9.6",
+    "dns-resource-record": "^0.9.7",
     "nearley": "^2.20.1"
   }
 }

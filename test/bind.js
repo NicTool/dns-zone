@@ -3,13 +3,13 @@ const assert = require('assert')
 const fs     = require('fs')
 
 const RR = require('dns-resource-record')
-const zf = require('../lib/zonefile')
+const zf = require('../lib/bind')
 
 beforeEach(function () {
   zf.zoneOpts = {}
 })
 
-describe('zonefile', function () {
+describe('bind', function () {
 
   describe('parseZoneFile', function () {
 
@@ -84,18 +84,6 @@ describe('zonefile', function () {
           retry  : '     ; retry',
           serial : '    ; serial',
         },
-      })
-    })
-
-    it('parses NS line', async () => {
-      const r = await zf.parseZoneFile(`cadillac.net.   14400   IN  NS  ns1.cadillac.net.\n`)
-      // console.dir(r, { depth: null })
-      assert.deepStrictEqual(r[0], {
-        owner: 'cadillac.net.',
-        ttl  : 14400,
-        class: 'IN',
-        type : 'NS',
-        dname: 'ns1.cadillac.net.',
       })
     })
 
@@ -270,7 +258,34 @@ describe('zonefile', function () {
       })
     })
 
-    // cid.urn.arpa.   86400    IN    NAPTR 100    10    ""    ""    "!^urn:cid:.+@([^\\.]+\\.)(.*)$!\x02!i"   .
+    it('parses NAPTR line', async () => {
+      const r = await zf.parseZoneFile(`cid.urn.arpa.   86400    IN    NAPTR 100    10    ""    ""    "!^urn:cid:.+@([^\\.]+\\.)(.*)$!\x02!i"   .\n`)
+      // console.dir(r, { depth: null })
+      assert.deepStrictEqual(r[0], {
+        owner      : 'cid.urn.arpa.',
+        ttl        : 86400,
+        class      : 'IN',
+        type       : 'NAPTR',
+        flags      : '',
+        service    : '',
+        order      : 100,
+        preference : 10,
+        regexp     : '"!^urn:cid:.+@([^\\.]+\\.)(.*)$!\x02!i"',
+        replacement: '.',
+      })
+    })
+
+    it('parses NS line', async () => {
+      const r = await zf.parseZoneFile(`cadillac.net.   14400   IN  NS  ns1.cadillac.net.\n`)
+      // console.dir(r, { depth: null })
+      assert.deepStrictEqual(r[0], {
+        owner: 'cadillac.net.',
+        ttl  : 14400,
+        class: 'IN',
+        type : 'NS',
+        dname: 'ns1.cadillac.net.',
+      })
+    })
 
     it('parses NS line', async () => {
       const r = await zf.parseZoneFile(`example.com.  3600  IN  NS  ns1.example.com.\n`)
@@ -407,7 +422,7 @@ describe('zonefile', function () {
     })
 
     it('parses cadillac.net zone file', async () => {
-      const file = './test/fixtures/zones/cadillac.net'
+      const file = './test/fixtures/bind/cadillac.net'
       fs.readFile(file, (err, buf) => {
         if (err) throw err
 
@@ -419,7 +434,7 @@ describe('zonefile', function () {
     })
 
     it('parses isi.edu zone file', async () => {
-      const file = './test/fixtures/zones/isi.edu'
+      const file = './test/fixtures/bind/isi.edu'
       fs.readFile(file, (err, buf) => {
         if (err) throw err
 
@@ -431,7 +446,7 @@ describe('zonefile', function () {
     })
 
     it('parses example.com zone file', async () => {
-      const file = './test/fixtures/zones/example.com'
+      const file = './test/fixtures/bind/example.com'
       fs.readFile(file, (err, buf) => {
         if (err) throw err
 
