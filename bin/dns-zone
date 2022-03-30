@@ -20,7 +20,7 @@ const opts = cmdLineArgs(usageOptions())._all
 if (opts.verbose) console.error(opts)
 if (opts.help) usage()
 
-bind.zoneOpts = {
+bind.zoneOpts = maradns.zoneOpts = {
   origin: rr.fullyQualify(opts.origin) || '',
   ttl   : opts.ttl || 0,
   class : opts.class || 'IN',
@@ -30,7 +30,9 @@ bind.zoneOpts = {
     origin   : opts['hide-origin'],
     sameOwner: opts['hide-same-owner'],
   },
+  verbose: opts.verbose,
 }
+
 if (opts.verbose) console.error(bind.zoneOpts)
 
 ingestZoneData()
@@ -39,7 +41,7 @@ ingestZoneData()
       case 'tinydns':
         return tinydns.parseData(r.data).then(checkZone)
       case 'maradns':
-        return maradns.parseZoneFile(r.data).then(checkZone)
+        return maradns.parseZoneFile(r.data).then(maradns.expandShortcuts).then(checkZone)
       default:
         return bind.parseZoneFile(r.data).then(bind.expandShortcuts).then(checkZone)
     }

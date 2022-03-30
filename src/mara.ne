@@ -8,8 +8,12 @@ comment         -> "#" anyToEOL              {% flatten %}
 ttl             -> uint                      {% flatten %}
 serialauto      -> "/serial"                 {% flatten %}
 ttldefault      -> "/ttl"                    {% flatten %}
+class           -> "IN"
 
-rr              -> hostname __ ("+" ttl __):? rr_type __ "~" (comment):?
+rr              -> hostname __    (comment eol _):?
+                   ("+" ttl __):? (comment eol _):?
+                   (class   __):? (comment eol _):?
+                   rr_type  __    (comment eol _):? "~" (_ comment):?
 
 times_3[X]      -> $X $X $X
 
@@ -18,7 +22,7 @@ _               -> wschar:*                  {% asNull %}
 __              -> wschar:+ | "|"            {% asNull %}
 wschar          -> [ \t\v\f]                 {% id %}
 anyToEOL        -> [^\n\r]:*
-hostname        -> host_char:*               {% asString %}
+hostname        -> host_char:+               {% asString %}
 host_char       -> [0-9A-Za-z\u0080-\uFFFF\.\-_@\\%] {% id %}
 ip6_chars       -> [0-9A-Fa-f:]:*            {% id %}
 digit           -> [0-9]                     {% id %}
@@ -48,25 +52,26 @@ strescape       -> ["\\/bfnrt]                {% id %}
 
 txt_comment     -> "\\" _ (comment):? eol _
 
-rr_type         -> a | aaaa | fqdn4 | fqdn6 | hinfo | loc | naptr
-                 | ns | ptr | raw | soa | srv | txt | spf
+rr_type         -> a | aaaa | fqdn4 | fqdn6 | hinfo | loc | mx | naptr
+                 | ns | ptr | raw | soa | srv | txt | spf | default
 
-a        -> "A"i     __ ip4 _ (comment):?          {% asRR %}
-#rr_d    ->             ip4 _ (comment):?          {% asRR %}
-aaaa     -> "AAAA"i  __ ip6 _ (comment):?          {% asRR %}
-fqdn4    -> "FQDN4"i __ ip4 _ (comment):?          {% asRR %}
-fqdn6    -> "FQDN6"i __ ip6 _ (comment):?          {% asRR %}
+a        -> "A"i    (__ comment eol):? __ ip4 _ (comment):?  {% asRR %}
+default  ->             ip4 _ (comment):?                    {% asRR %}
+aaaa     -> "AAAA"i  __ ip6 _ (comment):?                    {% asRR %}
+fqdn4    -> "FQDN4"i __ ip4 _ (comment):?                    {% asRR %}
+fqdn6    -> "FQDN6"i __ ip6 _ (comment):?                    {% asRR %}
 hinfo    -> "HINFO"i __ sqstring ";" sqstring _ (comment):?  {% asRR %}
 loc      -> "LOC"i   __ uint (__ uint):? (__ udec __):? ("N" | "S")
                      __ uint (__ uint):? (__ udec __):? ("E" | "W")
                      __ (word "m") (__ word "m"):? (__ word "m"):? (__ word "m"):?  {% asRR %}
+mx       -> "MX"i    __ uint __ hostname _ (comment):?        {% asRR %}
 naptr    -> "NAPTR"i __ uint __ uint __ sqstring ";" sqstring ";" sqstring _ word {% asRR %}
-ns       -> "NS"i    __ hostname _ (comment):?     {% asRR %}
-ptr      -> "PTR"i   __ hostname _ (comment):?       {% asRR %}
-raw      -> "RAW"i   __ uint __ anyToEOL {% asRR %}
+ns       -> "NS"i    __ hostname _ (comment):?                {% asRR %}
+ptr      -> "PTR"i   __ hostname _ (comment):?                {% asRR %}
+raw      -> "RAW"i   __ uint __ anyToEOL                      {% asRR %}
 soa      -> "SOA"i   __ hostname __ hostname __ (uint | serialauto)
                         __ uint __ uint __ uint __ uint                 {% asRR %}
-spf      -> "SPF"i   __ sqstring ("\\x7e" sqstring):* _ (comment):?
+spf      -> "SPF"i   __ sqstring ("\\x7e" sqstring):* _ (comment):?     {% asRR %}
 srv      -> "SRV"i   __ uint __ uint __ uint __ hostname _ (comment):?  {% asRR %}
 txt      -> "TXT"i   __ (  (txt_no_ws | txt_sq_str) txt_comment:?)
                         (_ (txt_no_ws | txt_sq_str) txt_comment:?):*    {% asRR %}
@@ -93,19 +98,14 @@ function asUDec   (d) {
 function asRR (d) {
   const r = { type: d[0].toUpperCase() }
   switch (r.type) {
-    case 'A':     return { ...r, address: d[2] }
+    case 'A'    : return { ...r, address: d[3] }
     case 'FQDN4': return { ...r, address: d[2] }
-    case 'AAAA':  return { ...r, address: d[2] }
+    case 'AAAA' : return { ...r, address: d[2] }
     case 'FQDN6': return { ...r, address: d[2] }
     case 'CAA':
       return { ...r, flags: parseInt(d[2]), tag: d[4], value: flatten(d[6]) }
     case 'CNAME': return { ...r, cname: d[2] }
-    case 'HINFO':
-      return {
-        ...r,
-        cpu : flatten(d[2]),
-        os  : flatten(d[4]),
-      }
+    case 'HINFO': return { ...r, cpu: flatten(d[2]), os: flatten(d[4]) }
     case 'LOC':
       return {
         ...r,
@@ -128,32 +128,23 @@ function asRR (d) {
           vertical:   flatten(d[15]).trim() || '10m',
         },
       }
-    case 'MX':
-      return {
-        type      : d[0],
-        preference: d[2],
-        exchange  : d[4],
-      }
+    case 'MX' : return { ...r, preference: d[2], exchange: d[4] }
     case 'NAPTR':
       return {
         ...r,
         order: d[2],
         preference: d[4],
-        flags: d[6],
+        flags: d[6].toUpperCase(),
         service: d[8],
         regexp: d[10],
         replacement: d[12],
       }
-    case 'NS': return { ...r, dname: d[2] }
-    case 'PTR':
-      return {
-        type : d[0],
-        dname: d[2],
-      }
+    case 'NS' : return { ...r, dname: d[2] }
+    case 'PTR': return { ...r, dname: d[2] }
     case 'RAW': return { ...r, typeid: flatten(d[2]), rdata: flatten(d[4]) }
     case 'SOA':
       return {
-        type   : d[0],
+        ...r,
         mname  : d[2],
         rname  : d[4],
         serial : d[6][0],
@@ -178,13 +169,10 @@ function asRR (d) {
         'certificate association data': flatten(d[10]).split(/\s+/).join(''),
       }
     case 'SPF':
-      return {
-        ...r,
-        data: d[2].map(e => e[0]),
-      }
+      return { ...r, data: `${d[2]}${d[3]}` }
     case 'SRV':
       return {
-        type    : d[0],
+        ...r,
         priority: d[2],
         port    : d[4],
         weight  : d[6],
@@ -212,14 +200,16 @@ function asRR (d) {
       }
     case 'URI':
       return {
-        type    : d[0],
+        ...r,
         priority: d[2],
         weight  : d[4],
         target  : d[6],
       }
     default:
-      if (/[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/.test(d[0])) {
-        return { type: 'A', address: d[2] }
+      // console.dir(d, { depth: null })
+      const ip4re = /[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/
+      if (ip4re.test(d[0])) {
+        return { type: 'A', address: d[0] }
       }
       throw new Error(`undefined type: ${d[0]}`)
   }

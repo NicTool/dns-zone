@@ -7,6 +7,7 @@
 - rename: zonefile -> bind
 - maradns
     - csv2 format parser
+    - shortcut expansion
     - exporter
 - bin/dns-zone
     - added checkZone (zone validator)
