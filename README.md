@@ -44,7 +44,7 @@ Examples
   2. BIND file to tinydns   ./bin/dns-zone -i ./isi.edu -e tinydns
   3. tinydns file to BIND   ./bin/dns-zone -i ./data -e bind
 
-  Project home: https://github.com/nictool/dns-zone
+  Project home: https://github.com/NicTool/dns-zone
 ````
 
 ## bin/dns-zone
@@ -158,7 +158,7 @@ DNS zones have numerous rules regarding the records that can exist in them. Exam
 
 Etc, etc, etc..
 
-This module will input a collection of [dns-resource-records](https://github.com/nictool/dns-resource-record) and validate that all the zone records can coexist.
+This module will input a collection of [dns-resource-records](https://github.com/NicTool/dns-resource-record) and validate that all the zone records can coexist.
 
 
 ## TODO

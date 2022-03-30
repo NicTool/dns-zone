@@ -2,7 +2,7 @@
 #### 1.N.N - YYYY-MM-DD
 
 
-#### 0.6.0 - 2022-03-NN
+#### 0.6.0 - 2022-03-29
 
 - rename: zonefile -> bind
 - maradns
@@ -30,7 +30,7 @@
 - ZONE: add addCname, hasNoConflictingLabels, getOwnerMatches
 - ZONE: add tests for A, SMIMEA, SSHFP, SRV, TLSA, URI
 - index: add class ZONE, addRR, addNS, getRR, itMatchesSetTTL, setOrigin, setSOA, setTTL
-- repo: move from msimerson -> nictool org
+- repo: move from msimerson -> NicTool org
 - package rename: remove -validator
 - dns-zone: added toHuman
 - rename: bin/import -> bin/dns-zone

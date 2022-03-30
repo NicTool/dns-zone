@@ -214,7 +214,7 @@ function usageSections () {
       ],
     },
     {
-      content: 'Project home: {underline https://github.com/nictool/dns-zone}',
+      content: 'Project home: {underline https://github.com/NicTool/dns-zone}',
     },
   ]
 }
