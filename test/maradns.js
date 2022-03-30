@@ -1,6 +1,6 @@
 
 const assert = require('assert')
-// const fs     = require('fs')
+const fs     = require('fs')
 
 const RR = require('dns-resource-record')
 const mara = require('../lib/maradns')
@@ -288,6 +288,24 @@ describe('maradns', function () {
           address: '1.2.3.4',
         }),
       ])
+    })
+  })
+
+  it('loads and validates example.com', function () {
+    const file = './test/fixtures/mara/example.net.csv2'
+    fs.readFile(file, (err, buf) => {
+      if (err) throw err
+      mara.zoneOpts.ttl = 3600
+      mara.zoneOpts.origin = 'example.net.'
+      mara.parseZoneFile(buf.toString())
+        .then(mara.expandShortcuts)
+        .then(r => {
+          // console.dir(r, { depth: null })
+          assert.equal(r.length, 40)
+        })
+        .catch(e => {
+          console.error(e)
+        })
     })
   })
 })

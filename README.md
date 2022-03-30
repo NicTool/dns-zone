@@ -148,13 +148,13 @@ Zisi.edu:venera.isi.edu:action\.domains.isi.edu:20:7200:600:3600000:60:60::
 
 DNS zones have numerous rules regarding the records that can exist in them. Examples:
 
-- serial numbers must increment when changes are made
+- [ ] serial numbers must increment when changes are made
 - [x] multiple identical RRs are not allowed - RFC 2181
     - [x] CAA takes tag into account, SRV: port
 - [x] RFC 2181: RR sets (identical label, class, type) must have identical TTL
 - [x] multiple CNAMES with the same name are not allowed
 - [x] CNAME label cannot coexist except for SIG,NXT,KEY,RRSIG,NSEC
-- MX and NS records cannot point to CNAME
+- [ ] MX and NS records cannot point to CNAME
 
 Etc, etc, etc..
 
@@ -168,8 +168,8 @@ This module will input a collection of [dns-resource-records](https://github.com
     - [x] write a bind zone file parser
     - [x] write a tinydns data file parser
     - [x] add BIND parsing for all RRs supported by dns-rr
-    - [ ] add support for $INCLUDE (RFC 1035)
-    - [ ] write a maradns parser
+    - [ ] add support for bind $INCLUDE (RFC 1035)
+    - [x] write a maradns parser
 - normalize BIND zone records
     - [x] expand `@` to zone name
     - [x] empty names are same as previous RR record
@@ -182,4 +182,4 @@ This module will input a collection of [dns-resource-records](https://github.com
         - [x] NS,PTR: dname
     - [x] suppress hostname when identical to previous RR
 - [x] validate zone rules
-- [ ] make it easy to add test cases: eg, test/fixtures/rr/{mx|a|*}/*
+- [x] make it easy to add test cases: eg, test/fixtures/zones
