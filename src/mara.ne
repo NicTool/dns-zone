@@ -1,19 +1,19 @@
 @builtin "string.ne"
 
-main            -> entry:*
-entry           -> blank | comment | rr
+main            -> entry:*  {% id %}
+entry           -> blank {% id %} | comment {% id %} | rr {% id %}
 
 blank           -> _ (comment):? eol         {% flatten %}
 comment         -> "#" anyToEOL              {% flatten %}
-ttl             -> uint                      {% flatten %}
+ttl             -> uint                      {% asUint %}
 serialauto      -> "/serial"                 {% flatten %}
 ttldefault      -> "/ttl"                    {% flatten %}
-class           -> "IN"
+class           -> "IN"                      {% id %}
 
 rr              -> hostname __    (comment eol _):?
                    ("+" ttl __):? (comment eol _):?
                    (class   __):? (comment eol _):?
-                   rr_type  __    (comment eol _):? "~" (_ comment):?
+                   rr_type  __    (comment eol _):? "~" (_ comment):? {% asRR %}
 
 times_3[X]      -> $X $X $X
 
@@ -35,12 +35,10 @@ hex             -> [a-fA-F0-9]
 word            -> (wordchars):+             {% flatten %}
 wordchars       -> [^\s]                     {% id %}
 
-txt_bare        -> txt_no_ws:+               {% flatten %}
 txt_no_ws       -> [A-Za-z0-9\-_+%!^=]       {% id %}
 
-txt_sqword      -> "'" sq_str_chars:* "'"    {% flatten %}
 sq_str_chars    -> [!"$%&(-{! }]             {% id %}
-                 | ("\\'" | "\\" [\s] | "\\" digit digit digit digit)
+                 | ("\\'" | "\\" [\s] | "\\" digit digit digit digit) {% id %}
 
 txt_sq_str      -> "'"  sqchars:* "'"        {% (d) => {return d[1].join(""); } %}
 sqchars         -> [^\\'\n\r]                {% id %}
@@ -48,40 +46,45 @@ sqchars         -> [^\\'\n\r]                {% id %}
                  | "\\'"                     {% (d) => { return "'"; } %}
 strescape       -> ["\\/bfnrt]                {% id %}
                  | "u" hex hex hex hex {% (d) => { return d.join(""); } %}
-#asciiprintable -> [ -~]
 
 txt_comment     -> "\\" _ (comment):? eol _
 
-rr_type         -> a | aaaa | fqdn4 | fqdn6 | hinfo | loc | mx | naptr
-                 | ns | ptr | raw | soa | srv | txt | spf | default
+rr_type         -> a     {% id %} | aaaa {% id %} | fqdn4 {% id %} | fqdn6   {% id %}
+                 | hinfo {% id %} | loc  {% id %} | mx    {% id %} | naptr   {% id %}
+                 | ns    {% id %} | ptr  {% id %} | raw   {% id %} | soa     {% id %}
+                 | srv   {% id %} | txt  {% id %} | spf   {% id %} | default {% id %}
 
-a        -> "A"i    (__ comment eol):? __ ip4 _ (comment):?  {% asRR %}
-default  ->             ip4 _ (comment):?                    {% asRR %}
-aaaa     -> "AAAA"i  __ ip6 _ (comment):?                    {% asRR %}
-fqdn4    -> "FQDN4"i __ ip4 _ (comment):?                    {% asRR %}
-fqdn6    -> "FQDN6"i __ ip6 _ (comment):?                    {% asRR %}
-hinfo    -> "HINFO"i __ sqstring ";" sqstring _ (comment):?  {% asRR %}
+a        -> "A"i    (__ comment eol):? __ ip4 _ (comment):?             {% asRdata %}
+default  ->             ip4 _ (comment):?                               {% asRdata %}
+aaaa     -> "AAAA"i  __ ip6 _ (comment):?                               {% asRdata %}
+fqdn4    -> "FQDN4"i __ ip4 _ (comment):?                               {% asRdata %}
+fqdn6    -> "FQDN6"i __ ip6 _ (comment):?                               {% asRdata %}
+hinfo    -> "HINFO"i __ sqstring ";" sqstring _ (comment):?             {% asRdata %}
 loc      -> "LOC"i   __ uint (__ uint):? (__ udec __):? ("N" | "S")
                      __ uint (__ uint):? (__ udec __):? ("E" | "W")
-                     __ (word "m") (__ word "m"):? (__ word "m"):? (__ word "m"):?  {% asRR %}
-mx       -> "MX"i    __ uint __ hostname _ (comment):?        {% asRR %}
-naptr    -> "NAPTR"i __ uint __ uint __ sqstring ";" sqstring ";" sqstring _ word {% asRR %}
-ns       -> "NS"i    __ hostname _ (comment):?                {% asRR %}
-ptr      -> "PTR"i   __ hostname _ (comment):?                {% asRR %}
-raw      -> "RAW"i   __ uint __ anyToEOL                      {% asRR %}
+                     __ (word "m") (__ word "m"):? (__ word "m"):? (__ word "m"):?  {% asRdata %}
+mx       -> "MX"i    __ uint __ hostname _ (comment):?                  {% asRdata %}
+naptr    -> "NAPTR"i __ uint __ uint __ sqstring ";" sqstring ";" sqstring _ word {% asRdata %}
+ns       -> "NS"i    __ hostname _ (comment):?                          {% asRdata %}
+ptr      -> "PTR"i   __ hostname _ (comment):?                          {% asRdata %}
+raw      -> "RAW"i   __ uint __ anyToEOL                                {% asRdata %}
 soa      -> "SOA"i   __ hostname __ hostname __ (uint | serialauto)
-                        __ uint __ uint __ uint __ uint                 {% asRR %}
-spf      -> "SPF"i   __ sqstring ("\\x7e" sqstring):* _ (comment):?     {% asRR %}
-srv      -> "SRV"i   __ uint __ uint __ uint __ hostname _ (comment):?  {% asRR %}
+                        __ uint __ uint __ uint __ uint                 {% asRdata %}
+spf      -> "SPF"i   __ sqstring ("\\x7e" sqstring):* _ (comment):?     {% asRdata %}
+srv      -> "SRV"i   __ uint __ uint __ uint __ hostname _ (comment):?  {% asRdata %}
 txt      -> "TXT"i   __ (  (txt_no_ws | txt_sq_str) txt_comment:?)
-                        (_ (txt_no_ws | txt_sq_str) txt_comment:?):*    {% asRR %}
-
+                        (_ (txt_no_ws | txt_sq_str) txt_comment:?):*    {% asRdata %}
 
 @{%
-
-function flat (d) {
+function asRR (d) {
   if (!d) return ''
-  return Array.isArray(d) ? d.flat(Infinity) : d
+  if (!Array.isArray(d)) return ''
+  return {
+    owner: d[0],
+    ...(d[3] && d[3][1] ? { 'ttl'  : d[3][1] } : {}),
+  ...(d[5] && d[5][0] ? { 'class': d[5][0] } : {}),
+  ...d[7],
+  }
 }
 function flatten (d) {
   if (!d) return ''
@@ -95,7 +98,7 @@ function asUint   (d) {
 function asUDec   (d) {
   return parseFloat(d[0].join('') + (d[1] ? `.${d[1][1].join('')}` : ''))
 }
-function asRR (d) {
+function asRdata (d) {
   const r = { type: d[0].toUpperCase() }
   switch (r.type) {
     case 'A'    : return { ...r, address: d[3] }

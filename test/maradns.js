@@ -179,6 +179,7 @@ describe('maradns', function () {
       const r = await mara.parseZoneFile(`mail.% +86400 A 10.22.23.24 ~\n`)
       assert.deepStrictEqual(r[0], {
         owner  : 'mail.%',
+        ttl    : 86400,
         address: '10.22.23.24',
         type   : 'A',
       })
@@ -188,6 +189,7 @@ describe('maradns', function () {
       const r = await mara.parseZoneFile(`15.12.11.10.in-addr.arpa. +64000 PTR    c.example.net. ~\n`)
       assert.deepStrictEqual(r[0], {
         owner: '15.12.11.10.in-addr.arpa.',
+        ttl  : 64000,
         type : 'PTR',
         dname: 'c.example.net.',
       })
@@ -207,6 +209,7 @@ describe('maradns', function () {
       const r = await mara.parseZoneFile(`oct2021._domainkey.example.com. +86400 TXT 'v=DKIM1;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoyUzGOTSOmakY8BcxXgi0mN/nFegLBPs7aaGQUtjHfa8yUrt9T2j6GSXgdjLuG3R43WjePQv3RHzc+bwwOkdw0XDOXiztn5mhrlaflbVr5PMSTrv64/cpFQKLtgQx8Vgqp7Dh3jw13rLomRTqJFgMrMHdhIibZEa69gtuAfDqoeXo6QDSGk5JuBAeRHEH27FriHulg5ob''4F4lmh7fMFVsDGkQEF6jaIVYqvRjDyyQed3R3aTJX3fpb3QrtRqvfn/LAf+3kzW58AjsERpsNCSTD2RquxbnyoR/1wdGKb8cUlD/EXvqtvpVnOzHeSeMEqex3kQI8HOGsEehWZlKd+GqwIDAQAB' ~\n`)
       assert.deepStrictEqual(r[0], {
         owner: 'oct2021._domainkey.example.com.',
+        ttl  : 86400,
         type : 'TXT',
         data : [
           'v=DKIM1;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoyUzGOTSOmakY8BcxXgi0mN/nFegLBPs7aaGQUtjHfa8yUrt9T2j6GSXgdjLuG3R43WjePQv3RHzc+bwwOkdw0XDOXiztn5mhrlaflbVr5PMSTrv64/cpFQKLtgQx8Vgqp7Dh3jw13rLomRTqJFgMrMHdhIibZEa69gtuAfDqoeXo6QDSGk5JuBAeRHEH27FriHulg5ob4F4lmh7fMFVsDGkQEF6jaIVYqvRjDyyQed3R3aTJX3fpb3QrtRqvfn/LAf+3kzW58AjsERpsNCSTD2RquxbnyoR/1wdGKb8cUlD/EXvqtvpVnOzHeSeMEqex3kQI8HOGsEehWZlKd+GqwIDAQAB',
