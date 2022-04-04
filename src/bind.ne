@@ -1,6 +1,6 @@
 @builtin "string.ne"
 
-main            -> (entry):*
+main            -> (entry):*  {% id %}
 entry           -> blank_line | comment_line | origin | zone_ttl | rr
 
 blank_line      -> ws eol                                    {% flatten %}
@@ -10,13 +10,15 @@ zone_ttl        -> "$TTL" __ uint _ (comment):? _ eol        {% asZoneTTL %}
 
 comment         -> ";" anyToEOL                              {% flatten %}
 ttl             -> uint                                      {% asUint %}
-class           -> "IN" | "CS" | "CH" | "HS" | "NONE" | "ANY" | "CLASS" uint
-rr              -> (hostname __) (ttl __):? (class __):? rr_type  {% flat %}
+class           -> "IN"   {% id %} | "CS"  {% id %} | "CH"   {% id %} | "HS" {% id %}
+                 | "NONE" {% id %} | "ANY" {% id %} | "CLASS" uint  {% id %}
+rr              -> (hostname __) (ttl __):? (class __):? rr_type  {% asRR %}
 
-rr_type         -> a | aaaa | caa | cname | dname | dnskey | ds
-                 | hinfo | loc | mx | naptr | ns | nsec | nsec3
-                 | ptr | rrsig | smimea | sshfp | soa | spf | srv
-                 | tlsa | txt | uri | "TYPE" uint
+rr_type         -> a      {% id %} | aaaa   {% id %} | caa   {% id %} | cname {% id %} | dname {% id %}
+                 | dnskey {% id %} | ds     {% id %} | hinfo {% id %} | loc   {% id %} | mx    {% id %}
+                 | naptr  {% id %} | ns     {% id %} | nsec  {% id %} | nsec3 {% id %} | ptr   {% id %}
+                 | rrsig  {% id %} | smimea {% id %} | sshfp {% id %} | soa   {% id %} | spf   {% id %}
+                 | srv    {% id %} | tlsa   {% id %} | txt   {% id %} | uri   {% id %} | "TYPE" uint {% id %}
 
 # MACROS
 times_3[X]      -> $X $X $X
@@ -50,56 +52,87 @@ ip6             -> ip6_chars                 {% flatten %}
 int8            -> digit | [1-9] digit | "1" digit digit | "2" [0-4] digit | "25" [0-5]
 
 
-a        -> "A"       __ ip4 _ (comment):? _ eol                   {% asRR %}
-aaaa     -> "AAAA"    __ ip6 _ (comment):? _ eol                   {% asRR %}
+a        -> "A"       __ ip4 _ (comment):? _ eol                   {% asRdata %}
+
+aaaa     -> "AAAA"    __ ip6 _ (comment):? _ eol                   {% asRdata %}
+
 caa      -> "CAA"     __ uint __ alpha_NUM __ QUOTE_OR_NO_WS
-                      _ (comment):? _ eol                          {% asRR %}
-cname    -> "CNAME"   __ hostname _ (comment):? _ eol              {% asRR %}
-dname    -> "DNAME"   __ hostname _ (comment):? _ eol              {% asRR %}
+                      _ (comment):? _ eol                          {% asRdata %}
+
+cname    -> "CNAME"   __ hostname _ (comment):? _ eol              {% asRdata %}
+
+dname    -> "DNAME"   __ hostname _ (comment):? _ eol              {% asRdata %}
+
 dnskey   -> "DNSKEY"  __ uint __ uint __ uint __
-                      "(" _ (BASE64):+ _ ")" _ (comment):? _ eol   {% asRR %}
+                      "(" _ (BASE64):+ _ ")" _ (comment):? _ eol   {% asRdata %}
+
 ds       -> "DS"      __ uint __ uint __ uint __
-                      "(" _ (HEX_WS):+ _ ")" _ (comment):? _ eol   {% asRR %}
+                      "(" _ (HEX_WS):+ _ ")" _ (comment):? _ eol   {% asRdata %}
+
 hinfo    -> "HINFO"   __ (wordchars):+ __ (wordchars):+
-                      _ (comment):? eol                            {% asRR %}
+                      _ (comment):? eol                            {% asRdata %}
+
 loc      -> "LOC"     __ uint (__ uint):? (__ udec __):? ("N" | "S")
                       __ uint (__ uint):? (__ udec __):? ("E" | "W")
                       __ (word "m") times_3[(__ (word "m")):?]
-                      _ (comment):? eol                            {% asRR %}
-mx       -> "MX"      __ uint __ hostname _ (comment):? eol        {% asRR %}
+                      _ (comment):? eol                            {% asRdata %}
+
+mx       -> "MX"      __ uint __ hostname _ (comment):? eol        {% asRdata %}
+
 naptr    -> "NAPTR"   __ uint __ uint __ dqstring __ dqstring
-                      __ word __ word _ (comment):? eol            {% asRR %}
-ns       -> "NS"      __ hostname _ (comment):? _ eol              {% asRR %}
+                      __ word __ word _ (comment):? eol            {% asRdata %}
+
+ns       -> "NS"      __ hostname _ (comment):? _ eol              {% asRdata %}
+
 nsec     -> "NSEC"    __ hostname __     eol
+
 nsec3    -> "NSEC3"   __ hostname __     eol
-ptr      -> "PTR"     __ hostname _ (comment):? _ eol              {% asRR %}
+
+ptr      -> "PTR"     __ hostname _ (comment):? _ eol              {% asRdata %}
+
 rrsig    -> "RRSIG"   __ word __ word __ uint __ ttl __ uint __ "("
                       _ uint __ uint __ hostname __ (BASE64):+
-                      _ ")" _ (comment):? _ eol                    {% asRR %}
+                      _ ")" _ (comment):? _ eol                    {% asRdata %}
+
 smimea   -> "SMIMEA"  __ uint __ uint __ uint __ "(" _ (HEX_WS):+
-                      _ ")" _ (comment):? _ eol                    {% asRR %}
+                      _ ")" _ (comment):? _ eol                    {% asRdata %}
+
 soa      -> "SOA"     __ hostname __ hostname __ "("
                       ws uint (ws comment):?
                       ws uint (ws comment):?
                       ws uint (ws comment):?
                       ws uint (ws comment):?
                       ws uint (ws comment):?
-                      ws ")" (ws comment):? eol                      {% asRR %}
-spf      -> "SPF"     __ (dqstring _):+ (comment):? _ eol            {% asRR %}
-srv      -> "SRV"     __ uint __ uint __ uint __ hostname _ (comment):? _ eol {% asRR %}
-sshfp    -> "SSHFP"   __ uint __ uint (HEX_WS):+ _ (comment):? _ eol {% asRR %}
-tlsa     -> "TLSA"    __ uint __ uint __ uint __ "(" _ (HEX_WS):+ _ ")" _ (comment):? _ eol {% asRR %}
-txt      -> "TXT"     __ (dqstring _):+ (comment):? _ eol            {% asRR %}
-uri      -> "URI"     __ uint __ uint __ dqstring (comment):? _ eol  {% asRR %}
+                      ws ")" (ws comment):? eol                      {% asRdata %}
 
+spf      -> "SPF"     __ (dqstring _):+ (comment):? _ eol            {% asRdata %}
+
+srv      -> "SRV"     __ uint __ uint __ uint __ hostname _ (comment):? _ eol {% asRdata %}
+
+sshfp    -> "SSHFP"   __ uint __ uint (HEX_WS):+ _ (comment):? _ eol {% asRdata %}
+
+tlsa     -> "TLSA"    __ uint __ uint __ uint __ "(" _ (HEX_WS):+ _ ")" _ (comment):? _ eol {% asRdata %}
+
+txt      -> "TXT"     __ (dqstring _):+ (comment):? _ eol            {% asRdata %}
+
+uri      -> "URI"     __ uint __ uint __ dqstring (comment):? _ eol  {% asRdata %}
 
 
 @{%
-function flat (d) {
+function asRR (d) {
   if (!d) return ''
-  return Array.isArray(d) ? d.flat(Infinity) : d
+  return {
+    owner: d[0][0],
+  ttl  : d[1][0],
+  class: d[2][0],
+  ...d[3],
+  }
 }
-
+function isObject (o) {
+  if (Array.isArray(o)) return false
+  if (o === null) return false
+  return 'object' === typeof o
+}
 function flatten (d) {
   if (!d) return ''
   return Array.isArray(d) ? d.flat(Infinity).join('') : d
@@ -121,7 +154,7 @@ function asZoneTTL (d) {
 }
 function asOrigin (d) { return { $ORIGIN: d[2] } }
 
-function asRR (d) {
+function asRdata (d) {
   switch (d[0]) {
     case 'A':
       return { type: d[0], address: d[2] }

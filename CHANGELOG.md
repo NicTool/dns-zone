@@ -5,7 +5,7 @@
 #### 0.7.0 - 2022-03-29
 
 - test: load example.net maradns zone file
--
+- bind: do more array unpacking in parser
 
 
 #### 0.6.0 - 2022-03-29

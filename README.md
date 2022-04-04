@@ -183,3 +183,17 @@ This module will input a collection of [dns-resource-records](https://github.com
     - [x] suppress hostname when identical to previous RR
 - [x] validate zone rules
 - [x] make it easy to add test cases: eg, test/fixtures/zones
+
+## GOALS
+
+- 2040 compatibility
+    + the software stack should evolve gracefully with the tech industry
+    + loosely coupled dependencies
+- modularity
+    + easy to add a new DNS [resource record type](https://github.com/NicTool/dns-resource-record)
+    + easy to add/modify/update DNS [zone rules](https://github.com/NicTool/dns-zone)
+- easily coupled with many DNS servers
+- distribution of DNS data should be:
+    + secure
+    + fast
+    + efficient
