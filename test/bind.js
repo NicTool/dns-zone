@@ -105,7 +105,6 @@ describe('bind', function () {
           flags: 0,
           owner: 'nocerts.example.com',
           tag  : 'issue',
-          ttl  : null,
           type : 'CAA',
           value: '";"',
         },
@@ -115,7 +114,6 @@ describe('bind', function () {
           flags: 0,
           owner: 'certs.example.com',
           tag  : 'issue',
-          ttl  : null,
           type : 'CAA',
           value: '"example.net"',
         },
@@ -210,7 +208,6 @@ describe('bind', function () {
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r[0], {
         owner: 'SRI-NIC.ARPA.',
-        ttl  : null,
         type : 'HINFO',
         cpu  : 'DEC-2060',
         os   : 'TOPS20',
@@ -320,7 +317,7 @@ describe('bind', function () {
       )\n`)
       assert.deepStrictEqual(r[0], {
         owner  : 'example.com.',
-        ttl    : null,
+        class  : 'IN',
         type   : 'SOA',
         mname  : 'ns1.example.com.',
         rname  : 'matt.example.com.',

@@ -123,9 +123,9 @@ function asRR (d) {
   if (!d) return ''
   return {
     owner: d[0][0],
-  ttl  : d[1][0],
-  class: d[2][0],
-  ...d[3],
+    ...(d[1] && d[1][0] ? { ttl: d[1][0] !== undefined } : {}),
+    ...(d[2] && d[2][0] ? { class: d[2][0] } : {}),
+    ...d[3],
   }
 }
 function isObject (o) {
