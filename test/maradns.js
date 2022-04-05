@@ -19,11 +19,11 @@ describe('maradns', function () {
       assert.deepStrictEqual(r, [ '\n' ])
     })
 
-    it.skip('parses two blank lines', async () => {
+    it('parses two blank lines', async () => {
       // stripping blank lines performance++, breaks this test-
       const r = await mara.parseZoneFile(`\n\n`)
       // console.dir(r, { depth: null })
-      assert.deepStrictEqual(r, [ '\n' ])
+      assert.deepStrictEqual(r, [ '\n', '\n' ])
     })
 
     it('parses line with only whitespace', async () => {
@@ -32,15 +32,15 @@ describe('maradns', function () {
       assert.deepStrictEqual(r, [ '\n' ])
     })
 
-    it.skip('parses comment line', async () => {
+    it('parses comment line', async () => {
       // I strip WS within this function, which breaks this test
-      const r = await mara.parseZoneFile(`# blank comment\n`)
+      const r = await mara.parseZoneFile(`# blank comment`)
       // console.dir(r, { depth: null })
-      assert.deepStrictEqual(r, [ '# blank comment', '\n' ])
+      assert.deepStrictEqual(r, [ '# blank comment\n' ])
     })
 
     it('parses comment line with leading ws', async () => {
-      const r = await mara.parseZoneFile(` # blank comment with leading ws\n`)
+      const r = await mara.parseZoneFile(` # blank comment with leading ws`)
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r, [ '# blank comment with leading ws\n' ])
     })

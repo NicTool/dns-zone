@@ -9,9 +9,10 @@
   "scripts": {
     "bind": "npx -p nearley nearleyc src/bind.ne -o dist/bind.js",
     "mara": "npx -p nearley nearleyc src/mara.ne -o dist/mara.js",
+    "grammar": "npm run bind && npm run mara",
     "lint": "npx eslint index.js lib/*.js test/*.js",
     "lintfix": "npx eslint --fix index.js lib/*.js test/*.js",
-    "postinstall": "npm run bind && npm run mara",
+    "postinstall": "npm run grammar",
     "test": "npx mocha",
     "versions": "npx dependency-version-checker check"
   },
