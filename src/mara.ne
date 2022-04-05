@@ -4,7 +4,7 @@ main            -> entry:*  {% id %}
 entry           -> blank {% id %} | comment {% id %} | rr {% id %}
 
 blank           -> _ (comment):? eol         {% flatten %}
-comment         -> "#" anyToEOL              {% flatten %}
+comment         -> "#" anyToEOL eol          {% flatten %}
 ttl             -> uint                      {% asUint %}
 serialauto      -> "/serial"                 {% flatten %}
 ttldefault      -> "/ttl"                    {% flatten %}
