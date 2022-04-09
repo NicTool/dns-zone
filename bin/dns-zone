@@ -231,7 +231,7 @@ function ingestZoneData () {
       filePath = process.stdin.fd
     }
     else {
-      if (!opts.origin) bind.zoneOpts.origin = rr.fullyQualify(path.basename(filePath))
+      if (!bind.zoneOpts.origin) bind.zoneOpts.origin = rr.fullyQualify(path.basename(filePath))
     }
 
     if (opts.verbose) console.error(`reading file ${filePath}`)

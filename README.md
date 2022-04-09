@@ -1,3 +1,6 @@
+[![Module Tests](https://github.com/NicTool/dns-zone/actions/workflows/ci-test.yml/badge.svg)](https://github.com/NicTool/dns-zone/actions/workflows/ci-test.yml)
+[![Coverage Status](https://coveralls.io/repos/github/NicTool/dns-zone/badge.svg?branch=master)](https://coveralls.io/github/NicTool/dns-zone?branch=master)
+
 # dns-zone
 
 DNS zone tool
@@ -73,7 +76,7 @@ mail3.example.com.    3600  A      192.0.2.5
 #### from bind file to bind
 
 ````
-➜ ./bin/dns-zone -f isi.edu -i import -e bind
+➜ ./bin/dns-zone -f isi.edu -i bind -e bind
 $TTL    60
 $ORIGIN isi.edu.
 isi.edu.    IN  SOA venera.isi.edu. action.domains.isi.edu. (
@@ -164,11 +167,9 @@ This module will input a collection of [dns-resource-records](https://github.com
 ## TODO
 
 - importing
-    - [ ] write a named.conf file parser
     - [x] write a bind zone file parser
     - [x] write a tinydns data file parser
     - [x] add BIND parsing for all RRs supported by dns-rr
-    - [ ] add support for bind $INCLUDE (RFC 1035)
     - [x] write a maradns parser
 - normalize BIND zone records
     - [x] expand `@` to zone name
@@ -193,7 +194,4 @@ This module will input a collection of [dns-resource-records](https://github.com
     + easy to add a new DNS [resource record type](https://github.com/NicTool/dns-resource-record)
     + easy to add/modify/update DNS [zone rules](https://github.com/NicTool/dns-zone)
 - easily coupled with many DNS servers
-- distribution of DNS data should be:
-    + secure
-    + fast
-    + efficient
+- distribution of DNS data should be secure, fast, and efficient
