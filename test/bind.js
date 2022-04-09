@@ -1,6 +1,6 @@
 
 const assert = require('assert')
-const fs     = require('fs')
+const fs     = require('fs/promises')
 
 const RR = require('dns-resource-record')
 const zf = require('../lib/bind')
@@ -105,7 +105,6 @@ describe('bind', function () {
           flags: 0,
           owner: 'nocerts.example.com',
           tag  : 'issue',
-          ttl  : null,
           type : 'CAA',
           value: '";"',
         },
@@ -115,7 +114,6 @@ describe('bind', function () {
           flags: 0,
           owner: 'certs.example.com',
           tag  : 'issue',
-          ttl  : null,
           type : 'CAA',
           value: '"example.net"',
         },
@@ -210,7 +208,6 @@ describe('bind', function () {
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r[0], {
         owner: 'SRI-NIC.ARPA.',
-        ttl  : null,
         type : 'HINFO',
         cpu  : 'DEC-2060',
         os   : 'TOPS20',
@@ -320,7 +317,7 @@ describe('bind', function () {
       )\n`)
       assert.deepStrictEqual(r[0], {
         owner  : 'example.com.',
-        ttl    : null,
+        class  : 'IN',
         type   : 'SOA',
         mname  : 'ns1.example.com.',
         rname  : 'matt.example.com.',
@@ -423,43 +420,37 @@ describe('bind', function () {
 
     it('parses cadillac.net zone file', async () => {
       const file = './test/fixtures/bind/cadillac.net'
-      fs.readFile(file, (err, buf) => {
-        if (err) throw err
+      const buf = await fs.readFile(file)
 
-        zf.parseZoneFile(buf.toString()).then(r => {
-          // console.dir(r, { depth: null })
-          assert.equal(r.length, 41)
-        })
+      zf.parseZoneFile(buf.toString()).then(r => {
+        // console.dir(r, { depth: null })
+        assert.equal(r.length, 41)
       })
     })
 
     it('parses isi.edu zone file', async () => {
       const file = './test/fixtures/bind/isi.edu'
-      fs.readFile(file, (err, buf) => {
-        if (err) throw err
+      const buf = await fs.readFile(file)
 
-        zf.parseZoneFile(buf.toString()).then(zf.expandShortcuts).then(r => {
-          // console.dir(r, { depth: null })
-          assert.equal(r.length, 11)
-        })
+      zf.parseZoneFile(buf.toString()).then(zf.expandShortcuts).then(r => {
+        // console.dir(r, { depth: null })
+        assert.equal(r.length, 11)
       })
     })
 
     it('parses example.com zone file', async () => {
       const file = './test/fixtures/bind/example.com'
-      fs.readFile(file, (err, buf) => {
-        if (err) throw err
+      const buf = await fs.readFile(file)
 
-        zf.parseZoneFile(buf.toString())
-          .then(zf.expandShortcuts)
-          .then(r => {
-            // console.dir(r, { depth: null })
-            assert.equal(r.length, 15)
-          })
-          .catch(e => {
-            console.error(e)
-          })
-      })
+      zf.parseZoneFile(buf.toString())
+        .then(zf.expandShortcuts)
+        .then(r => {
+          // console.dir(r, { depth: null })
+          assert.equal(r.length, 15)
+        })
+        .catch(e => {
+          console.error(e)
+        })
     })
   })
 

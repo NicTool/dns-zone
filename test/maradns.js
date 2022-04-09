@@ -1,6 +1,6 @@
 
 const assert = require('assert')
-// const fs     = require('fs')
+const fs     = require('fs').promises
 
 const RR = require('dns-resource-record')
 const mara = require('../lib/maradns')
@@ -19,11 +19,11 @@ describe('maradns', function () {
       assert.deepStrictEqual(r, [ '\n' ])
     })
 
-    it.skip('parses two blank lines', async () => {
+    it('parses two blank lines', async () => {
       // stripping blank lines performance++, breaks this test-
       const r = await mara.parseZoneFile(`\n\n`)
       // console.dir(r, { depth: null })
-      assert.deepStrictEqual(r, [ '\n' ])
+      assert.deepStrictEqual(r, [ '\n', '\n' ])
     })
 
     it('parses line with only whitespace', async () => {
@@ -32,15 +32,15 @@ describe('maradns', function () {
       assert.deepStrictEqual(r, [ '\n' ])
     })
 
-    it.skip('parses comment line', async () => {
+    it('parses comment line', async () => {
       // I strip WS within this function, which breaks this test
-      const r = await mara.parseZoneFile(`# blank comment\n`)
+      const r = await mara.parseZoneFile(`# blank comment`)
       // console.dir(r, { depth: null })
-      assert.deepStrictEqual(r, [ '# blank comment', '\n' ])
+      assert.deepStrictEqual(r, [ '# blank comment\n' ])
     })
 
     it('parses comment line with leading ws', async () => {
-      const r = await mara.parseZoneFile(` # blank comment with leading ws\n`)
+      const r = await mara.parseZoneFile(` # blank comment with leading ws`)
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r, [ '# blank comment with leading ws\n' ])
     })
@@ -179,6 +179,7 @@ describe('maradns', function () {
       const r = await mara.parseZoneFile(`mail.% +86400 A 10.22.23.24 ~\n`)
       assert.deepStrictEqual(r[0], {
         owner  : 'mail.%',
+        ttl    : 86400,
         address: '10.22.23.24',
         type   : 'A',
       })
@@ -188,6 +189,7 @@ describe('maradns', function () {
       const r = await mara.parseZoneFile(`15.12.11.10.in-addr.arpa. +64000 PTR    c.example.net. ~\n`)
       assert.deepStrictEqual(r[0], {
         owner: '15.12.11.10.in-addr.arpa.',
+        ttl  : 64000,
         type : 'PTR',
         dname: 'c.example.net.',
       })
@@ -207,6 +209,7 @@ describe('maradns', function () {
       const r = await mara.parseZoneFile(`oct2021._domainkey.example.com. +86400 TXT 'v=DKIM1;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoyUzGOTSOmakY8BcxXgi0mN/nFegLBPs7aaGQUtjHfa8yUrt9T2j6GSXgdjLuG3R43WjePQv3RHzc+bwwOkdw0XDOXiztn5mhrlaflbVr5PMSTrv64/cpFQKLtgQx8Vgqp7Dh3jw13rLomRTqJFgMrMHdhIibZEa69gtuAfDqoeXo6QDSGk5JuBAeRHEH27FriHulg5ob''4F4lmh7fMFVsDGkQEF6jaIVYqvRjDyyQed3R3aTJX3fpb3QrtRqvfn/LAf+3kzW58AjsERpsNCSTD2RquxbnyoR/1wdGKb8cUlD/EXvqtvpVnOzHeSeMEqex3kQI8HOGsEehWZlKd+GqwIDAQAB' ~\n`)
       assert.deepStrictEqual(r[0], {
         owner: 'oct2021._domainkey.example.com.',
+        ttl  : 86400,
         type : 'TXT',
         data : [
           'v=DKIM1;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoyUzGOTSOmakY8BcxXgi0mN/nFegLBPs7aaGQUtjHfa8yUrt9T2j6GSXgdjLuG3R43WjePQv3RHzc+bwwOkdw0XDOXiztn5mhrlaflbVr5PMSTrv64/cpFQKLtgQx8Vgqp7Dh3jw13rLomRTqJFgMrMHdhIibZEa69gtuAfDqoeXo6QDSGk5JuBAeRHEH27FriHulg5ob4F4lmh7fMFVsDGkQEF6jaIVYqvRjDyyQed3R3aTJX3fpb3QrtRqvfn/LAf+3kzW58AjsERpsNCSTD2RquxbnyoR/1wdGKb8cUlD/EXvqtvpVnOzHeSeMEqex3kQI8HOGsEehWZlKd+GqwIDAQAB',
@@ -289,5 +292,22 @@ describe('maradns', function () {
         }),
       ])
     })
+  })
+
+  it('loads and validates example.com', async function () {
+    const file = './test/fixtures/mara/example.net.csv2'
+    const buf = await fs.readFile(file)
+
+    mara.zoneOpts.ttl = 3600
+    mara.zoneOpts.origin = 'example.net.'
+    mara.parseZoneFile(buf.toString())
+      .then(mara.expandShortcuts)
+      .then(r => {
+        // console.dir(r, { depth: null })
+        assert.equal(r.length, 40)
+      })
+      .catch(e => {
+        console.error(e)
+      })
   })
 })

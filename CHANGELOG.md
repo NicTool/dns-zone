@@ -2,6 +2,13 @@
 #### 1.N.N - YYYY-MM-DD
 
 
+#### 0.7.0 - 2022-04-08
+
+- test: load example.net maradns zone file
+- bind: do more array unpacking in parser
+- style: use fs promises
+
+
 #### 0.6.0 - 2022-03-29
 
 - rename: zonefile -> bind
