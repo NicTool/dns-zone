@@ -2,10 +2,19 @@
 #### 1.N.N - YYYY-MM-DD
 
 
+#### 0.8.0 - 2022-04-12
+
+- style(bin/dns-zone): use fs/promises API
+-
+
+
 #### 0.7.0 - 2022-04-08
 
-- test: load example.net maradns zone file
 - bind: do more array unpacking in parser
+- test: load example.net maradns zone file
+- mara: more flattening in parser, fix ttl
+- mara: add eol to comment
+- mara: improve blank line handling
 - style: use fs promises
 
 

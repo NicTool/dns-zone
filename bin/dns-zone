@@ -1,6 +1,6 @@
 #!node
 
-const fs   = require('fs')
+const fs   = require('fs/promises')
 const path = require('path')
 const os   = require('os')
 
@@ -62,7 +62,7 @@ function checkZone (zoneArray) {
       resolve(zoneArray)
     }
     catch (e) {
-      console.error(e)
+      // console.error(e)
       reject(e)
     }
   })
@@ -96,10 +96,10 @@ function usageOptions () {
     {
       name        : 'file',
       alias       : 'f',
-      defaultValue: 'stdin',
+      defaultValue: '',
       type        : String,
-      typeLabel   : '<stdin | file path>',
-      description : 'source of DNS zone data (stdin)',
+      typeLabel   : '<file path | - (stdin)>',
+      description : 'source of DNS zone data',
       group       : 'io',
     },
     {
@@ -222,13 +222,13 @@ function usageSections () {
 function ingestZoneData () {
   return new Promise((resolve, reject) => {
 
-    const res = { type: opts.import }
     if (!opts.import) usage()
+    if (!opts.file) usage()
 
-    let filePath = opts.file || 'stdin'
+    let filePath = opts.file
 
-    if (filePath === 'stdin') {
-      filePath = process.stdin.fd
+    if (filePath === '-') {
+      filePath = '/dev/stdin' // process.stdin.fd
     }
     else {
       if (!bind.zoneOpts.origin) bind.zoneOpts.origin = rr.fullyQualify(path.basename(filePath))
@@ -236,13 +236,12 @@ function ingestZoneData () {
 
     if (opts.verbose) console.error(`reading file ${filePath}`)
 
-    fs.readFile(filePath, (err, buf) => {
-      if (err) return reject(err)
-
-      res.data = buf.toString()
-
-      resolve(res)
-    })
+    fs.readFile(filePath).then(buf => {
+      resolve({
+        type: opts.import,
+        data: buf.toString(),
+      })
+    }).catch(reject)
   })
 }
 
