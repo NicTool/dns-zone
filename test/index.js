@@ -1,8 +1,8 @@
 
-const assert = require('assert')
+import assert from 'assert'
 
-const DNSZONE = require('../index').ZONE
-const RR      = require('dns-resource-record')
+import { ZONE } from '../index.js'
+import RR      from 'dns-resource-record'
 
 const testSOA = new RR.SOA({
   owner  : 'example.com.',
@@ -21,14 +21,14 @@ const testSOA = new RR.SOA({
 describe('dns-zone', function () {
 
   it('creates a zone object', function () {
-    const zone = new DNSZONE({ origin: 'example.com' })
-    assert.ok(zone instanceof DNSZONE)
+    const zone = new ZONE({ origin: 'example.com' })
+    assert.ok(zone instanceof ZONE)
   })
 
   describe('setSOA', function () {
 
     before(function () {
-      this.zone = new DNSZONE({ origin: 'example.com' })
+      this.zone = new ZONE({ origin: 'example.com' })
     })
 
     it('sets the zones SOA', function () {
@@ -49,7 +49,7 @@ describe('dns-zone', function () {
   describe('addRR', function () {
 
     before(function () {
-      this.zone = new DNSZONE({ origin: 'example.com' })
+      this.zone = new ZONE({ origin: 'example.com' })
       this.zone.setSOA(testSOA)
     })
 

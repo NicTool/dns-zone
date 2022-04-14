@@ -1,9 +1,9 @@
 
-const assert = require('assert')
-const fs     = require('fs').promises
+import assert from 'assert'
+import fs     from 'fs/promises'
 
-const RR = require('dns-resource-record')
-const mara = require('../lib/maradns')
+import RR   from 'dns-resource-record'
+import mara from '../lib/maradns.js'
 
 beforeEach(function () {
   mara.zoneOpts = {}

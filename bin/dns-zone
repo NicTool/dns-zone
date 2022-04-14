@@ -43,7 +43,7 @@ ingestZoneData()
       case 'maradns':
         return maradns.parseZoneFile(r.data).then(maradns.expandShortcuts).then(checkZone)
       default:
-        return bind.parseZoneFile(r.data).then(bind.expandShortcuts).then(checkZone)
+        return bind.parseZoneFile(r.data).then(checkZone)
     }
   })
   .then(output)

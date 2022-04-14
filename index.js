@@ -1,7 +1,7 @@
 
-const os = require('os')
+import os from 'os'
 
-class ZONE extends Map {
+export class ZONE extends Map {
   constructor (opts = {}) {
     super()
 
@@ -139,4 +139,17 @@ class ZONE extends Map {
   }
 }
 
-module.exports = { ZONE }
+export default { ZONE, valueCleanup }
+
+export function valueCleanup (str) {
+
+  if (str.startsWith('"') && str.endsWith('"')) {
+    str = str.substr(1,str.length -2) // strip double quotes
+  }
+
+  if (/^[0-9.]+$/.test(str) && Number(str).toString() === str) {
+    return Number(str)
+  }
+
+  return str
+}

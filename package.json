@@ -3,6 +3,7 @@
   "version": "0.8.0",
   "description": "DNS Zone",
   "main": "index.js",
+  "type": "module",
   "bin": {
     "dns-zone": "./bin/dns-zone"
   },
