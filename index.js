@@ -1,6 +1,5 @@
 
 import fs from 'fs/promises'
-import os from 'os'
 
 export class ZONE extends Map {
   constructor (opts = {}) {
@@ -21,7 +20,15 @@ export class ZONE extends Map {
 
   addRR (rr) {
 
-    if (rr === os.EOL) return
+    if (rr.$TTL) {
+      this.setTTL(rr.$TTL)
+      return
+    }
+
+    if (rr.$ORIGIN) {
+      this.setOrigin(rr.$ORIGIN)
+      return
+    }
 
     const type = rr.get('type')
 

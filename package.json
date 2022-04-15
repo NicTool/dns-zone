@@ -5,11 +5,11 @@
   "main": "index.js",
   "type": "module",
   "bin": {
-    "dns-zone": "./bin/dns-zone"
+    "dns-zone": "./bin/dns-zone.js"
   },
   "scripts": {
-    "lint": "npx eslint index.js lib/*.js test/*.js",
-    "lintfix": "npx eslint --fix index.js lib/*.js test/*.js",
+    "lint": "npx eslint *.js lib/*.js test/*.js",
+    "lintfix": "npx eslint --fix *.js lib/*.js test/*.js",
     "test": "npx mocha",
     "versions": "npx dependency-version-checker check"
   },

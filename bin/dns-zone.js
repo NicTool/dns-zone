@@ -1,26 +1,28 @@
 #!node
 
-const fs   = require('fs/promises')
-const path = require('path')
-const os   = require('os')
+import fs   from 'fs/promises'
+import path from 'path'
+import os   from 'os'
 
-const chalk = require('chalk')
-const cmdLineArgs = require('command-line-args')
-const cmdLineUsage = require('command-line-usage')
+import chalk from 'chalk'
+import cmdLineArgs from 'command-line-args'
+import cmdLineUsage from 'command-line-usage'
 
-const ZONE    = require('../index').ZONE
-const bind    = require('../lib/bind')
-const tinydns = require('../lib/tinydns')
-const maradns = require('../lib/maradns')
-const RR      = require('dns-resource-record')
-const rr      = new RR.A(null)
+import * as zf      from '../index.js'
+import * as bind    from '../lib/bind.js'
+import * as tinydns from '../lib/tinydns.js'
+import * as maradns from '../lib/maradns.js'
+
+import RR from 'dns-resource-record'
+
+const rr = new RR.A(null)
 
 // CLI argument processing
 const opts = cmdLineArgs(usageOptions())._all
 if (opts.verbose) console.error(opts)
 if (opts.help) usage()
 
-bind.zoneOpts = maradns.zoneOpts = {
+const optsObj = {
   origin: rr.fullyQualify(opts.origin) || '',
   ttl   : opts.ttl || 0,
   class : opts.class || 'IN',
@@ -32,6 +34,8 @@ bind.zoneOpts = maradns.zoneOpts = {
   },
   verbose: opts.verbose,
 }
+Object.assign(bind.zoneOpts, optsObj)
+Object.assign(maradns.zoneOpts, optsObj)
 
 if (opts.verbose) console.error(bind.zoneOpts)
 
@@ -41,7 +45,7 @@ ingestZoneData()
       case 'tinydns':
         return tinydns.parseData(r.data).then(checkZone)
       case 'maradns':
-        return maradns.parseZoneFile(r.data).then(maradns.expandShortcuts).then(checkZone)
+        return maradns.parseZoneFile(r.data).then(checkZone)
       default:
         return bind.parseZoneFile(r.data).then(checkZone)
     }
@@ -55,8 +59,8 @@ ingestZoneData()
 function checkZone (zoneArray) {
   return new Promise((resolve, reject) => {
     try {
-      new ZONE({
-        ttl: bind.zoneOpts.ttl, origin: bind.zoneOpts.origin, RR: zoneArray,
+      new zf.ZONE({
+        ttl: optsObj.ttl, origin: optsObj.origin, RR: zoneArray,
       })
       // console.log(z)
       resolve(zoneArray)
@@ -201,15 +205,15 @@ function usageSections () {
       content: [
         {
           desc   : '1. BIND file to human',
-          example: './bin/dns-zone -i ./isi.edu',
+          example: './bin/dns-zone -i bind -f isi.edu',
         },
         {
           desc   : '2. BIND file to tinydns',
-          example: './bin/dns-zone -i ./isi.edu -e tinydns',
+          example: './bin/dns-zone -i bind -f isi.edu -e tinydns',
         },
         {
           desc   : '3. tinydns file to BIND',
-          example: './bin/dns-zone -i ./data -e bind',
+          example: './bin/dns-zone -i tinydns -f data -e bind',
         },
       ],
     },
@@ -267,6 +271,10 @@ function isBlank (rr) {
 function toBind (zoneArray, origin) {
   for (const rr of zoneArray) {
     if (isBlank(rr)) continue
+    if (!rr.toBind) {
+      process.stdout.write(`${Object.keys(rr)[0]} ${Object.values(rr)[0]}\n`)
+      continue
+    }
     process.stdout.write(rr.toBind(bind.zoneOpts))
     bind.zoneOpts.previousOwner = rr.get('owner')
   }
@@ -292,6 +300,7 @@ function toHuman (zoneArray) {
   const fields = [ 'owner', 'ttl', 'type' ]
   zoneArray.map(r => {
     if (r === os.EOL) return
+    if (!r.get) return
     for (const f of fields) {
       if (getWidth(r.get(f)) > widest[f]) widest[f] = getWidth(r.get(f))
     }
@@ -305,6 +314,10 @@ function toHuman (zoneArray) {
 
   for (const r of zoneArray) {
     if (isBlank(r)) continue
+    if (!r.get) {
+      process.stdout.write(`${Object.keys(r)[0]} ${Object.values(r)[0]}\n`)
+      continue
+    }
 
     process.stdout.write(r.get('owner').padEnd(widest.owner + 2, ' '))
 
@@ -325,6 +338,12 @@ function toHuman (zoneArray) {
 function toMaraDNS (zoneArray) {
   for (const rr of zoneArray) {
     if (rr === os.EOL) continue
+    if (rr.$TTL) {
+      process.stdout.write(`/ttl ${rr.$TTL}\n`); continue
+    }
+    if (rr.$ORIGIN) {
+      process.stdout.write(`/origin ${rr.$ORIGIN}\n`); continue
+    }
     process.stdout.write(rr.toMaraDNS())
   }
 }
