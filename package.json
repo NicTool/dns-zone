@@ -1,18 +1,15 @@
 {
   "name": "dns-zone-validator",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "DNS Zone",
   "main": "index.js",
+  "type": "module",
   "bin": {
-    "dns-zone": "./bin/dns-zone"
+    "dns-zone": "./bin/dns-zone.js"
   },
   "scripts": {
-    "bind": "npx -p nearley nearleyc src/bind.ne -o dist/bind.js",
-    "mara": "npx -p nearley nearleyc src/mara.ne -o dist/mara.js",
-    "grammar": "npm run bind && npm run mara",
-    "lint": "npx eslint index.js lib/*.js test/*.js",
-    "lintfix": "npx eslint --fix index.js lib/*.js test/*.js",
-    "postinstall": "npm run grammar",
+    "lint": "npx eslint *.js lib/*.js test/*.js",
+    "lintfix": "npx eslint --fix *.js lib/*.js test/*.js",
     "test": "npx mocha",
     "versions": "npx dependency-version-checker check"
   },
@@ -42,7 +39,6 @@
   "dependencies": {
     "command-line-args": "^5.2.1",
     "command-line-usage": "^6.1.1",
-    "dns-resource-record": "^0.9.7",
-    "nearley": "^2.20.1"
+    "dns-resource-record": "^0.9.7"
   }
 }

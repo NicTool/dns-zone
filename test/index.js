@@ -1,8 +1,9 @@
 
-const assert = require('assert')
+import assert from 'assert'
 
-const DNSZONE = require('../index').ZONE
-const RR      = require('dns-resource-record')
+import { ZONE } from '../index.js'
+import * as dz from '../index.js'
+import RR      from 'dns-resource-record'
 
 const testSOA = new RR.SOA({
   owner  : 'example.com.',
@@ -21,14 +22,14 @@ const testSOA = new RR.SOA({
 describe('dns-zone', function () {
 
   it('creates a zone object', function () {
-    const zone = new DNSZONE({ origin: 'example.com' })
-    assert.ok(zone instanceof DNSZONE)
+    const zone = new ZONE({ origin: 'example.com' })
+    assert.ok(zone instanceof ZONE)
   })
 
   describe('setSOA', function () {
 
     before(function () {
-      this.zone = new DNSZONE({ origin: 'example.com' })
+      this.zone = new ZONE({ origin: 'example.com' })
     })
 
     it('sets the zones SOA', function () {
@@ -49,7 +50,7 @@ describe('dns-zone', function () {
   describe('addRR', function () {
 
     before(function () {
-      this.zone = new DNSZONE({ origin: 'example.com' })
+      this.zone = new ZONE({ origin: 'example.com' })
       this.zone.setSOA(testSOA)
     })
 
@@ -207,6 +208,19 @@ describe('dns-zone', function () {
         message: `owner exists as CNAME, not allowed, RFC 1034, 2181, & 4035`,
       })
     })
+  })
 
+  describe('hasUnquoted', function () {
+    it('returns true when char is in string unquoted', function () {
+      assert.strictEqual(dz.hasUnquoted('this is a ( string of text', '"', '('), true)
+    })
+
+    it('returns false when char is not in string', function () {
+      assert.strictEqual(dz.hasUnquoted('this is a string of text', '"', '('), false)
+    })
+
+    it('returns false when char is in quoted string', function () {
+      assert.strictEqual(dz.hasUnquoted('this is a string "of ( quoted" text', '"', '('), false)
+    })
   })
 })
