@@ -3,75 +3,65 @@ import assert from 'assert'
 import fs     from 'fs/promises'
 
 import RR from 'dns-resource-record'
-import zf from '../lib/bind.js'
+import bind from '../lib/bind.js'
 
 beforeEach(() => {
-  delete zf.zoneOpts.ttl
-  delete zf.zoneOpts.origin
+  Object.keys(bind.zoneOpts).map(k => delete bind.zoneOpts[k])
 })
 
 describe('bind', function () {
 
-  describe('hasUnquoted', function () {
-    it('returns true when char is in string unquoted', function () {
-      assert.strictEqual(zf.hasUnquoted('(', 'this is a ( string of text'), true)
-    })
-
-    it('returns false when char is not in string', function () {
-      assert.strictEqual(zf.hasUnquoted('(', 'this is a string of text'), false)
-    })
-
-    it('returns false when char is in quoted string', function () {
-      assert.strictEqual(zf.hasUnquoted('(', 'this is a string "of ( quoted" text'), false)
-    })
-  })
-
   describe('parseZoneFile', function () {
 
     it('parses blank line', async () => {
-      const r = await zf.parseZoneFile('')
+      bind.zoneOpts.showBlank = true
+      const r = await bind.parseZoneFile('')
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r, [ '' ])
     })
 
     it('parses two blank lines', async () => {
-      const r = await zf.parseZoneFile(`\n`)
+      bind.zoneOpts.showBlank = true
+      const r = await bind.parseZoneFile(`\n`)
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r, [ '', '' ])
     })
 
     it('parses line with only whitespace', async () => {
-      const r = await zf.parseZoneFile(` \t`)
+      bind.zoneOpts.showBlank = true
+      const r = await bind.parseZoneFile(` \t`)
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r, [ ' \t' ])
     })
 
     it('parses comment line', async () => {
-      const r = await zf.parseZoneFile(`; blank comment`)
+      bind.zoneOpts.showComment = true
+      const r = await bind.parseZoneFile(`; blank comment`)
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r, [ '; blank comment' ])
     })
 
     it('parses comment line with leading ws', async () => {
-      const r = await zf.parseZoneFile(` ; blank comment with leading ws`)
+      bind.zoneOpts.showComment = true
+      const r = await bind.parseZoneFile(` ; blank comment with leading ws`)
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r, [ ' ; blank comment with leading ws' ])
     })
 
     it('parses $TTL line', async () => {
-      const r = await zf.parseZoneFile(`$TTL 86400`)
+      const r = await bind.parseZoneFile(`$TTL 86400`)
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r[0], { $TTL: 86400 })
     })
 
     it('parses $TTL line with a comment', async () => {
-      const r = await zf.parseZoneFile(`$TTL 86400; yikers`)
+      const r = await bind.parseZoneFile(`$TTL 86400; yikers`)
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r[0], { $TTL: 86400 })
     })
 
     it(`parses SOA`, async () => {
-      const r = await zf.parseZoneFile(`example.com.   86400   IN  SOA ns1.example.com.    hostmaster.example.com. (
+      const r = await bind.parseZoneFile(`example.com.   86400   IN  SOA ns1.example.com.    hostmaster.example.com. (
                       2021102100    ; serial
                       16384   ; refresh
                       2048     ; retry
@@ -96,7 +86,7 @@ describe('bind', function () {
     })
 
     it(`parses SOA one liner`, async () => {
-      const r = await zf.parseZoneFile(`example.com. 86400 IN SOA ns1.example.com. hostmaster.example.com. 2021102100 16384 2048 604800 2560`)
+      const r = await bind.parseZoneFile(`example.com. 86400 IN SOA ns1.example.com. hostmaster.example.com. 2021102100 16384 2048 604800 2560`)
       assert.deepStrictEqual(r[0], new RR.SOA({
         owner  : 'example.com.',
         ttl    : 86400,
@@ -113,7 +103,7 @@ describe('bind', function () {
     })
 
     it(`parses SOA one liner, unusual continuations`, async () => {
-      const r = await zf.parseZoneFile(`example.com. 86400 IN SOA ( ns1.example.com. hostmaster.example.com. 2021102100 16384 2048 604800 2560 )`)
+      const r = await bind.parseZoneFile(`example.com. 86400 IN SOA ( ns1.example.com. hostmaster.example.com. 2021102100 16384 2048 604800 2560 )`)
       assert.deepStrictEqual(r[0], new RR.SOA({
         owner  : 'example.com.',
         ttl    : 86400,
@@ -130,7 +120,7 @@ describe('bind', function () {
     })
 
     it('parses A line', async () => {
-      const r = await zf.parseZoneFile(`cadillac.net.   86400   IN  A   66.128.51.173\n`)
+      const r = await bind.parseZoneFile(`cadillac.net.   86400   IN  A   66.128.51.173\n`)
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r[0], new RR.A({
         owner  : 'cadillac.net.',
@@ -168,15 +158,15 @@ describe('bind', function () {
 
     for (const t of testCAAs) {
       it(`parses CAA record: ${t.result.owner}`, async () => {
-        zf.zoneOpts.ttl = 86400
-        const r = await zf.parseZoneFile(t.bind)
+        bind.zoneOpts.ttl = 86400
+        const r = await bind.parseZoneFile(t.bind)
         assert.deepStrictEqual(r[0], new RR.CAA(t.result))
       })
     }
 
     it('parses CNAME line, absolute', async () => {
-      zf.zoneOpts.origin = 'example.com.'
-      const r = await zf.parseZoneFile(`www.example.com. 28800 IN  CNAME vhost0.example.com.\n`)
+      bind.zoneOpts.origin = 'example.com.'
+      const r = await bind.parseZoneFile(`www.example.com. 28800 IN  CNAME vhost0.example.com.\n`)
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r[0], new RR.CNAME({
         owner: 'www.example.com.',
@@ -188,8 +178,8 @@ describe('bind', function () {
     })
 
     it('parses CNAME line, relative', async () => {
-      zf.zoneOpts.origin = 'example.com.'
-      const r = await zf.parseZoneFile(`www 28800 IN  CNAME vhost0\n`)
+      bind.zoneOpts.origin = 'example.com.'
+      const r = await bind.parseZoneFile(`www 28800 IN  CNAME vhost0\n`)
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r[0], new RR.CNAME({
         owner: 'www.example.com.',
@@ -201,7 +191,7 @@ describe('bind', function () {
     })
 
     it('parses DNAME line', async () => {
-      const r = await zf.parseZoneFile(`_tcp.theartfarm.com. 86400 IN  DNAME _tcp.theartfarm.com.\n`)
+      const r = await bind.parseZoneFile(`_tcp.theartfarm.com. 86400 IN  DNAME _tcp.theartfarm.com.\n`)
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r[0], new RR.DNAME({
         owner : '_tcp.theartfarm.com.',
@@ -213,7 +203,7 @@ describe('bind', function () {
     })
 
     it('parses DNSKEY record', async () => {
-      const r = await zf.parseZoneFile(
+      const r = await bind.parseZoneFile(
         `example.com. 86400 IN DNSKEY 256 3 5 AQPSKmynfzW4kyBv015MUG2DeIQ3 Cbl+BBZH4b/0PY1kxkmvHjcZc8no kfzj31GajIQKY+5CptLr3buXA10h WqTkF7H6RfoRqXQeogmMHfpftf6z Mv1LyBUgia7za6ZEzOJBOztyvhjL 742iU/TpPSEDhm2SNKLijfUppn1U aNvv4w==\n`)
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r[0], new RR.DNSKEY({
@@ -229,7 +219,7 @@ describe('bind', function () {
     })
 
     it('parses DS record', async () => {
-      const r = await zf.parseZoneFile(
+      const r = await bind.parseZoneFile(
         `dskey.example.com. 86400 IN DS 60485 5 1 2BB183AF5F22588179A53B0A 98631FAD1A292118\n`)
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r[0], new RR.DS({
@@ -245,8 +235,8 @@ describe('bind', function () {
     })
 
     it('parses HINFO line', async () => {
-      zf.zoneOpts.ttl = 86400
-      const r = await zf.parseZoneFile(`SRI-NIC.ARPA. HINFO   DEC-2060 TOPS20\n`)
+      bind.zoneOpts.ttl = 86400
+      const r = await bind.parseZoneFile(`SRI-NIC.ARPA. HINFO   DEC-2060 TOPS20\n`)
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r[0], new RR.HINFO({
         owner: 'SRI-NIC.ARPA.',
@@ -258,7 +248,7 @@ describe('bind', function () {
     })
 
     it('parses LOC line', async () => {
-      const r = await zf.parseZoneFile(`rwy04l.logan-airport.boston. 3600 IN LOC 42 21 28.764 N 71 0 51.617 W -44m 2000m\n`)
+      const r = await bind.parseZoneFile(`rwy04l.logan-airport.boston. 3600 IN LOC 42 21 28.764 N 71 0 51.617 W -44m 2000m\n`)
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r[0], new RR.LOC({
         owner  : 'rwy04l.logan-airport.boston.',
@@ -270,7 +260,7 @@ describe('bind', function () {
     })
 
     it('parses MX line', async () => {
-      const r = await zf.parseZoneFile(`test.example.com. 3600 IN MX 0  mail.example.com.\n`)
+      const r = await bind.parseZoneFile(`test.example.com. 3600 IN MX 0  mail.example.com.\n`)
       assert.deepStrictEqual(r[0], new RR.MX({
         class     : 'IN',
         exchange  : 'mail.example.com.',
@@ -282,7 +272,7 @@ describe('bind', function () {
     })
 
     it('parses NAPTR line', async () => {
-      const r = await zf.parseZoneFile(`cid.urn.arpa.   86400    IN    NAPTR 100    10    ""    ""    "!^urn:cid:.+@([^\\.]+\\.)(.*)$!\x02!i"   .\n`)
+      const r = await bind.parseZoneFile(`cid.urn.arpa.   86400    IN    NAPTR 100    10    ""    ""    "!^urn:cid:.+@([^\\.]+\\.)(.*)$!\x02!i"   .\n`)
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r[0], new RR.NAPTR({
         owner      : 'cid.urn.arpa.',
@@ -299,8 +289,8 @@ describe('bind', function () {
     })
 
     it('parses NS line', async () => {
-      zf.zoneOpts.origin = 'cadillac.net.'
-      const r = await zf.parseZoneFile(`@   14400   IN  NS  ns1.cadillac.net.  ; this is a comment\n`)
+      bind.zoneOpts.origin = 'cadillac.net.'
+      const r = await bind.parseZoneFile(`@   14400   IN  NS  ns1.cadillac.net.  ; this is a comment\n`)
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r[0], new RR.NS({
         owner: 'cadillac.net.',
@@ -312,7 +302,7 @@ describe('bind', function () {
     })
 
     it('parses NS line', async () => {
-      const r = await zf.parseZoneFile(`example.com.  3600  IN  NS  ns1.example.com.\n`)
+      const r = await bind.parseZoneFile(`example.com.  3600  IN  NS  ns1.example.com.\n`)
       assert.deepStrictEqual(r[0], new RR.NS({
         owner: 'example.com.',
         ttl  : 3600,
@@ -323,7 +313,7 @@ describe('bind', function () {
     })
 
     it('parses PTR line', async () => {
-      const r = await zf.parseZoneFile(`2.2.0.192.in-addr.arpa. 86400  IN  PTR dhcp.example.com.\n`)
+      const r = await bind.parseZoneFile(`2.2.0.192.in-addr.arpa. 86400  IN  PTR dhcp.example.com.\n`)
       assert.deepStrictEqual(r[0], new RR.PTR({
         class: 'IN',
         dname: 'dhcp.example.com.',
@@ -334,9 +324,9 @@ describe('bind', function () {
     })
 
     it('parses SOA line', async () => {
-      zf.zoneOpts.origin = 'example.com.'
-      zf.zoneOpts.ttl = 86400
-      const r = await zf.parseZoneFile(`example.com.  IN  SOA ns1.example.com. matt.example.com. 1 7200 3600 1209600 3600`)
+      bind.zoneOpts.origin = 'example.com.'
+      bind.zoneOpts.ttl = 86400
+      const r = await bind.parseZoneFile(`example.com.  IN  SOA ns1.example.com. matt.example.com. 1 7200 3600 1209600 3600`)
       assert.deepStrictEqual(r[0], new RR.SOA({
         owner  : 'example.com.',
         class  : 'IN',
@@ -353,7 +343,7 @@ describe('bind', function () {
     })
 
     it('parses TXT line', async () => {
-      const r = await zf.parseZoneFile(`oct2021._domainkey.example.com. 86400  IN  TXT "v=DKIM1;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoyUzGOTSOmakY8BcxXgi0mN/nFegLBPs7aaGQUtjHfa8yUrt9T2j6GSXgdjLuG3R43WjePQv3RHzc+bwwOkdw0XDOXiztn5mhrlaflbVr5PMSTrv64/cpFQKLtgQx8Vgqp7Dh3jw13rLomRTqJFgMrMHdhIibZEa69gtuAfDqoeXo6QDSGk5JuBAeRHEH27FriHulg5ob" "4F4lmh7fMFVsDGkQEF6jaIVYqvRjDyyQed3R3aTJX3fpb3QrtRqvfn/LAf+3kzW58AjsERpsNCSTD2RquxbnyoR/1wdGKb8cUlD/EXvqtvpVnOzHeSeMEqex3kQI8HOGsEehWZlKd+GqwIDAQAB"\n`)
+      const r = await bind.parseZoneFile(`oct2021._domainkey.example.com. 86400  IN  TXT "v=DKIM1;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoyUzGOTSOmakY8BcxXgi0mN/nFegLBPs7aaGQUtjHfa8yUrt9T2j6GSXgdjLuG3R43WjePQv3RHzc+bwwOkdw0XDOXiztn5mhrlaflbVr5PMSTrv64/cpFQKLtgQx8Vgqp7Dh3jw13rLomRTqJFgMrMHdhIibZEa69gtuAfDqoeXo6QDSGk5JuBAeRHEH27FriHulg5ob" "4F4lmh7fMFVsDGkQEF6jaIVYqvRjDyyQed3R3aTJX3fpb3QrtRqvfn/LAf+3kzW58AjsERpsNCSTD2RquxbnyoR/1wdGKb8cUlD/EXvqtvpVnOzHeSeMEqex3kQI8HOGsEehWZlKd+GqwIDAQAB"\n`)
       assert.deepStrictEqual(r[0], new RR.TXT({
         owner: 'oct2021._domainkey.example.com.',
         ttl  : 86400,
@@ -364,7 +354,7 @@ describe('bind', function () {
     })
 
     it('parses SMIMEA line', async () => {
-      const r = await zf.parseZoneFile(`_443._tcp.www.example.com. 3600 IN SMIMEA 0 0 1 d2abde240d7cd3ee6b4b28c54df034b9 7983a1d16e8a410e4561cb106618e971`)
+      const r = await bind.parseZoneFile(`_443._tcp.www.example.com. 3600 IN SMIMEA 0 0 1 d2abde240d7cd3ee6b4b28c54df034b9 7983a1d16e8a410e4561cb106618e971`)
       assert.deepStrictEqual(r[0], new RR.SMIMEA({
         owner                         : '_443._tcp.www.example.com.',
         ttl                           : 3600,
@@ -378,7 +368,7 @@ describe('bind', function () {
     })
 
     it('parses SSHFP line', async () => {
-      const r = await zf.parseZoneFile(`mail.example.com.   86400    IN    SSHFP 1  1   ed8c6e16fdae4f633eee6a7b8f64fdd356bbb32841d535565d777014c9ea4c26`)
+      const r = await bind.parseZoneFile(`mail.example.com.   86400    IN    SSHFP 1  1   ed8c6e16fdae4f633eee6a7b8f64fdd356bbb32841d535565d777014c9ea4c26`)
       assert.deepStrictEqual(r[0], new RR.SSHFP({
         owner      : 'mail.example.com.',
         ttl        : 86400,
@@ -391,7 +381,7 @@ describe('bind', function () {
     })
 
     it('parses SRV line', async () => {
-      const r = await zf.parseZoneFile(`_imaps._tcp.example.com.    3600  IN  SRV 1  0   993    mail.example.com.`)
+      const r = await bind.parseZoneFile(`_imaps._tcp.example.com.    3600  IN  SRV 1  0   993    mail.example.com.`)
       assert.deepStrictEqual(r[0], new RR.SRV({
         owner   : '_imaps._tcp.example.com.',
         class   : 'IN',
@@ -405,7 +395,7 @@ describe('bind', function () {
     })
 
     it('parses TLSA line', async () => {
-      const r = await zf.parseZoneFile(`_443._tcp.www.example.com. 3600 IN TLSA 0 0 1 d2abde240d7cd3ee6b4b28c54df034b9 7983a1d16e8a410e4561cb106618e971`)
+      const r = await bind.parseZoneFile(`_443._tcp.www.example.com. 3600 IN TLSA 0 0 1 d2abde240d7cd3ee6b4b28c54df034b9 7983a1d16e8a410e4561cb106618e971`)
       assert.deepStrictEqual(r[0], new RR.TLSA({
         owner                         : '_443._tcp.www.example.com.',
         ttl                           : 3600,
@@ -419,7 +409,7 @@ describe('bind', function () {
     })
 
     it('parses URI line', async () => {
-      const r = await zf.parseZoneFile(`www.example.com. 3600 IN URI 1 0 "www2.example.com."`)
+      const r = await bind.parseZoneFile(`www.example.com. 3600 IN URI 1 0 "www2.example.com."`)
       assert.deepStrictEqual(r[0], new RR.URI({
         owner   : 'www.example.com.',
         ttl     : 3600,
@@ -434,35 +424,26 @@ describe('bind', function () {
     it('parses cadillac.net zone file', async () => {
       const file = './test/fixtures/bind/cadillac.net'
       const buf = await fs.readFile(file)
-
-      zf.parseZoneFile(buf.toString()).then(r => {
-        // console.dir(r, { depth: null })
-        assert.equal(r.length, 41)
-      })
+      const r = await bind.parseZoneFile(buf.toString())
+      // console.dir(r, { depth: null })
+      assert.equal(r.length, 41)
     })
 
     it('parses isi.edu zone file', async () => {
+      bind.zoneOpts.origin = 'isi.edu.'
       const file = './test/fixtures/bind/isi.edu'
       const buf = await fs.readFile(file)
-
-      zf.parseZoneFile(buf.toString()).then(zf.expandShortcuts).then(r => {
-        // console.dir(r, { depth: null })
-        assert.equal(r.length, 11)
-      })
+      const rrs = await bind.parseZoneFile(buf.toString())
+      // console.dir(rrs, { depth: null })
+      assert.equal(rrs.length, 11)
     })
 
     it('parses example.com zone file', async () => {
       const file = './test/fixtures/bind/example.com'
       const buf = await fs.readFile(file)
-
-      try {
-        const rrs = await zf.parseZoneFile(buf.toString())
-        // console.dir(rrs, { depth: null })
-        assert.equal(rrs.length, 17)
-      }
-      catch (e) {
-        assert.ifError(e)
-      }
+      const rrs = await bind.parseZoneFile(buf.toString())
+      // console.dir(rrs, { depth: null })
+      assert.equal(rrs.length, 17)
     })
   })
 })

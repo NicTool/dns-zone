@@ -2,6 +2,7 @@
 import assert from 'assert'
 
 import { ZONE } from '../index.js'
+import * as dz from '../index.js'
 import RR      from 'dns-resource-record'
 
 const testSOA = new RR.SOA({
@@ -207,6 +208,19 @@ describe('dns-zone', function () {
         message: `owner exists as CNAME, not allowed, RFC 1034, 2181, & 4035`,
       })
     })
+  })
 
+  describe('hasUnquoted', function () {
+    it('returns true when char is in string unquoted', function () {
+      assert.strictEqual(dz.hasUnquoted('this is a ( string of text', '"', '('), true)
+    })
+
+    it('returns false when char is not in string', function () {
+      assert.strictEqual(dz.hasUnquoted('this is a string of text', '"', '('), false)
+    })
+
+    it('returns false when char is in quoted string', function () {
+      assert.strictEqual(dz.hasUnquoted('this is a string "of ( quoted" text', '"', '('), false)
+    })
   })
 })
