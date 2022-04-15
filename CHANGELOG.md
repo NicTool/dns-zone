@@ -2,10 +2,19 @@
 #### 1.N.N - YYYY-MM-DD
 
 
-#### 0.8.0 - 2022-04-12
+#### 0.8.0 - 2022-04-14
 
 - style(bin/dns-zone): use fs/promises API
-- 
+- bin/dns-zone.js: updates to work as ES6 module
+- style(mara): replace nearley parser with custom JS
+    - leans more on dns-resource-record for parsing
+    - index: added hasUnquoted, removeChar, replaceChar, stripComment, serialByDate, serialByFileStat
+    - dep: removed nearley
+    - tests: fully parse the records and compare against fully parsed test case (robust++)
+- CJS -> ESM
+- add index.valueCleanup
+- feat(bind): replace nearly parser with custom
+- style(bin/dns-zone): use fs/promises API
 
 
 #### 0.7.0 - 2022-04-08
