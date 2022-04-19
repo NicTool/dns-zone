@@ -2,7 +2,7 @@
 import assert from 'assert'
 import fs     from 'fs/promises'
 
-import RR from 'dns-resource-record'
+import * as RR from 'dns-resource-record'
 import bind from '../lib/bind.js'
 
 beforeEach(() => {

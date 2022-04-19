@@ -1,6 +1,6 @@
 {
   "name": "dns-zone-validator",
-  "version": "0.8.0",
+  "version": "0.8.5",
   "description": "DNS Zone",
   "main": "index.js",
   "type": "module",
@@ -24,7 +24,8 @@
     "import",
     "export",
     "validator",
-    "validation"
+    "validation",
+    "nictool"
   ],
   "author": "Matt Simerson <matt@tnpi.net>",
   "license": "BSD-3-Clause",
@@ -39,6 +40,6 @@
   "dependencies": {
     "command-line-args": "^5.2.1",
     "command-line-usage": "^6.1.1",
-    "dns-resource-record": "^0.9.7"
+    "dns-resource-record": "^1.0.0"
   }
 }

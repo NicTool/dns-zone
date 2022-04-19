@@ -3,7 +3,7 @@ import assert from 'assert'
 
 import { ZONE } from '../index.js'
 import * as dz from '../index.js'
-import RR      from 'dns-resource-record'
+import * as RR from 'dns-resource-record'
 
 const testSOA = new RR.SOA({
   owner  : 'example.com.',
@@ -130,7 +130,7 @@ describe('dns-zone', function () {
         owner  : 'a2.example.com.',
         ttl    : 3600,
         class  : 'IN',
-        type   : 'NS',
+        type   : 'A',
         address: '192.0.2.128',
       })
       this.zone.addRR(a2)
