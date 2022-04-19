@@ -55,7 +55,7 @@ Examples
 #### import from STDIN to human
 
 ````
-➜ cat test/fixtures/bind/example.com| ./bin/dns-zone.js -i bind -f - --origin=example.com.
+➜ cat example.com| ./bin/dns-zone.js -i bind -f - --origin=example.com.
 $ORIGIN example.com.
 $TTL 3600
 example.com.          3600  SOA    ns.example.com. username.example.com. 2020091025 7200 3600 1209600 3600
@@ -78,7 +78,7 @@ mail3.example.com.    3600  A      192.0.2.5
 #### from bind file to bind
 
 ````
-➜ ./bin/dns-zone.js -i bind -e bind -f test/fixtures/bind/isi.edu --origin=isi.edu.
+➜ ./bin/dns-zone.js -i bind -e bind -f isi.edu --origin=isi.edu.
 isi.edu.    60  IN  SOA venera.isi.edu. action\.domains.isi.edu.    20  7200    600 3600000 60
 isi.edu.    60  IN  NS  a.isi.edu.
 isi.edu.    60  IN  NS  venera.isi.edu.
@@ -95,7 +95,7 @@ vaxa.isi.edu.   60  IN  A   128.9.0.33
 #### from bind to bind (relative)
 
 ````
-➜ ./bin/dns-zone.js -i bind -e bind -f test/fixtures/bind/isi.edu --ttl=60 \
+➜ ./bin/dns-zone.js -i bind -e bind -f isi.edu --ttl=60 \
    --origin=isi.edu. --hide-ttl --hide-class --hide-origin --hide-same-owner
 @   60  IN  SOA venera  action\.domains 20  7200    600 3600000 60
             NS  a
