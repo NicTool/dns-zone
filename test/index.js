@@ -130,7 +130,7 @@ describe('dns-zone', function () {
         owner  : 'a2.example.com.',
         ttl    : 3600,
         class  : 'IN',
-        type   : 'NS',
+        type   : 'A',
         address: '192.0.2.128',
       })
       this.zone.addRR(a2)

@@ -1,6 +1,10 @@
 
 #### 1.N.N - YYYY-MM-DD
 
+#### 0.8.5 - 2022-04-18
+
+- updated to work with dns-rr as ES6 module
+
 
 #### 0.8.0 - 2022-04-14
 
