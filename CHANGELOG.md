@@ -1,6 +1,15 @@
 
 #### 1.N.N - YYYY-MM-DD
 
+
+#### 0.9.0 - 2022-04-19
+
+- feat(bind): add more RR types to zoneRR pattern
+- style: move class ZONE from ./index to lib/zone
+- test: replace coverage reporter nyc with c8
+- bind: when a RR doesn't parse, show it before the error
+
+
 #### 0.8.5 - 2022-04-18
 
 - updated to work with dns-rr as ES6 module
