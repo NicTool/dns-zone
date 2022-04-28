@@ -5,8 +5,13 @@
 
 #### 1.0.0 - 2022-04-25
 
-- tinydns: print unparsable line before throwing
 - fix(dns-zone): update import syntax for ESM RR
+- feat(bin/dns-zone): when -e=tinydns fails, show entry
+- feat(bin/dns-zone): usage caller specifies exit code
+- feat(bind): print a . for every 500 RRs parsed
+- feat(tinydns): print unparsable line before throwing
+- test(dns-zone): add help and example.com tests
+- test(dns-zone): import tinydns zone, export as mara
 
 
 #### 0.9.0 - 2022-04-19
