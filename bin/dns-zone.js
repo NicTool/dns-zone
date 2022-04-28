@@ -1,4 +1,4 @@
-#!node
+#!/usr/local/bin/node
 
 import fs   from 'fs/promises'
 import path from 'path'
@@ -283,7 +283,14 @@ function toBind (zoneArray, origin) {
 function toTinydns (zoneArray) {
   for (const rr of zoneArray) {
     if (rr === os.EOL) continue
-    process.stdout.write(rr.toTinydns())
+    if (rr.$TTL || rr.$ORIGIN) continue
+    try {
+      process.stdout.write(rr.toTinydns())
+    }
+    catch (e) {
+      console.error(rr)
+      throw e
+    }
   }
 }
 
