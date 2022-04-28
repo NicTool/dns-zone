@@ -66,7 +66,7 @@ function checkZone (zoneArray) {
       resolve(zoneArray)
     }
     catch (e) {
-      // console.error(e)
+      console.error(e)
       reject(e)
     }
   })
