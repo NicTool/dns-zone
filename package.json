@@ -1,6 +1,6 @@
 {
   "name": "dns-zone-validator",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "description": "DNS Zone",
   "main": "index.js",
   "type": "module",

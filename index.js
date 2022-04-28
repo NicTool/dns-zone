@@ -1,7 +1,7 @@
 
 import fs from 'fs/promises'
 
-import bind from './lib/bind.js'
+import bind    from './lib/bind.js'
 import maradns from './lib/maradns.js'
 import tinydns from './lib/tinydns.js'
 

@@ -13,7 +13,7 @@ import * as bind    from '../lib/bind.js'
 import * as tinydns from '../lib/tinydns.js'
 import * as maradns from '../lib/maradns.js'
 
-import RR from 'dns-resource-record'
+import * as RR from 'dns-resource-record'
 
 const rr = new RR.A(null)
 

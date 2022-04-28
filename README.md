@@ -11,7 +11,7 @@ Import and export DNS data to and from common nameserver formats. Normalize, val
 
 
 ````
-➜ ./bin/dns-zone -h
+➜ ./bin/dns-zone.js -h
 
  +-+-+-+ +-+-+-+-+
  |D|N|S| |Z|O|N|E|
@@ -43,14 +43,14 @@ Misc
 
 Examples
 
-  1. BIND file to human     ./bin/dns-zone -i bind -f isi.edu
-  2. BIND file to tinydns   ./bin/dns-zone -i bind -f isi.edu -e tinydns
-  3. tinydns file to BIND   ./bin/dns-zone -i tinydns -f data -e bind
+  1. BIND file to human     ./bin/dns-zone.js -i bind -f isi.edu
+  2. BIND file to tinydns   ./bin/dns-zone.js -i bind -f isi.edu -e tinydns
+  3. tinydns file to BIND   ./bin/dns-zone.js -i tinydns -f data -e bind
 
   Project home: https://github.com/NicTool/dns-zone
 ````
 
-## bin/dns-zone
+## bin/dns-zone.js
 
 #### import from STDIN to human
 

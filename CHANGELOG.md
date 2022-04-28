@@ -1,5 +1,12 @@
+# CHANGE LOG
 
 #### 1.N.N - YYYY-MM-DD
+
+
+#### 1.0.0 - 2022-04-25
+
+- tinydns: print unparsable line before throwing
+- fix(dns-zone): update import syntax for ESM RR
 
 
 #### 0.9.0 - 2022-04-19
