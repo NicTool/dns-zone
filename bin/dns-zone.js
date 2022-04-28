@@ -8,7 +8,7 @@ import chalk from 'chalk'
 import cmdLineArgs from 'command-line-args'
 import cmdLineUsage from 'command-line-usage'
 
-import * as zf      from '../index.js'
+import ZONE         from '../lib/zone.js'
 import * as bind    from '../lib/bind.js'
 import * as tinydns from '../lib/tinydns.js'
 import * as maradns from '../lib/maradns.js'
@@ -59,7 +59,7 @@ ingestZoneData()
 function checkZone (zoneArray) {
   return new Promise((resolve, reject) => {
     try {
-      new zf.ZONE({
+      new ZONE({
         ttl: optsObj.ttl, origin: optsObj.origin, RR: zoneArray,
       })
       // console.log(z)
