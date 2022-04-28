@@ -20,7 +20,7 @@ const rr = new RR.A(null)
 // CLI argument processing
 const opts = cmdLineArgs(usageOptions())._all
 if (opts.verbose) console.error(opts)
-if (opts.help) usage()
+if (opts.help) usage(0)
 
 const optsObj = {
   origin: rr.fullyQualify(opts.origin) || '',
@@ -72,9 +72,14 @@ function checkZone (zoneArray) {
   })
 }
 
-function usage () {
-  console.error(cmdLineUsage(usageSections()))
-  process.exit(1)
+function usage (code) {
+  if (code === 0) {
+    console.log(cmdLineUsage(usageSections()))
+  }
+  else {
+    console.error(cmdLineUsage(usageSections()))
+  }
+  process.exit(code)
 }
 
 function usageOptions () {
@@ -226,8 +231,8 @@ function usageSections () {
 function ingestZoneData () {
   return new Promise((resolve, reject) => {
 
-    if (!opts.import) usage()
-    if (!opts.file) usage()
+    if (!opts.import) usage(1)
+    if (!opts.file) usage(1)
 
     let filePath = opts.file
 
