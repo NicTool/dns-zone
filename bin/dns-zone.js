@@ -8,19 +8,20 @@ import chalk from 'chalk'
 import cmdLineArgs from 'command-line-args'
 import cmdLineUsage from 'command-line-usage'
 
-import * as zf      from '../index.js'
+import ZONE         from '../lib/zone.js'
+import * as dz      from '../index.js'
 import * as bind    from '../lib/bind.js'
 import * as tinydns from '../lib/tinydns.js'
 import * as maradns from '../lib/maradns.js'
 
-import RR from 'dns-resource-record'
+import * as RR from 'dns-resource-record'
 
 const rr = new RR.A(null)
 
 // CLI argument processing
 const opts = cmdLineArgs(usageOptions())._all
 if (opts.verbose) console.error(opts)
-if (opts.help) usage()
+if (opts.help) usage(0)
 
 const optsObj = {
   origin: rr.fullyQualify(opts.origin) || '',
@@ -40,11 +41,12 @@ Object.assign(maradns.zoneOpts, optsObj)
 if (opts.verbose) console.error(bind.zoneOpts)
 
 ingestZoneData()
-  .then(r => {
+  .then(async r => {
     switch (r.type) {
       case 'tinydns':
         return tinydns.parseData(r.data).then(checkZone)
       case 'maradns':
+        maradns.zoneOpts.serial = await dz.serialByFileStat(opts.file)
         return maradns.parseZoneFile(r.data).then(checkZone)
       default:
         return bind.parseZoneFile(r.data).then(checkZone)
@@ -59,22 +61,27 @@ ingestZoneData()
 function checkZone (zoneArray) {
   return new Promise((resolve, reject) => {
     try {
-      new zf.ZONE({
+      new ZONE({
         ttl: optsObj.ttl, origin: optsObj.origin, RR: zoneArray,
       })
       // console.log(z)
       resolve(zoneArray)
     }
     catch (e) {
-      // console.error(e)
+      console.error(e)
       reject(e)
     }
   })
 }
 
-function usage () {
-  console.error(cmdLineUsage(usageSections()))
-  process.exit(1)
+function usage (code) {
+  if (code === 0) {
+    console.log(cmdLineUsage(usageSections()))
+  }
+  else {
+    console.error(cmdLineUsage(usageSections()))
+  }
+  process.exit(code)
 }
 
 function usageOptions () {
@@ -226,8 +233,8 @@ function usageSections () {
 function ingestZoneData () {
   return new Promise((resolve, reject) => {
 
-    if (!opts.import) usage()
-    if (!opts.file) usage()
+    if (!opts.import) usage(1)
+    if (!opts.file) usage(1)
 
     let filePath = opts.file
 
@@ -240,10 +247,11 @@ function ingestZoneData () {
 
     if (opts.verbose) console.error(`reading file ${filePath}`)
 
-    fs.readFile(filePath).then(buf => {
+    fs.readFile(filePath).then(async buf => {
+      const str = await bind.includeIncludes(buf.toString(), opts)
       resolve({
         type: opts.import,
-        data: buf.toString(),
+        data: str,
       })
     }).catch(reject)
   })
@@ -283,7 +291,14 @@ function toBind (zoneArray, origin) {
 function toTinydns (zoneArray) {
   for (const rr of zoneArray) {
     if (rr === os.EOL) continue
-    process.stdout.write(rr.toTinydns())
+    if (rr.$TTL || rr.$ORIGIN) continue
+    try {
+      process.stdout.write(rr.toTinydns())
+    }
+    catch (e) {
+      console.error(rr)
+      throw e
+    }
   }
 }
 

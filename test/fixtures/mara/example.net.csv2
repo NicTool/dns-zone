@@ -7,7 +7,7 @@
 # This is a commented out record and disabled.
 
 #%  SOA % email@% 1 7200 3600 604800 1800 ~
-x.org. SOA x.org. john\.doe@x.org. /serial 7200 3600 604800 1800 ~
+x.org. SOA x.org. john\.doe@x.org. 2 7200 3600 604800 1800 ~
 #x.org. SOA x.org. email@x.org. /serial 7200 3600 604800 1800 ~
 
 # Second of all, csv2 zone files do not need authoritative NS records.
@@ -88,11 +88,11 @@ example.com.    SPF 'v=spf1 +mx a:colo.example.com/28 '\x7e'all' ~
 
 a.example.net.        A     10.11.12.13 ~
 b.example.net.        A     10.11.12.14 ~
-c.example.net. +64000 A     10.11.12.15 ~
+c.example.net. +86400 A     10.11.12.15 ~
 
 13.12.11.10.in-addr.arpa.        PTR    a.example.net. ~
 14.12.11.10.in-addr.arpa.        PTR    b.example.net. ~
-15.12.11.10.in-addr.arpa. +64000 PTR    c.example.net. ~
+15.12.11.10.in-addr.arpa. +86400 PTR    c.example.net. ~
 
 www.example.com. NAPTR 100 100 's';'http+I2R';'' _http._tcp.example.com. ~
 

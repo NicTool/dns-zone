@@ -1,6 +1,7 @@
 
 import assert from 'assert'
 import fs     from 'fs/promises'
+import os     from 'os'
 
 import * as RR from 'dns-resource-record'
 import mara from '../lib/maradns.js'
@@ -22,7 +23,7 @@ describe('maradns', function () {
 
     it('parses two blank lines', async () => {
       mara.zoneOpts.showBlank = true
-      const r = await mara.parseZoneFile(`\n`)
+      const r = await mara.parseZoneFile(os.EOL)
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r, [ '', '' ])
     })

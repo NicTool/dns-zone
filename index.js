@@ -1,7 +1,7 @@
 
 import fs from 'fs/promises'
 
-import bind from './lib/bind.js'
+import bind    from './lib/bind.js'
 import maradns from './lib/maradns.js'
 import tinydns from './lib/tinydns.js'
 
@@ -79,4 +79,19 @@ export function serialByDate (start, inc) {
 export async function serialByFileStat (filePath) {
   const stat = await fs.stat(filePath)
   return Math.round(stat.mtime.getTime() / 1000)
+}
+
+export function toSeconds (str) {
+  if (/^[0-9]+$/.test(str)) return parseInt(str, 10) // all numeric
+
+  const re = /(?:([0-9]+)w)?(?:([0-9]+)d)?(?:([0-9]+)h)?(?:([0-9]+)m)?(?:([0-9]+)s)?/i
+  const match = str.match(re)
+  if (!match) throw new Error(`unable to convert ${str} to seconds`)
+
+  const [ weeks, days, hours, minutes, seconds ] = match.slice(1)
+  return  parseInt(weeks   || 0) * 604800
+        + parseInt(days    || 0) *  86400
+        + parseInt(hours   || 0) *   3600
+        + parseInt(minutes || 0) *     60
+        + parseInt(seconds || 0) *      1
 }

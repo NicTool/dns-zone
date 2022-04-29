@@ -1,0 +1,43 @@
+Ztheartfarm.com:ns3.theartfarm.com.:hostmaster.theartfarm.com:2022032700:16384:2048:1048576:2560:86400::
+&theartfarm.com::ns3.theartfarm.com.:14400::
+&theartfarm.com::ns1.theartfarm.com.:14400::
+&theartfarm.com::ns2.theartfarm.com.:14400::
+@theartfarm.com.::mail.theartfarm.com.:10:28800::
+'theartfarm.com.:v=spf1 include\072mx.theartfarm.com ip4\07269.64.153.131 ip4\072172.16.16.5 -all:86400::
++theartfarm.com.:66.128.51.172:28800::
+@www.theartfarm.com::mail.theartfarm.com.:10:28800::
+@dmarc.theartfarm.com::mail.theartfarm.com.:10:86400::
+'theartfarm.com.:stripe-verification=a5fd4f2f0595baed5ff34b5faa4fbbfe1a3c558edb5d3e1f79a1b47c17034045:86400::
++localhost.theartfarm.com:127.0.0.1:86400::
++ns1.theartfarm.com:192.48.85.147:86400::
++www.theartfarm.com:66.128.51.172:28800::
+Cart.theartfarm.com:mail.theartfarm.com.:86400::
+Cftp.theartfarm.com:www.theartfarm.com.:28800::
+Cpop.theartfarm.com:mail.theartfarm.com.:28800::
+Csmtp.theartfarm.com:mail.theartfarm.com.:28800::
+Cimap.theartfarm.com:mail.theartfarm.com.:28800::
+Cdns.theartfarm.com:dns.tnpi.net.:86400::
+Cwww2.theartfarm.com:ns2.theartfarm.com.:3600::
++ns2.theartfarm.com:66.128.51.172:28800::
+'mail.theartfarm.com:v=spf1 a -all:28800::
+'www.theartfarm.com:v=spf1 a mx ip4\072127.0.0.24 -all:86400::
++vhost0.theartfarm.com:66.128.51.173:86400::
++mail.theartfarm.com:66.128.51.165:28800::
+Ctoaster.theartfarm.com:mail.theartfarm.com.:3600::
++ns3.theartfarm.com:138.210.133.60:28800::
++lo.mail.theartfarm.com:127.0.0.6:86400::
+'mar2013._domainkey.theartfarm.com:v=DKIM1;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA5Q41fZ8CqpSgzSWpDY88oGq+bXKHdROGHmyjY6+b8qLUmdoHgpcaBUhL2zhZChvx5uayVJRV\057gWxPZtODsozOqPk6fl8Mn1VH1MBsuQdShnC0a\057Tcm8bPW0NE2viHysUamvL+X5Ea9H2GyVGKpe6rdKrmUiCzZyRYwTYqLvC9HhkTNWjR3TuP5mA2rmBO8IBPBFkdaz7WveNaiR8ImegA+wv1uCYcQLwcz3bn\057U2yK2UzFGsJLZ1KCTqr8WMPTuy1zc5zClHpZZMmCl3uk02bE59RVa7zzyZwVEGeRcjouq0rh5JCl057rMK2cwA2wu\057\0578svN+pGZAKJCnuFlpC0bwIDAQAB:3600::
+'_dmarc.theartfarm.com:v=DMARC1; p=reject; rua=mailto\072dmarc-feedback@theartfarm.com; ruf=mailto\072dmarc-feedback@theartfarm.com; pct=100:86400::
+'_dmarc.dmarc.theartfarm.com:v=DMARC1; p=reject; pct=100:86400::
+'dmarc.theartfarm.com:v=spf1 include\072mx.theartfarm.com -all:86400::
++dmarc.theartfarm.com:66.128.51.165:86400::
+'mx.theartfarm.com:v=spf1 ip4\07266.128.51.160\05727 ip4\072192.48.85.146\05729 ip4\072173.45.131.0\05727 ip4\072204.11.99.0\05727 ip6\0722605\0727900\07220\072a\072\072\05764 ip6\0722605\072ae00\072329\072\0720\05764 -all:86400::
+Chtpta.theartfarm.com:vhost0.theartfarm.com.:86400::
+'vhost0.theartfarm.com:v=spf1 include\072mx.theartfarm.com -all:86400::
+'ns3.theartfarm.com:v=spf1 a ip4\072138.210.133.60 ip4\07246.105.8.147 -all:86400::
+Cwordpress.theartfarm.com:www.theartfarm.com.:86400::
+'apr2019._domainkey.mail.theartfarm.com:v=DKIM1;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoW91trHF9nBzY3DeFtauDbPbr904YNBgW7mh\0578s5Fcmsi3TPB1bSqyBcr2BjYGqCG1KPFBvs+IRZNMDgHJ4wMSdC+4Pt6wXkMJpElNg4DjuP7q2UALJsOQ\057H54VtH8TWVMOekmc4W3um8ZqxePGJkWd2UGV+YT00dR8jLne5d+9MXo3CayOe3L7rK9uEvm0u8dLYLJaTmPdKI+8LWEIuxC4KeRsaB\05710M7NIaR73C5wB0HlTOm7MQW3806rTdlFYpO9Rtx2uV3stqCIfUYK9qeGLJFXHjLxh0nki4ztVIZdPi9TkZnj+juS5k8GTADSGy7PWawUnbhjEDyd4JX5YxwIDAQAB:86400::
++ns1.theartfarm.com:173.45.131.5:86400::
++ns1.theartfarm.com:204.11.99.5:86400::
++mx-out.theartfarm.com:66.128.51.178:86400::
+Cbounce.theartfarm.com:custom-email-domain.stripe.com.:86400::

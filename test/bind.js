@@ -1,9 +1,10 @@
 
 import assert from 'assert'
 import fs     from 'fs/promises'
+import os     from 'os'
 
 import * as RR from 'dns-resource-record'
-import bind from '../lib/bind.js'
+import * as bind from '../lib/bind.js'
 
 beforeEach(() => {
   Object.keys(bind.zoneOpts).map(k => delete bind.zoneOpts[k])
@@ -22,7 +23,7 @@ describe('bind', function () {
 
     it('parses two blank lines', async () => {
       bind.zoneOpts.showBlank = true
-      const r = await bind.parseZoneFile(`\n`)
+      const r = await bind.parseZoneFile(os.EOL)
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r, [ '', '' ])
     })
@@ -67,7 +68,7 @@ describe('bind', function () {
                       2048     ; retry
                       604800    ; expiry
                       2560   ; minimum
-                      )\n`)
+                      )${os.EOL}`)
 
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r[0], new RR.SOA({
@@ -444,6 +445,15 @@ describe('bind', function () {
       const rrs = await bind.parseZoneFile(buf.toString())
       // console.dir(rrs, { depth: null })
       assert.equal(rrs.length, 17)
+    })
+
+    it('parses example.net zone file (with $INCLUDE)', async () => {
+      const file = './test/fixtures/bind/example.net'
+      const buf = await fs.readFile(file)
+      const str = await bind.includeIncludes(buf.toString(), { file: file })
+      const rrs = await bind.parseZoneFile(str)
+      // console.dir(rrs, { depth: null })
+      assert.equal(rrs.length, 7)
     })
   })
 })
