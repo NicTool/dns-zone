@@ -61,7 +61,7 @@ describe('bind', function () {
       assert.deepStrictEqual(r[0], { $TTL: 86400 })
     })
 
-    it.only(`parses SOA`, async () => {
+    it(`parses SOA`, async () => {
       const r = await bind.parseZoneFile(`example.com.   86400   IN  SOA ns1.example.com.    hostmaster.example.com. (${os.EOL}\t\t2021102100    ; serial${os.EOL}\t\t16384   ; refresh${os.EOL}\t\t2048     ; retry${os.EOL}\t\t604800    ; expiry${os.EOL}\t\t2560   ; minimum${os.EOL}\t\t) ${os.EOL}`)
 
       // console.dir(r, { depth: null })

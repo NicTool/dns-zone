@@ -51,7 +51,6 @@ describe('dns-zone', function () {
     it('removes multiline comments', async function () {
       assert.equal(dz.stripComment(`This line has a ; trailing comment${os.EOL}and so too does ;this one${os.EOL}`, '"', ';'), 'This line has a ')
     })
-
   })
 
   describe('toSeconds', function () {
