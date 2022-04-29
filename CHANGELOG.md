@@ -3,6 +3,11 @@
 #### 1.N.N - YYYY-MM-DD
 
 
+- test: add windows CI testing
+- test(bind): replace implicit \n with os.EOL
+- test(index): add tests for removeChar, stripComment
+
+
 #### 1.0.0 - 2022-04-25
 
 - fix(dns-zone): update import syntax for ESM RR
