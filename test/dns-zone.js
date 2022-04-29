@@ -9,9 +9,9 @@ const execFile = util.promisify(child.execFile)
 describe('nt-zone.js', function () {
   it('prints help message', async function () {
     const binPath = path.resolve('bin', 'dns-zone.js')
-    const args = [ '-h' ]
+    const args = [ binPath, '-h' ]
     try {
-      const { stdout, stderr } = await execFile(binPath, args)
+      const { stdout, stderr } = await execFile('node', args)
       // console.log(stdout)
       // console.log(stderr)
       assert.ok(/|Z|O|N|E|/.test(stdout))
@@ -24,10 +24,10 @@ describe('nt-zone.js', function () {
 
   it('parses BIND example zone file', async function () {
     const binPath = path.resolve('bin', 'dns-zone.js')
-    const args = [ '-i', 'bind', '-f', './test/fixtures/bind/example.com', '-o', 'cadillac.net' ]
+    const args = [ binPath, '-i', 'bind', '-f', './test/fixtures/bind/example.com', '-o', 'cadillac.net' ]
     // console.log(`${binPath} ${args.join(' ')}`)
     try {
-      const { stdout, stderr } = await execFile(binPath, args)
+      const { stdout, stderr } = await execFile('node', args)
       assert.strictEqual(stdout, `$ORIGIN example.com.
 $TTL 3600
 example.com.          3600  SOA    
@@ -55,10 +55,10 @@ mail3.example.com.    3600  A
 
   it('parses tinydns example data file to maradns', async function () {
     const binPath = path.resolve('bin', 'dns-zone.js')
-    const args = [ '-i', 'tinydns', '-f', './test/fixtures/tinydns/data', '-e', 'maradns' ]
+    const args = [ binPath, '-i', 'tinydns', '-f', './test/fixtures/tinydns/data', '-e', 'maradns' ]
     // console.log(`${binPath} ${args.join(' ')}`)
     try {
-      const { stdout, stderr } = await execFile(binPath, args)
+      const { stdout, stderr } = await execFile('node', args)
       assert.strictEqual(stdout, `theartfarm.com.\t SOA\tns3.theartfarm.com.\thostmaster.theartfarm.com.\t2022032700\t16384\t2048\t1048576\t2560 ~
 theartfarm.com.\t+14400\tNS\tns3.theartfarm.com. ~
 theartfarm.com.\t+14400\tNS\tns1.theartfarm.com. ~
@@ -112,10 +112,10 @@ bounce.theartfarm.com.\t+86400\tCNAME\tcustom-email-domain.stripe.com. ~
 
   it('parses maradns example data file to tinydns', async function () {
     const binPath = path.resolve('bin', 'dns-zone.js')
-    const args = [ '-i', 'maradns', '-f', './test/fixtures/mara/example.net.csv2', '--origin=example.net', '-e', 'tinydns' ]
+    const args = [ binPath, '-i', 'maradns', '-f', './test/fixtures/mara/example.net.csv2', '--origin=example.net', '-e', 'tinydns' ]
     // console.log(`${binPath} ${args.join(' ')}`)
     try {
-      const { stdout, stderr } = await execFile(binPath, args)
+      const { stdout, stderr } = await execFile('node', args)
       assert.strictEqual(stdout, `Zx.org:x.org:john\\.doe.x.org:2:7200:3600:604800:1800:86400::
 &example.net::a.example.net:86400::
 &example.net::b.example.net:86400::
