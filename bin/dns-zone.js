@@ -247,10 +247,11 @@ function ingestZoneData () {
 
     if (opts.verbose) console.error(`reading file ${filePath}`)
 
-    fs.readFile(filePath).then(buf => {
+    fs.readFile(filePath).then(async buf => {
+      const str = await bind.includeIncludes(buf.toString(), opts)
       resolve({
         type: opts.import,
-        data: buf.toString(),
+        data: str,
       })
     }).catch(reject)
   })
