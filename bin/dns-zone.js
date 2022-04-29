@@ -9,6 +9,7 @@ import cmdLineArgs from 'command-line-args'
 import cmdLineUsage from 'command-line-usage'
 
 import ZONE         from '../lib/zone.js'
+import * as dz      from '../index.js'
 import * as bind    from '../lib/bind.js'
 import * as tinydns from '../lib/tinydns.js'
 import * as maradns from '../lib/maradns.js'
@@ -40,11 +41,12 @@ Object.assign(maradns.zoneOpts, optsObj)
 if (opts.verbose) console.error(bind.zoneOpts)
 
 ingestZoneData()
-  .then(r => {
+  .then(async r => {
     switch (r.type) {
       case 'tinydns':
         return tinydns.parseData(r.data).then(checkZone)
       case 'maradns':
+        maradns.zoneOpts.serial = await dz.serialByFileStat(opts.file)
         return maradns.parseZoneFile(r.data).then(checkZone)
       default:
         return bind.parseZoneFile(r.data).then(checkZone)

@@ -109,4 +109,58 @@ bounce.theartfarm.com.\t+86400\tCNAME\tcustom-email-domain.stripe.com. ~
       assert.ifError(e)
     }
   })
+
+  it('parses maradns example data file to tinydns', async function () {
+    const binPath = path.resolve('bin', 'dns-zone.js')
+    const args = [ '-i', 'maradns', '-f', './test/fixtures/mara/example.net.csv2', '--origin=example.net', '-e', 'tinydns' ]
+    // console.log(`${binPath} ${args.join(' ')}`)
+    try {
+      const { stdout, stderr } = await execFile(binPath, args)
+      assert.strictEqual(stdout, `Zx.org:x.org:john\\.doe.x.org:1651193101:7200:3600:604800:1800:86400::
+&example.net::a.example.net:86400::
+&example.net::b.example.net:86400::
+&example.net::ns1.example.net:86400::
+&example.net::ns2.example.net:86400::
++b.example.net:10.10.10.11:86400::
++b.example.net:10.10.10.12:86400::
++z.example.net:10.2.3.4:86400::
++y.example.net:10.3.4.5:86400::
++percent.example.net:10.9.8.7:86400::
++d.example.net:10.11.12.13:86400::
++f.example.net:10.2.19.83:86400::
++c.example.net:10.1.1.1:86400::
++e.example.net:10.2.3.4:86400::
++h.example.net:10.9.8.7:86400::
++g.example.net:10.11.9.8:86400::
+@example.net::mail.example.net:10:86400::
++mail.example.net:10.22.23.24:86400::
+:a.example.net:28:\\375\\115\\141\\162\\141\\104\\116\\123\\000\\001\\000\\002\\000\\003\\000\\004:86400::
+:_http._tcp.example.net:33:\\000\\000\\000\\000\\000\\120\\001a\\007example\\003net\\000:86400::
+'example.net:This is some text:86400::
+'example.com:This is an example text field:86400::
+:example.net:99:v=spf1 +mx a\\072colo.example.com\\05728 -all:86400::
+:example.com:99:v=spf1 +mx a\\072colo.example.com\\05728 \\134x7eall:86400::
++a.example.net:10.11.12.13:86400::
++b.example.net:10.11.12.14:86400::
++c.example.net:10.11.12.15:86400::
+^13.12.11.10.in-addr.arpa:a.example.net:86400::
+^14.12.11.10.in-addr.arpa:b.example.net:86400::
+^15.12.11.10.in-addr.arpa:c.example.net:86400::
+:www.example.com:35:\\000\\144\\000\\144\\001S\\010http+I2R\\000\\027_http._tcp.example.com.\\000:86400::
++x.example.net:10.3.28.79:86400::
+^79.28.3.10.in-addr.arpa:x.example.net:86400::
++x.example.net:10.3.28.80:86400::
+^80.28.3.10.in-addr.arpa:x.example.net:86400::
+:x.example.net:28:\\375\\115\\141\\162\\141\\104\\116\\123\\000\\000\\000\\013\\000\\014\\000\\015:86400::
+^d.0.0.0.c.0.0.0.b.0.0.0.0.0.0.0.3.5.e.4.4.4.1.6.2.7.1.6.d.4.d.f.ip6.arpa:x.example.net:86400::
+:x.example.net:28:\\375\\115\\141\\162\\141\\104\\116\\123\\000\\000\\000\\013\\000\\014\\000\\016:86400::
+^e.0.0.0.c.0.0.0.b.0.0.0.0.0.0.0.3.5.e.4.4.4.1.6.2.7.1.6.d.4.d.f.ip6.arpa:x.example.net:86400::
+:example.com:13:\\021Intel Pentium III\\020CentOS Linux 3.7:86400::
+`)
+      assert.strictEqual(stderr, '')
+    }
+    catch (e) {
+      assert.ifError(e)
+    }
+  })
 })
