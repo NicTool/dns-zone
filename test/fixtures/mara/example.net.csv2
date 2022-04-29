@@ -7,7 +7,7 @@
 # This is a commented out record and disabled.
 
 #%  SOA % email@% 1 7200 3600 604800 1800 ~
-x.org. SOA x.org. john\.doe@x.org. /serial 7200 3600 604800 1800 ~
+x.org. SOA x.org. john\.doe@x.org. 2 7200 3600 604800 1800 ~
 #x.org. SOA x.org. email@x.org. /serial 7200 3600 604800 1800 ~
 
 # Second of all, csv2 zone files do not need authoritative NS records.

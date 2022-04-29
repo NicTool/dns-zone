@@ -116,7 +116,7 @@ bounce.theartfarm.com.\t+86400\tCNAME\tcustom-email-domain.stripe.com. ~
     // console.log(`${binPath} ${args.join(' ')}`)
     try {
       const { stdout, stderr } = await execFile(binPath, args)
-      assert.strictEqual(stdout, `Zx.org:x.org:john\\.doe.x.org:1651193101:7200:3600:604800:1800:86400::
+      assert.strictEqual(stdout, `Zx.org:x.org:john\\.doe.x.org:2:7200:3600:604800:1800:86400::
 &example.net::a.example.net:86400::
 &example.net::b.example.net:86400::
 &example.net::ns1.example.net:86400::
