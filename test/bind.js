@@ -1,6 +1,7 @@
 
 import assert from 'assert'
 import fs     from 'fs/promises'
+import os     from 'os'
 
 import * as RR from 'dns-resource-record'
 import bind from '../lib/bind.js'
@@ -22,7 +23,7 @@ describe('bind', function () {
 
     it('parses two blank lines', async () => {
       bind.zoneOpts.showBlank = true
-      const r = await bind.parseZoneFile(`\n`)
+      const r = await bind.parseZoneFile(os.EOL)
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r, [ '', '' ])
     })
@@ -67,7 +68,7 @@ describe('bind', function () {
                       2048     ; retry
                       604800    ; expiry
                       2560   ; minimum
-                      )\n`)
+                      )${os.EOL}`)
 
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(r[0], new RR.SOA({
