@@ -1,6 +1,7 @@
 
 import assert from 'assert'
 import * as child from 'child_process'
+import os     from 'os'
 import path   from 'path'
 import util   from 'util'
 
@@ -157,6 +158,19 @@ bounce.theartfarm.com.\t+86400\tCNAME\tcustom-email-domain.stripe.com. ~
 ^e.0.0.0.c.0.0.0.b.0.0.0.0.0.0.0.3.5.e.4.4.4.1.6.2.7.1.6.d.4.d.f.ip6.arpa:x.example.net:86400::
 :example.com:13:\\021Intel Pentium III\\020CentOS Linux 3.7:86400::
 `)
+      assert.strictEqual(stderr, '')
+    }
+    catch (e) {
+      assert.ifError(e)
+    }
+  })
+
+  it('parses 5,000 entry zone file quickly', async function () {
+    const binPath = path.resolve('bin', 'dns-zone.js')
+    const args = [ binPath, '-i', 'bind', '-f', './test/fixtures/bind/example2.com', '-o', 'example2.com' ]
+    try {
+      const { stdout, stderr } = await execFile('node', args)
+      assert.strictEqual(stdout.split(os.EOL).length, 4996)
       assert.strictEqual(stderr, '')
     }
     catch (e) {
