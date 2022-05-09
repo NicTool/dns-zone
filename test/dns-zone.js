@@ -1,7 +1,6 @@
 
 import assert from 'assert'
 import * as child from 'child_process'
-import os     from 'os'
 import path   from 'path'
 import util   from 'util'
 
@@ -170,7 +169,7 @@ bounce.theartfarm.com.\t+86400\tCNAME\tcustom-email-domain.stripe.com. ~
     const args = [ binPath, '-i', 'bind', '-f', './test/fixtures/bind/example2.com', '-o', 'example2.com' ]
     try {
       const { stdout, stderr } = await execFile('node', args)
-      assert.strictEqual(stdout.split(os.EOL).length, 4996)
+      assert.strictEqual(stdout.split('\n').length, 4996)
       assert.strictEqual(stderr, '')
     }
     catch (e) {
