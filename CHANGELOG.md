@@ -3,6 +3,11 @@
 #### 1.N.N - YYYY-MM-DD
 
 
+#### 1.1.0 - 2022-05-09
+
+- feat(speed): make adding records much faster
+    - for a zone with 30,000 records, reduce insertion time from 7 minutes to ~3 seconds.
+    - method: populate owner index, use for duplicate and collision detection (vs linear array search)
 - test: add windows CI testing
 - test(bind): replace implicit \n with os.EOL
 - test(index): add tests for removeChar, stripComment

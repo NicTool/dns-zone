@@ -163,4 +163,17 @@ bounce.theartfarm.com.\t+86400\tCNAME\tcustom-email-domain.stripe.com. ~
       assert.ifError(e)
     }
   })
+
+  it('parses 5,000 entry zone file quickly', async function () {
+    const binPath = path.resolve('bin', 'dns-zone.js')
+    const args = [ binPath, '-i', 'bind', '-f', './test/fixtures/bind/example2.com', '-o', 'example2.com' ]
+    try {
+      const { stdout, stderr } = await execFile('node', args)
+      assert.strictEqual(stdout.split('\n').length, 4996)
+      assert.strictEqual(stderr, '')
+    }
+    catch (e) {
+      assert.ifError(e)
+    }
+  })
 })
