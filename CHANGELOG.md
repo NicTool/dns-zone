@@ -1,6 +1,11 @@
 # CHANGE LOG
 
-#### 1.N.N - YYYY-MM-DD
+#### N.N.N - YYYY-MM-DD
+
+
+#### 1.1.2 - 2022-05-28
+
+- replace .release with submodule
 
 
 #### 1.1.0 - 2022-05-09
