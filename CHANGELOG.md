@@ -1,6 +1,14 @@
 # CHANGE LOG
 
-#### 1.N.N - YYYY-MM-DD
+#### N.N.N - YYYY-MM-DD
+
+
+#### 1.1.2 - 2022-05-28
+
+- chore: replace .release scripts with submodule
+- chore(ci): merged coverage & lint into ci-test.yml
+- chore(ci): ci-test.yml -> ci.yml
+- maradns: refactoring parseZoneFile for simplicity
 
 
 #### 1.1.0 - 2022-05-09
