@@ -6,6 +6,7 @@
 #### 1.1.2 - 2022-05-28
 
 - replace .release with submodule
+- maradns: refactoring parseZoneFile
 
 
 #### 1.1.0 - 2022-05-09
