@@ -8,8 +8,8 @@ engines:
 checks:
   # return-statements:
   #   enabled: false
-  # similar-code:
-  #   enabled: false
+  similar-code:
+    enabled: false
   method-lines:
     config:
       threshold: 50
