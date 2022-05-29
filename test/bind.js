@@ -3,7 +3,7 @@ import assert from 'assert'
 import fs     from 'fs/promises'
 import os     from 'os'
 
-import * as RR from 'dns-resource-record'
+import * as RR from '@nictool/dns-resource-record'
 import * as bind from '../lib/bind.js'
 
 beforeEach(() => {

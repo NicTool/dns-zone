@@ -2,7 +2,7 @@
 import assert from 'assert'
 
 import ZONE from '../lib/zone.js'
-import * as RR from 'dns-resource-record'
+import * as RR from '@nictool/dns-resource-record'
 
 const testSOA = new RR.SOA({
   owner  : 'example.com.',
