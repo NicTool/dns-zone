@@ -1,6 +1,22 @@
 # ChangeLog
 
-### Unpublished
+### Unreleased
+
+
+### [1.1.4] - 2022-05-29
+
+#### Added
+
+- 
+
+#### Fixed
+
+- 
+
+#### Changed
+
+- 
+- bump version to 1.1.3
 
 
 ### 1.1.2 - 2022-05-29
@@ -163,4 +179,7 @@
 - add \r to eol, for windows
 - local copy of builtin-whitespace, adds \r char
 - ci: remove windows support, times out, I think upstream nearley issue
+
+
 [1.1.3]: https://github.com/NicTool/dns-zone/releases/tag/1.1.3
+[1.1.4]: https://github.com/NicTool/dns-zone/releases/tag/1.1.4
