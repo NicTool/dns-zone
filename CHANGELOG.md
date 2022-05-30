@@ -3,28 +3,17 @@
 ### Unreleased
 
 
-### [1.1.4] - 2022-05-29
+### [1.1.3] - 2022-05-29
 
-#### Added
-
-- 
-
-#### Fixed
-
-- 
-
-#### Changed
-
-- 
-- bump version to 1.1.3
+- chore(ci): updated shared GHA workflow URLs
 
 
-### 1.1.2 - 2022-05-29
+### [1.1.2] - 2022-05-29
 
 - chore: publish npm package in @nictool namespace
 
 
-### 1.1.2 - 2022-05-28
+### [1.1.1] - 2022-05-28
 
 - chore: replace .release scripts with submodule
 - chore(ci): merged coverage & lint into ci-test.yml
@@ -181,5 +170,5 @@
 - ci: remove windows support, times out, I think upstream nearley issue
 
 
+[1.1.2]: https://github.com/NicTool/dns-zone/releases/tag/1.1.2
 [1.1.3]: https://github.com/NicTool/dns-zone/releases/tag/1.1.3
-[1.1.4]: https://github.com/NicTool/dns-zone/releases/tag/1.1.4
