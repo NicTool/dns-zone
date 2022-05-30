@@ -1,14 +1,19 @@
-# CHANGE LOG
+# ChangeLog
 
-#### N.N.N - YYYY-MM-DD
+### Unreleased
 
 
-#### 1.1.2 - 2022-05-29
+### [1.1.3] - 2022-05-29
+
+- chore(ci): updated shared GHA workflow URLs
+
+
+### [1.1.2] - 2022-05-29
 
 - chore: publish npm package in @nictool namespace
 
 
-#### 1.1.2 - 2022-05-28
+### [1.1.1] - 2022-05-28
 
 - chore: replace .release scripts with submodule
 - chore(ci): merged coverage & lint into ci-test.yml
@@ -16,7 +21,7 @@
 - maradns: refactoring parseZoneFile for simplicity
 
 
-#### 1.1.0 - 2022-05-09
+### 1.1.0 - 2022-05-09
 
 - feat(speed): make adding records much faster
     - for a zone with 30,000 records, reduce insertion time from 7 minutes to ~3 seconds.
@@ -26,7 +31,7 @@
 - test(index): add tests for removeChar, stripComment
 
 
-#### 1.0.0 - 2022-04-25
+### 1.0.0 - 2022-04-25
 
 - fix(dns-zone): update import syntax for ESM RR
 - feat(bin/dns-zone): when -e=tinydns fails, show entry
@@ -37,7 +42,7 @@
 - test(dns-zone): import tinydns zone, export as mara
 
 
-#### 0.9.0 - 2022-04-19
+### 0.9.0 - 2022-04-19
 
 - feat(bind): add more RR types to zoneRR pattern
 - style: move class ZONE from ./index to lib/zone
@@ -45,12 +50,12 @@
 - bind: when a RR doesn't parse, show it before the error
 
 
-#### 0.8.5 - 2022-04-18
+### 0.8.5 - 2022-04-18
 
 - updated to work with dns-rr as ES6 module
 
 
-#### 0.8.0 - 2022-04-14
+### 0.8.0 - 2022-04-14
 
 - style(bin/dns-zone): use fs/promises API
 - bin/dns-zone.js: updates to work as ES6 module
@@ -65,7 +70,7 @@
 - style(bin/dns-zone): use fs/promises API
 
 
-#### 0.7.0 - 2022-04-08
+### 0.7.0 - 2022-04-08
 
 - bind: do more array unpacking in parser
 - test: load example.net maradns zone file
@@ -75,7 +80,7 @@
 - style: use fs promises
 
 
-#### 0.6.0 - 2022-03-29
+### 0.6.0 - 2022-03-29
 
 - rename: zonefile -> bind
 - maradns
@@ -89,7 +94,7 @@
 - bind: add NAPTR test
 
 
-#### 0.5.1 - 2022-03-27
+### 0.5.1 - 2022-03-27
 
 - hostnames: add \ to allowed chars
 - dns-zone: use zf.zoneOpts directly
@@ -97,7 +102,7 @@
 - README: move -h output into synopsis, ## validation
 
 
-#### 0.5.0 - 2022-03-27
+### 0.5.0 - 2022-03-27
 
 - rr.name -> rr.owner
 - ZONE: add addCname, hasNoConflictingLabels, getOwnerMatches
@@ -112,7 +117,7 @@
 - move compiled grammars into ./dist
 
 
-#### 0.4.0 - 2022-03-26
+### 0.4.0 - 2022-03-26
 
 - move compiled grammar.js into ./lib
 - pass previousOwner into RR
@@ -126,7 +131,7 @@
 - tests: added tests for MX, NS, PTR, SOA, TXT
 
 
-#### 0.3.0 - 2022-03-24
+### 0.3.0 - 2022-03-24
 
 - import
     - added CLI options
@@ -144,7 +149,7 @@
 - README: expand with examples
 
 
-#### 0.2.0 - 2022-03-22
+### 0.2.0 - 2022-03-22
 
 - add expandShortcuts
 - added bin/import
@@ -152,7 +157,7 @@
 - SOA: capture comments
 
 
-#### 0.1.0 - 2022-03-17
+### 0.1.0 - 2022-03-17
 
 - Bind zonefile parser, using nearley: #1
     
@@ -163,3 +168,7 @@
 - add \r to eol, for windows
 - local copy of builtin-whitespace, adds \r char
 - ci: remove windows support, times out, I think upstream nearley issue
+
+
+[1.1.2]: https://github.com/NicTool/dns-zone/releases/tag/1.1.2
+[1.1.3]: https://github.com/NicTool/dns-zone/releases/tag/1.1.3
