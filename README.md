@@ -1,5 +1,5 @@
 [![Module Tests](https://github.com/NicTool/dns-zone/actions/workflows/ci.yml/badge.svg)](https://github.com/NicTool/dns-zone/actions/workflows/ci.yml)
-[![Coverage Status](https://coveralls.io/repos/github/NicTool/dns-zone/badge.svg?branch=master)](https://coveralls.io/github/NicTool/dns-zone?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/NicTool/dns-zone/badge.svg?branch=main)](https://coveralls.io/github/NicTool/dns-zone?branch=main)
 
 # dns-zone
 
