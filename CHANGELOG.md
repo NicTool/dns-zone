@@ -3,6 +3,11 @@
 ### Unreleased
 
 
+### [1.1.4] - 2022-06-03
+
+- ci: auto-populate node LTS versions for CI tests
+
+
 ### [1.1.3] - 2022-05-29
 
 - chore(ci): updated shared GHA workflow URLs
@@ -170,5 +175,7 @@
 - ci: remove windows support, times out, I think upstream nearley issue
 
 
+[1.1.1]: https://github.com/NicTool/dns-zone/releases/tag/1.1.1
 [1.1.2]: https://github.com/NicTool/dns-zone/releases/tag/1.1.2
 [1.1.3]: https://github.com/NicTool/dns-zone/releases/tag/1.1.3
+[1.1.4]: https://github.com/NicTool/dns-zone/releases/tag/1.1.4
