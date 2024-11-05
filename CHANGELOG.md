@@ -5,10 +5,8 @@
 
 ### [1.1.5] - 2024-11-04
 
-
 - chore: use package.json[files], delete .npmignore
 - chore: bump dep versions
-- 
 
 
 ### [1.1.4] - 2022-06-03
