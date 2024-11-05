@@ -1,12 +1,17 @@
 {
   "name": "@nictool/dns-zone",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "DNS Zone",
   "main": "index.js",
   "type": "module",
   "bin": {
     "dns-zone": "./bin/dns-zone.js"
   },
+  "files": [
+    "bin",
+    "lib",
+    "CHANGELOG.md"
+  ],
   "scripts": {
     "lint": "npx eslint *.js lib test",
     "lintfix": "npx eslint --fix *.js lib test",
@@ -34,12 +39,12 @@
   },
   "homepage": "https://github.com/NicTool/dns-zone#readme",
   "devDependencies": {
-    "eslint": ">=8",
-    "mocha": ">=9"
+    "eslint": "8.57.1",
+    "mocha": "10.8.2"
   },
   "dependencies": {
-    "command-line-args": "^5.2.1",
-    "command-line-usage": "^6.1.1",
-    "@nictool/dns-resource-record": "^1.1.1"
+    "command-line-args": "^6.0.1",
+    "command-line-usage": "^7.0.3",
+    "@nictool/dns-resource-record": "^1.2.1"
   }
 }

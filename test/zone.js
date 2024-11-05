@@ -18,7 +18,7 @@ const testSOA = new RR.SOA({
   minimum: 2560,
 })
 
-describe('dns-zone', function () {
+describe('zone', function () {
 
   it('creates a zone object', function () {
     const zone = new ZONE({ origin: 'example.com' })
