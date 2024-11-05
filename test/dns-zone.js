@@ -6,7 +6,7 @@ import util   from 'util'
 
 const execFile = util.promisify(child.execFile)
 
-describe('nt-zone.js', function () {
+describe('dns-zone.js', function () {
   it('prints help message', async function () {
     const binPath = path.resolve('bin', 'dns-zone.js')
     const args = [ binPath, '-h' ]
