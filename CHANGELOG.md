@@ -5,6 +5,7 @@
 ### [1.1.6] - 2025-10-06
 
 - style: add prettier, update eslint to v9
+- deps: bump versions
 
 ### [1.1.5] - 2024-11-04
 
