@@ -1,34 +1,34 @@
-
 import assert from 'assert'
 import * as child from 'child_process'
-import path   from 'path'
-import util   from 'util'
+import path from 'path'
+import util from 'util'
 
 const execFile = util.promisify(child.execFile)
 
 describe('dns-zone.js', function () {
   it('prints help message', async function () {
     const binPath = path.resolve('bin', 'dns-zone.js')
-    const args = [ binPath, '-h' ]
+    const args = [binPath, '-h']
     try {
       const { stdout, stderr } = await execFile('node', args)
       // console.log(stdout)
       // console.log(stderr)
       assert.ok(/|Z|O|N|E|/.test(stdout))
       assert.strictEqual(stderr, '')
-    }
-    catch (e) {
+    } catch (e) {
       assert.ifError(e)
     }
   })
 
   it('parses BIND example zone file', async function () {
     const binPath = path.resolve('bin', 'dns-zone.js')
-    const args = [ binPath, '-i', 'bind', '-f', './test/fixtures/bind/example.com', '-o', 'cadillac.net' ]
+    const args = [binPath, '-i', 'bind', '-f', './test/fixtures/bind/example.com', '-o', 'cadillac.net']
     // console.log(`${binPath} ${args.join(' ')}`)
     try {
       const { stdout, stderr } = await execFile('node', args)
-      assert.strictEqual(stdout, `$ORIGIN example.com.
+      assert.strictEqual(
+        stdout,
+        `$ORIGIN example.com.
 $TTL 3600
 example.com.          3600  SOA    
 example.com.          3600  NS     
@@ -45,21 +45,23 @@ wwwtest.example.com.  3600  CNAME
 mail.example.com.     3600  A      
 mail2.example.com.    3600  A      
 mail3.example.com.    3600  A      
-`)
+`,
+      )
       assert.strictEqual(stderr, ``)
-    }
-    catch (e) {
+    } catch (e) {
       assert.ifError(e)
     }
   })
 
   it('parses tinydns example data file to maradns', async function () {
     const binPath = path.resolve('bin', 'dns-zone.js')
-    const args = [ binPath, '-i', 'tinydns', '-f', './test/fixtures/tinydns/data', '-e', 'maradns' ]
+    const args = [binPath, '-i', 'tinydns', '-f', './test/fixtures/tinydns/data', '-e', 'maradns']
     // console.log(`${binPath} ${args.join(' ')}`)
     try {
       const { stdout, stderr } = await execFile('node', args)
-      assert.strictEqual(stdout, `theartfarm.com.\t SOA\tns3.theartfarm.com.\thostmaster.theartfarm.com.\t2022032700\t16384\t2048\t1048576\t2560 ~
+      assert.strictEqual(
+        stdout,
+        `theartfarm.com.\t SOA\tns3.theartfarm.com.\thostmaster.theartfarm.com.\t2022032700\t16384\t2048\t1048576\t2560 ~
 theartfarm.com.\t+14400\tNS\tns3.theartfarm.com. ~
 theartfarm.com.\t+14400\tNS\tns1.theartfarm.com. ~
 theartfarm.com.\t+14400\tNS\tns2.theartfarm.com. ~
@@ -102,21 +104,32 @@ ns1.theartfarm.com.\t+86400\tA\t173.45.131.5 ~
 ns1.theartfarm.com.\t+86400\tA\t204.11.99.5 ~
 mx-out.theartfarm.com.\t+86400\tA\t66.128.51.178 ~
 bounce.theartfarm.com.\t+86400\tCNAME\tcustom-email-domain.stripe.com. ~
-`)
+`,
+      )
       assert.strictEqual(stderr, '')
-    }
-    catch (e) {
+    } catch (e) {
       assert.ifError(e)
     }
   })
 
   it('parses maradns example data file to tinydns', async function () {
     const binPath = path.resolve('bin', 'dns-zone.js')
-    const args = [ binPath, '-i', 'maradns', '-f', './test/fixtures/mara/example.net.csv2', '--origin=example.net', '-e', 'tinydns' ]
+    const args = [
+      binPath,
+      '-i',
+      'maradns',
+      '-f',
+      './test/fixtures/mara/example.net.csv2',
+      '--origin=example.net',
+      '-e',
+      'tinydns',
+    ]
     // console.log(`${binPath} ${args.join(' ')}`)
     try {
       const { stdout, stderr } = await execFile('node', args)
-      assert.strictEqual(stdout, `Zx.org:x.org:john\\.doe.x.org:2:7200:3600:604800:1800:86400::
+      assert.strictEqual(
+        stdout,
+        `Zx.org:x.org:john\\.doe.x.org:2:7200:3600:604800:1800:86400::
 &example.net::a.example.net:86400::
 &example.net::b.example.net:86400::
 &example.net::ns1.example.net:86400::
@@ -156,23 +169,22 @@ bounce.theartfarm.com.\t+86400\tCNAME\tcustom-email-domain.stripe.com. ~
 :x.example.net:28:\\375\\115\\141\\162\\141\\104\\116\\123\\000\\000\\000\\013\\000\\014\\000\\016:86400::
 ^e.0.0.0.c.0.0.0.b.0.0.0.0.0.0.0.3.5.e.4.4.4.1.6.2.7.1.6.d.4.d.f.ip6.arpa:x.example.net:86400::
 :example.com:13:\\021Intel Pentium III\\020CentOS Linux 3.7:86400::
-`)
+`,
+      )
       assert.strictEqual(stderr, '')
-    }
-    catch (e) {
+    } catch (e) {
       assert.ifError(e)
     }
   })
 
   it('parses 5,000 entry zone file quickly', async function () {
     const binPath = path.resolve('bin', 'dns-zone.js')
-    const args = [ binPath, '-i', 'bind', '-f', './test/fixtures/bind/example2.com', '-o', 'example2.com' ]
+    const args = [binPath, '-i', 'bind', '-f', './test/fixtures/bind/example2.com', '-o', 'example2.com']
     try {
       const { stdout, stderr } = await execFile('node', args)
       assert.strictEqual(stdout.split('\n').length, 4996)
       assert.strictEqual(stderr, '')
-    }
-    catch (e) {
+    } catch (e) {
       assert.ifError(e)
     }
   })

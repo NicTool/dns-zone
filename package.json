@@ -14,9 +14,12 @@
   ],
   "scripts": {
     "lint": "npx eslint *.js lib test",
-    "lintfix": "npx eslint --fix *.js lib test",
+    "lint:fix": "npx eslint --fix *.js lib test",
+    "prettier": "npx prettier --ignore-path .gitignore --check .",
+    "prettier:fix": "npx prettier --ignore-path .gitignore --write .",
     "test": "npx mocha",
-    "versions": "npx dependency-version-checker check"
+    "versions": "npx dependency-version-checker check",
+    "versions:fix": "npx dependency-version-checker update"
   },
   "repository": {
     "type": "git",
@@ -39,12 +42,18 @@
   },
   "homepage": "https://github.com/NicTool/dns-zone#readme",
   "devDependencies": {
-    "eslint": "8.57.1",
-    "mocha": "10.8.2"
+    "eslint": "9.37.0",
+    "mocha": "11.7.4"
   },
   "dependencies": {
     "command-line-args": "^6.0.1",
     "command-line-usage": "^7.0.3",
-    "@nictool/dns-resource-record": "^1.2.1"
+    "@nictool/dns-resource-record": "^1.2.4"
+  },
+  "prettier": {
+    "printWidth": 110,
+    "semi": false,
+    "singleQuote": true,
+    "trailingComma": "all"
   }
 }

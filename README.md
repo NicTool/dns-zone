@@ -9,8 +9,7 @@ DNS zone tool
 
 Import and export DNS data to and from common nameserver formats. Normalize, validate, and optionally apply transformations at the same time.
 
-
-````
+```
 ➜ ./bin/dns-zone.js -h
 
  +-+-+-+ +-+-+-+-+
@@ -48,13 +47,13 @@ Examples
   3. tinydns file to BIND   ./bin/dns-zone.js -i tinydns -f data -e bind
 
   Project home: https://github.com/NicTool/dns-zone
-````
+```
 
 ## bin/dns-zone.js
 
 #### import from STDIN to human
 
-````
+```
 ➜ cat example.com| ./bin/dns-zone.js -i bind -f - --origin=example.com.
 $ORIGIN example.com.
 $TTL 3600
@@ -73,11 +72,11 @@ wwwtest.example.com.  3600  CNAME  www.example.com.
 mail.example.com.     3600  A      192.0.2.3
 mail2.example.com.    3600  A      192.0.2.4
 mail3.example.com.    3600  A      192.0.2.5
-````
+```
 
 #### from bind file to bind
 
-````
+```
 ➜ ./bin/dns-zone.js -i bind -e bind -f isi.edu --origin=isi.edu.
 isi.edu.    60  IN  SOA venera.isi.edu. action\.domains.isi.edu.    20  7200    600 3600000 60
 isi.edu.    60  IN  NS  a.isi.edu.
@@ -90,11 +89,11 @@ venera.isi.edu. 60  IN  A   10.1.0.52
 venera.isi.edu. 60  IN  A   128.9.0.32
 vaxa.isi.edu.   60  IN  A   10.2.0.27
 vaxa.isi.edu.   60  IN  A   128.9.0.33
-````
+```
 
 #### from bind to bind (relative)
 
-````
+```
 ➜ ./bin/dns-zone.js -i bind -e bind -f isi.edu --ttl=60 \
    --origin=isi.edu. --hide-ttl --hide-class --hide-origin --hide-same-owner
 @   60  IN  SOA venera  action\.domains 20  7200    600 3600000 60
@@ -108,12 +107,11 @@ venera          A   10.1.0.52
             A   128.9.0.32
 vaxa            A   10.2.0.27
             A   128.9.0.33
-````
-
+```
 
 #### from bind to tinydns
 
-````
+```
 ➜ ./bin/dns-zone.js --origin=isi.edu. -i bind -e tinydns -f isi.edu
 Zisi.edu:venera.isi.edu:action\.domains.isi.edu:20:7200:600:3600000:60:60::
 &isi.edu::a.isi.edu:60::
@@ -126,11 +124,11 @@ Zisi.edu:venera.isi.edu:action\.domains.isi.edu:20:7200:600:3600000:60:60::
 +venera.isi.edu:128.9.0.32:60::
 +vaxa.isi.edu:10.2.0.27:60::
 +vaxa.isi.edu:128.9.0.33:60::
-````
+```
 
 #### from bind to maradns
 
-````
+```
 ./bin/dns-zone.js -i bind -e maradns -f isi.edu --origin=isi.edu.
 isi.edu.     SOA    venera.isi.edu. action\.domains.isi.edu.    20  7200    600 3600000 60 ~
 isi.edu.    +60 NS  a.isi.edu. ~
@@ -143,7 +141,7 @@ venera.isi.edu. +60 A   10.1.0.52 ~
 venera.isi.edu. +60 A   128.9.0.32 ~
 vaxa.isi.edu.   +60 A   10.2.0.27 ~
 vaxa.isi.edu.   +60 A   128.9.0.33 ~
-````
+```
 
 ## VALIDATION
 
@@ -151,7 +149,7 @@ DNS zones have numerous rules regarding the records that can exist in them. Exam
 
 - [ ] serial numbers must increment when changes are made
 - [x] multiple identical RRs are not allowed - RFC 2181
-    - [x] CAA takes tag into account, SRV: port
+  - [x] CAA takes tag into account, SRV: port
 - [x] RFC 2181: RR sets (identical label, class, type) must have identical TTL
 - [x] multiple CNAMES with the same name are not allowed
 - [x] CNAME label cannot coexist except for SIG,NXT,KEY,RRSIG,NSEC
@@ -161,35 +159,34 @@ Etc, etc, etc..
 
 This module will input a collection of [dns-resource-records](https://github.com/NicTool/dns-resource-record) and validate that all the zone records can coexist.
 
-
 ## TODO
 
 - importing
-    - [x] write a bind zone file parser
-    - [x] write a tinydns data file parser
-    - [x] add BIND parsing for all RRs supported by dns-rr
-    - [x] write a maradns parser
+  - [x] write a bind zone file parser
+  - [x] write a tinydns data file parser
+  - [x] add BIND parsing for all RRs supported by dns-rr
+  - [x] write a maradns parser
 - normalize BIND zone records
-    - [x] expand `@` to zone name
-    - [x] empty names are same as previous RR record
-    - [x] missing TTLs inherit zone TTL, or zone MINIMUM
-    - expand hostnames to FQDNs
-        - [x] ALL: name field
-        - [x] MX: exchange
-        - [x] CNAME: cname,
-        - [x] SOA: mname, rname,
-        - [x] NS,PTR: dname
-    - [x] suppress hostname when identical to previous RR
+  - [x] expand `@` to zone name
+  - [x] empty names are same as previous RR record
+  - [x] missing TTLs inherit zone TTL, or zone MINIMUM
+  - expand hostnames to FQDNs
+    - [x] ALL: name field
+    - [x] MX: exchange
+    - [x] CNAME: cname,
+    - [x] SOA: mname, rname,
+    - [x] NS,PTR: dname
+  - [x] suppress hostname when identical to previous RR
 - [x] validate zone rules
 - [x] make it easy to add test cases: eg, test/fixtures/zones
 
 ## GOALS
 
 - 2040 compatibility
-    + the software stack should evolve gracefully with the tech industry
-    + loosely coupled dependencies
+  - the software stack should evolve gracefully with the tech industry
+  - loosely coupled dependencies
 - modularity
-    + easy to add a new DNS [resource record type](https://github.com/NicTool/dns-resource-record)
-    + easy to add/modify/update DNS [zone rules](https://github.com/NicTool/dns-zone)
+  - easy to add a new DNS [resource record type](https://github.com/NicTool/dns-resource-record)
+  - easy to add/modify/update DNS [zone rules](https://github.com/NicTool/dns-zone)
 - easily coupled with many DNS servers
 - distribution of DNS data should be secure, fast, and efficient

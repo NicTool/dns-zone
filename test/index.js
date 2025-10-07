@@ -1,6 +1,5 @@
-
 import assert from 'assert'
-import os     from 'os'
+import os from 'os'
 
 import * as dz from '../index.js'
 
@@ -21,8 +20,8 @@ describe('dns-zone', function () {
 
   describe('removeChar', function () {
     const removeCases = [
-      [ 'this ( has opening paran', '"', '(', 'this  has opening paran' ],
-      [ 'this ) has closing paran', '"', ')', 'this  has closing paran' ],
+      ['this ( has opening paran', '"', '(', 'this  has opening paran'],
+      ['this ) has closing paran', '"', ')', 'this  has closing paran'],
     ]
 
     for (const c of removeCases) {
@@ -32,8 +31,8 @@ describe('dns-zone', function () {
     }
 
     const remainCases = [
-      [ 'this "(" quoted open remains', '"', '(', 'this "(" quoted open remains' ],
-      [ 'this ")" quoted open remains', '"', ')', 'this ")" quoted open remains' ],
+      ['this "(" quoted open remains', '"', '(', 'this "(" quoted open remains'],
+      ['this ")" quoted open remains', '"', ')', 'this ")" quoted open remains'],
     ]
 
     for (const c of remainCases) {
@@ -49,20 +48,27 @@ describe('dns-zone', function () {
     })
 
     it('removes multiline comments', async function () {
-      assert.equal(dz.stripComment(`This line has a ; trailing comment${os.EOL}and so too does ;this one${os.EOL}`, '"', ';'), 'This line has a ')
+      assert.equal(
+        dz.stripComment(
+          `This line has a ; trailing comment${os.EOL}and so too does ;this one${os.EOL}`,
+          '"',
+          ';',
+        ),
+        'This line has a ',
+      )
     })
   })
 
   describe('toSeconds', function () {
     const cases = {
       '1w2d3h4m5s': 788645,
-      '1w1d'      : 691200,
-      '1w'        : 604800,
-      '1d'        : 86400,
-      '2h'        : 7200,
-      '1m'        : 60,
-      '3600'      : 3600,
-      '4500s'     : 4500,
+      '1w1d': 691200,
+      '1w': 604800,
+      '1d': 86400,
+      '2h': 7200,
+      '1m': 60,
+      3600: 3600,
+      '4500s': 4500,
     }
 
     for (const c in cases) {
