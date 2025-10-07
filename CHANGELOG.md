@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+### [1.1.6] - 2025-10-06
+
+- style: add prettier, update eslint to v9
+
 ### [1.1.5] - 2024-11-04
 
 - chore: use package.json[files], delete .npmignore
@@ -166,3 +170,18 @@
 [1.1.3]: https://github.com/NicTool/dns-zone/releases/tag/1.1.3
 [1.1.4]: https://github.com/NicTool/dns-zone/releases/tag/1.1.4
 [1.1.5]: https://github.com/NicTool/dns-zone/releases/tag/1.1.5
+[1.1.6]: https://github.com/NicTool/dns-zone/releases/tag/v1.1.6
+[0.0.2]: https://github.com/NicTool/dns-zone/releases/tag/0.0.2
+[0.1.0]: https://github.com/NicTool/dns-zone/releases/tag/0.1.0
+[0.2.0]: https://github.com/NicTool/dns-zone/releases/tag/0.2.0
+[0.3.0]: https://github.com/NicTool/dns-zone/releases/tag/0.3.0
+[0.4.0]: https://github.com/NicTool/dns-zone/releases/tag/0.4.0
+[0.5.0]: https://github.com/NicTool/dns-zone/releases/tag/0.5.0
+[0.5.1]: https://github.com/NicTool/dns-zone/releases/tag/0.5.1
+[0.6.0]: https://github.com/NicTool/dns-zone/releases/tag/0.6.0
+[0.7.0]: https://github.com/NicTool/dns-zone/releases/tag/0.7.0
+[0.8.0]: https://github.com/NicTool/dns-zone/releases/tag/0.8.0
+[0.8.5]: https://github.com/NicTool/dns-zone/releases/tag/0.8.5
+[0.9.0]: https://github.com/NicTool/dns-zone/releases/tag/0.9.0
+[1.0.0]: https://github.com/NicTool/dns-zone/releases/tag/1.0.0
+[1.1.0]: https://github.com/NicTool/dns-zone/releases/tag/1.1.0
