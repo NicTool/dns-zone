@@ -2,6 +2,12 @@
 
 ### Unreleased
 
+### [1.1.7] - 2026-03-13
+
+- dep(eslint): update to v10
+- deps: bump all to latest
+- ci(test): use shared workflow
+
 ### [1.1.6] - 2025-10-06
 
 - style: add prettier, update eslint to v9
@@ -184,4 +190,5 @@
 [1.1.3]: https://github.com/NicTool/dns-zone/releases/tag/1.1.3
 [1.1.4]: https://github.com/NicTool/dns-zone/releases/tag/1.1.4
 [1.1.5]: https://github.com/NicTool/dns-zone/releases/tag/1.1.5
-[1.1.6]: https://github.com/NicTool/dns-zone/releases/tag/1.1.6
+[1.1.6]: https://github.com/NicTool/dns-zone/releases/tag/v1.1.6
+[1.1.7]: https://github.com/NicTool/dns-zone/releases/tag/v1.1.7
