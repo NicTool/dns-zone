@@ -1,6 +1,6 @@
 {
   "name": "@nictool/dns-zone",
-  "version": "1.1.7",
+  "version": "1.1.8",
   "description": "DNS Zone",
   "main": "index.js",
   "type": "module",
@@ -18,9 +18,10 @@
     "prettier": "npx prettier --ignore-path .gitignore --check .",
     "prettier:fix": "npx prettier --ignore-path .gitignore --write .",
     "test": "npx mocha",
-    "versions": "npx dependency-version-checker check",
-    "versions:fix": "npx dependency-version-checker update",
-    "format": "npm run prettier:fix && npm run lint:fix"
+    "versions": "npx npm-dep-mgr check",
+    "versions:fix": "npx npm-dep-mgr update",
+    "format": "npm run prettier:fix && npm run lint:fix",
+    "test:coverage": "npx c8 --reporter=text --reporter=text-summary npm test"
   },
   "repository": {
     "type": "git",

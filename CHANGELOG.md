@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+### [1.1.8] - 2026-04-07
+
+- style: replace str.substring (deprecated) with slice
+
 ### [1.1.7] - 2026-03-13
 
 - dep(eslint): update to v10
@@ -192,3 +196,4 @@
 [1.1.5]: https://github.com/NicTool/dns-zone/releases/tag/1.1.5
 [1.1.6]: https://github.com/NicTool/dns-zone/releases/tag/v1.1.6
 [1.1.7]: https://github.com/NicTool/dns-zone/releases/tag/v1.1.7
+[1.1.8]: https://github.com/NicTool/dns-zone/releases/tag/v1.1.8
