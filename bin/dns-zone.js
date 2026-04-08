@@ -351,7 +351,7 @@ function toHuman(zoneArray) {
       .getRdataFields()
       .map((f) => r.get(f))
       .join(' ')
-    process.stdout.write(rdata.substring(0, rdataWidth))
+    process.stdout.write(rdata.slice(0, rdataWidth))
     if (rdata.length > rdataWidth) process.stdout.write('...')
 
     process.stdout.write('\n')
