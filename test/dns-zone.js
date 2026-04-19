@@ -2,6 +2,7 @@ import assert from 'assert'
 import * as child from 'child_process'
 import path from 'path'
 import util from 'util'
+import { describe, it } from 'node:test'
 
 const execFile = util.promisify(child.execFile)
 
@@ -186,6 +187,80 @@ bounce.theartfarm.com.\t+86400\tCNAME\tcustom-email-domain.stripe.com. ~
       assert.strictEqual(stderr, '')
     } catch (e) {
       assert.ifError(e)
+    }
+  })
+
+  it('exports BIND zone as bind format (-e bind)', async function () {
+    const binPath = path.resolve('bin', 'dns-zone.js')
+    const args = [
+      binPath,
+      '-i',
+      'bind',
+      '-f',
+      './test/fixtures/bind/example.com',
+      '-o',
+      'example.com',
+      '-e',
+      'bind',
+    ]
+    const { stdout, stderr } = await execFile('node', args)
+    assert.ok(stdout.includes('SOA'))
+    assert.strictEqual(stderr, '')
+  })
+
+  it('exports tinydns data as JSON (-e json)', async function () {
+    const binPath = path.resolve('bin', 'dns-zone.js')
+    const args = [binPath, '-i', 'tinydns', '-f', './test/fixtures/tinydns/data', '-e', 'json']
+    const { stdout, stderr } = await execFile('node', args)
+    assert.ok(stdout.length > 0)
+    assert.strictEqual(stderr, '')
+  })
+
+  it('exports BIND zone as tinydns format (-e tinydns)', async function () {
+    const binPath = path.resolve('bin', 'dns-zone.js')
+    const args = [
+      binPath,
+      '-i',
+      'bind',
+      '-f',
+      './test/fixtures/bind/example.com',
+      '-o',
+      'example.com',
+      '-e',
+      'tinydns',
+    ]
+    const { stdout, stderr } = await execFile('node', args)
+    assert.ok(stdout.includes('example.com'))
+    assert.strictEqual(stderr, '')
+  })
+
+  it('exports BIND zone as maradns format (-e maradns)', async function () {
+    const binPath = path.resolve('bin', 'dns-zone.js')
+    const args = [
+      binPath,
+      '-i',
+      'bind',
+      '-f',
+      './test/fixtures/bind/example.com',
+      '-o',
+      'example.com',
+      '-e',
+      'maradns',
+    ]
+    const { stdout, stderr } = await execFile('node', args)
+    assert.ok(stdout.includes('/ttl') || stdout.includes('/origin') || stdout.includes('example.com'))
+    assert.strictEqual(stderr, '')
+  })
+
+  it('prints usage to stderr when -f flag is missing', async function () {
+    const binPath = path.resolve('bin', 'dns-zone.js')
+    const args = [binPath, '-i', 'bind']
+    try {
+      await execFile('node', args)
+      assert.fail('should have exited with non-zero code')
+    } catch (e) {
+      assert.ok(e.code !== 0)
+      assert.ok(e.stderr.length > 0)
     }
   })
 })

@@ -2,9 +2,33 @@
 
 ### Unreleased
 
+### [1.2.0] - 2026-04-19
+
+- feat(index): add tokenizeQuoted, ~10x faster char/quote/comments
+- feat(zone): this.recordKeys Set for O(1) duplicate detection
+- feat(maradns): parse CAA records from RAW
+- feat(bind): support generic record format, RFC 3597
+- feat(bind): support recursive INCLUDE directive
+- fix(dns-zone): in invalid arg, show usage
+- fix(bind): better error message when SOA is missing fields
+- fix(bind): don't limit TTL to 5 num chars
+- fix(bind): add path traversal guard
+- fix: two typos uncovered by testing
+- change: replace some regex with native string functions
+- change: lib/{bind,maradns,tinydns}.js — added ctx parameter (default: zoneOpts)
+- change: class ZONE no longer extends Map
+- change: iterate directly on strings
+- change: serialByDate, remove first unused param (start)
+- change: str.substr() -> str.slice
+- deps: bump versions to latest
+- doc(README): wordsmithed
+- test: convert test runner & coverage to node:test
+- test: add tinydns end-to-end coverage
+
 ### [1.1.8] - 2026-04-07
 
 - style: replace str.substring (deprecated) with slice
+- style: use optional chaining
 
 ### [1.1.7] - 2026-03-13
 
@@ -197,3 +221,4 @@
 [1.1.6]: https://github.com/NicTool/dns-zone/releases/tag/v1.1.6
 [1.1.7]: https://github.com/NicTool/dns-zone/releases/tag/v1.1.7
 [1.1.8]: https://github.com/NicTool/dns-zone/releases/tag/v1.1.8
+[1.2.0]: https://github.com/NicTool/dns-zone/releases/tag/v1.2.0

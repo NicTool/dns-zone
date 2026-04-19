@@ -1,6 +1,7 @@
 import assert from 'assert'
 import fs from 'fs/promises'
 import os from 'os'
+import { describe, it, beforeEach } from 'node:test'
 
 import * as RR from '@nictool/dns-resource-record'
 import mara from '../lib/maradns.js'
@@ -112,7 +113,7 @@ describe('maradns', function () {
       )
     })
 
-    it.skip(`parses CAA record (RAW)`, async () => {
+    it(`parses CAA record (RAW)`, async () => {
       const r = await mara.parseZoneFile(`example.com. RAW 257 \x00\x05'issueletsencrypt.org' ~\n`)
       assert.deepStrictEqual(
         r[0],
@@ -336,6 +337,34 @@ describe('maradns', function () {
         }),
       )
     })
+  })
+
+  it('parses /ttl directive', async () => {
+    const r = await mara.parseZoneFile('/ttl 3600 ~')
+    assert.deepStrictEqual(r, [])
+    assert.equal(mara.zoneOpts.ttl, 3600)
+  })
+
+  it('parses /origin directive', async () => {
+    const r = await mara.parseZoneFile('/origin example.net ~')
+    assert.deepStrictEqual(r, [])
+    assert.equal(mara.zoneOpts.origin, 'example.net.')
+  })
+
+  it('parses PTR without trailing dot (appends .in-addr.arpa.)', async () => {
+    mara.zoneOpts.ttl = 86400
+    const r = await mara.parseZoneFile(`15.12.11.10 +64000 PTR c.example.net. ~\n`)
+    assert.equal(r.length, 1)
+    assert.equal(r[0].get('type'), 'PTR')
+    assert.equal(r[0].get('owner'), '15.12.11.10.in-addr.arpa.')
+  })
+
+  it('parses PTR without trailing dot with hex chars (appends .ip6.arpa.)', async () => {
+    mara.zoneOpts.ttl = 86400
+    const r = await mara.parseZoneFile(`f.e.d.c.b.a +86400 PTR a.example.net. ~\n`)
+    assert.equal(r.length, 1)
+    assert.equal(r[0].get('type'), 'PTR')
+    assert.equal(r[0].get('owner'), 'f.e.d.c.b.a.ip6.arpa.')
   })
 
   it('loads and validates example.com', async function () {
