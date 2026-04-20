@@ -1,6 +1,7 @@
 import assert from 'assert'
 import fs from 'fs/promises'
 import os from 'os'
+import { describe, it, beforeEach } from 'node:test'
 
 import * as RR from '@nictool/dns-resource-record'
 import * as bind from '../lib/bind.js'
@@ -509,6 +510,71 @@ describe('bind', function () {
       )
     })
 
+    // RFC 3597 — Handling of Unknown DNS Resource Record (RR) Types
+    // https://www.rfc-editor.org/rfc/rfc3597
+
+    it('RFC 3597: TYPE<n> with text rdata maps to known type (TYPE1 → A)', async () => {
+      const r = await bind.parseZoneFile(`e.example.com.  3600  IN  TYPE1  10.0.0.1\n`)
+      assert.deepStrictEqual(
+        r[0],
+        new RR.A({ owner: 'e.example.com.', ttl: 3600, class: 'IN', type: 'A', address: '10.0.0.1' }),
+      )
+    })
+
+    it('RFC 3597: unknown TYPE<n> with generic \\# rdata is stored as plain object', async () => {
+      const r = await bind.parseZoneFile(`a.example.com.  3600  IN  TYPE65534  \\# 4 01020304\n`)
+      assert.deepStrictEqual(r[0], {
+        owner: 'a.example.com.',
+        ttl: 3600,
+        class: 'IN',
+        type: 'TYPE65534',
+        rdata: '\\# 4 01020304',
+      })
+    })
+
+    it('RFC 3597: known TYPE<n> with generic \\# rdata resolves type name, stores as plain object', async () => {
+      // TYPE1 = A; wire-format hex rdata is stored verbatim (no wire decoder available)
+      const r = await bind.parseZoneFile(`e.example.com.  3600  IN  TYPE1  \\# 4 0a000001\n`)
+      assert.deepStrictEqual(r[0], {
+        owner: 'e.example.com.',
+        ttl: 3600,
+        class: 'IN',
+        type: 'A',
+        rdata: '\\# 4 0a000001',
+      })
+    })
+
+    it('RFC 3597: TYPE<n> \\# 0 (zero-length rdata)', async () => {
+      const r = await bind.parseZoneFile(`b.example.com.  3600  IN  TYPE65534  \\# 0\n`)
+      assert.deepStrictEqual(r[0], {
+        owner: 'b.example.com.',
+        ttl: 3600,
+        class: 'IN',
+        type: 'TYPE65534',
+        rdata: '\\# 0',
+      })
+    })
+
+    it('RFC 3597: multi-line generic rdata via BIND parenthesis continuation', async () => {
+      // example adapted from RFC 3597 §5
+      const r = await bind.parseZoneFile(`a.example.com.  3600  IN  TYPE65534  \\# 4 abcd (\n  ef01 )\n`)
+      assert.deepStrictEqual(r[0], {
+        owner: 'a.example.com.',
+        ttl: 3600,
+        class: 'IN',
+        type: 'TYPE65534',
+        rdata: '\\# 4 abcdef01',
+      })
+    })
+
+    it('RFC 3597: throws on generic rdata length mismatch', async () => {
+      // \# 4 declares 4 bytes but abcd is only 2 bytes of hex
+      await assert.rejects(
+        bind.parseZoneFile(`a.example.com.  3600  IN  TYPE65534  \\# 4 abcd\n`),
+        /RFC 3597.*length mismatch/,
+      )
+    })
+
     it('parses cadillac.net zone file', async () => {
       const file = './test/fixtures/bind/cadillac.net'
       const buf = await fs.readFile(file)
@@ -541,6 +607,32 @@ describe('bind', function () {
       const rrs = await bind.parseZoneFile(str)
       // console.dir(rrs, { depth: null })
       assert.equal(rrs.length, 7)
+    })
+
+    it('follows $INCLUDE when ctx.file is set', async () => {
+      const file = './test/fixtures/bind/example.net'
+      const buf = await fs.readFile(file)
+      const rrs = await bind.parseZoneFile(buf.toString(), { file })
+      assert.equal(rrs.length, 7)
+    })
+
+    it('throws on $INCLUDE without ctx.file', async () => {
+      await assert.rejects(
+        bind.parseZoneFile('$INCLUDE non-existent.txt\n$TTL 3600\nexample.com. IN A 1.2.3.4\n'),
+        /\$INCLUDE requires ctx\.file/,
+      )
+    })
+
+    it('throws on self-referencing $INCLUDE', async () => {
+      const file = './test/fixtures/bind/self-include'
+      const buf = await fs.readFile(file)
+      await assert.rejects(bind.includeIncludes(buf.toString(), { file }), /\$INCLUDE cycle detected/)
+    })
+
+    it('throws on mutually recursive $INCLUDE', async () => {
+      const file = './test/fixtures/bind/mutual-a'
+      const buf = await fs.readFile(file)
+      await assert.rejects(bind.includeIncludes(buf.toString(), { file }), /\$INCLUDE cycle detected/)
     })
   })
 })

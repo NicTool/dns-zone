@@ -1,25 +1,31 @@
 #!node
 
 import fs from 'node:fs/promises'
-import path from 'node:path'
 import os from 'node:os'
+import path from 'node:path'
 
+import * as RR from '@nictool/dns-resource-record'
 import chalk from 'chalk'
 import cmdLineArgs from 'command-line-args'
 import cmdLineUsage from 'command-line-usage'
 
-import ZONE from '../lib/zone.js'
 import * as dz from '../index.js'
 import * as bind from '../lib/bind.js'
-import * as tinydns from '../lib/tinydns.js'
+import * as json from '../lib/json.js'
 import * as maradns from '../lib/maradns.js'
-
-import * as RR from '@nictool/dns-resource-record'
+import * as tinydns from '../lib/tinydns.js'
+import ZONE from '../lib/zone.js'
 
 const rr = new RR.A(null)
 
 // CLI argument processing
-const opts = cmdLineArgs(usageOptions())._all
+let opts
+try {
+  opts = cmdLineArgs(usageOptions())._all
+} catch (e) {
+  console.error(e.message)
+  usage(1)
+}
 if (opts.verbose) console.error(opts)
 if (opts.help) usage(0)
 
@@ -40,38 +46,43 @@ Object.assign(maradns.zoneOpts, optsObj)
 
 if (opts.verbose) console.error(bind.zoneOpts)
 
-ingestZoneData()
-  .then(async (r) => {
-    switch (r.type) {
-      case 'tinydns':
-        return tinydns.parseData(r.data).then(checkZone)
-      case 'maradns':
-        maradns.zoneOpts.serial = await dz.serialByFileStat(opts.file)
-        return maradns.parseZoneFile(r.data).then(checkZone)
-      default:
-        return bind.parseZoneFile(r.data).then(checkZone)
-    }
-  })
-  .then(output)
-  .catch((e) => {
-    console.error(e.message)
-  })
+try {
+  const r = await ingestZoneData()
+  let zoneArray
+  switch (r.type) {
+    case 'json':
+      zoneArray = checkZone(await json.parseZoneFile(r.data))
+      break
+    case 'tinydns':
+      zoneArray = checkZone(await tinydns.parseData(r.data))
+      break
+    case 'maradns':
+      maradns.zoneOpts.serial = await dz.serialByFileStat(opts.file)
+      zoneArray = checkZone(await maradns.parseZoneFile(r.data))
+      break
+    default:
+      zoneArray = checkZone(await bind.parseZoneFile(r.data))
+  }
+  output(zoneArray)
+} catch (e) {
+  console.error(e.message)
+  process.exitCode = 1
+}
 
 function checkZone(zoneArray) {
-  return new Promise((resolve, reject) => {
-    try {
-      new ZONE({
-        ttl: optsObj.ttl,
-        origin: optsObj.origin,
-        RR: zoneArray,
-      })
-      // console.log(z)
-      resolve(zoneArray)
-    } catch (e) {
-      console.error(e)
-      reject(e)
-    }
+  const z = new ZONE({
+    ttl: optsObj.ttl,
+    origin: optsObj.origin,
+    RR: zoneArray,
   })
+  if (z.errors.length) {
+    for (const { rr, error } of z.errors) {
+      console.error(error.message)
+      if (opts.verbose) console.error(rr)
+    }
+    throw new Error(`zone validation failed: ${z.errors.length} error(s)`)
+  }
+  return zoneArray
 }
 
 function usage(code) {
@@ -229,31 +240,24 @@ function usageSections() {
   ]
 }
 
-function ingestZoneData() {
-  return new Promise((resolve, reject) => {
-    if (!opts.import) usage(1)
-    if (!opts.file) usage(1)
+async function ingestZoneData() {
+  if (!opts.import) usage(1)
+  if (!opts.file) usage(1)
 
-    let filePath = opts.file
+  let raw
+  if (opts.file === '-') {
+    if (opts.verbose) console.error('reading from stdin')
+    const chunks = []
+    for await (const chunk of process.stdin) chunks.push(chunk)
+    raw = Buffer.concat(chunks).toString()
+  } else {
+    if (!bind.zoneOpts.origin) bind.zoneOpts.origin = rr.fullyQualify(path.basename(opts.file))
+    bind.zoneOpts.file = opts.file
+    if (opts.verbose) console.error(`reading file ${opts.file}`)
+    raw = await fs.readFile(opts.file, 'utf8')
+  }
 
-    if (filePath === '-') {
-      filePath = '/dev/stdin' // process.stdin.fd
-    } else {
-      if (!bind.zoneOpts.origin) bind.zoneOpts.origin = rr.fullyQualify(path.basename(filePath))
-    }
-
-    if (opts.verbose) console.error(`reading file ${filePath}`)
-
-    fs.readFile(filePath)
-      .then(async (buf) => {
-        const str = await bind.includeIncludes(buf.toString(), opts)
-        resolve({
-          type: opts.import,
-          data: str,
-        })
-      })
-      .catch(reject)
-  })
+  return { type: opts.import, data: raw }
 }
 
 function output(zoneArray) {
@@ -277,6 +281,7 @@ function isBlank(rr) {
     process.stdout.write(rr)
     return true
   }
+  return false
 }
 
 function toBind(zoneArray, origin) {
@@ -307,17 +312,17 @@ function toTinydns(zoneArray) {
 function toJSON(zoneArray) {
   for (const rr of zoneArray) {
     if (isBlank(rr)) continue
+    if (!rr.get) continue // skip $TTL, $ORIGIN directives
     if (rr.get('comment')) rr.delete('comment')
-    process.stdout.write(JSON.stringify(Object.fromEntries(rr)))
+    process.stdout.write(JSON.stringify(Object.fromEntries(rr)) + '\n')
   }
 }
 
 function toHuman(zoneArray) {
   const widest = { owner: 0, ttl: 0, type: 0, rdata: 0 }
   const fields = ['owner', 'ttl', 'type']
-  zoneArray.map((r) => {
-    if (r === os.EOL) return
-    if (!r.get) return
+  for (const r of zoneArray) {
+    if (r === os.EOL || !r.get) continue
     for (const f of fields) {
       if (getWidth(r.get(f)) > widest[f]) widest[f] = getWidth(r.get(f))
     }
@@ -326,7 +331,7 @@ function toHuman(zoneArray) {
       .map((f) => r.get(f))
       .join(' ').length
     if (rdataLen > widest.rdata) widest.rdata = rdataLen
-  })
+  }
 
   // console.log(widest)
   let rdataWidth = process.stdout.columns - widest.owner - widest.type - 10
@@ -339,22 +344,21 @@ function toHuman(zoneArray) {
       continue
     }
 
-    process.stdout.write(r.get('owner').padEnd(widest.owner + 2, ' '))
-
+    let line = r.get('owner').padEnd(widest.owner + 2, ' ')
     if (!bind.zoneOpts.hide.ttl) {
-      process.stdout.write(r.get('ttl').toString().padStart(widest.ttl, ' ') + '  ')
+      line += r.get('ttl').toString().padStart(widest.ttl, ' ') + '  '
     }
-
-    process.stdout.write(r.get('type').padEnd(widest.type + 2, ' '))
+    line += r.get('type').padEnd(widest.type + 2, ' ')
 
     const rdata = r
       .getRdataFields()
       .map((f) => r.get(f))
       .join(' ')
-    process.stdout.write(rdata.slice(0, rdataWidth))
-    if (rdata.length > rdataWidth) process.stdout.write('...')
+    line += rdata.slice(0, rdataWidth)
+    if (rdata.length > rdataWidth) line += '...'
+    line += '\n'
 
-    process.stdout.write('\n')
+    process.stdout.write(line)
   }
 }
 
@@ -374,7 +378,6 @@ function toMaraDNS(zoneArray) {
 }
 
 function getWidth(str) {
-  // console.log(str)
-  if ('number' === typeof str) return str.toString().length
+  if (typeof str === 'number') return str.toString().length
   return str.length
 }

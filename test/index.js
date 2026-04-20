@@ -1,5 +1,6 @@
 import assert from 'assert'
 import os from 'os'
+import { describe, it } from 'node:test'
 
 import * as dz from '../index.js'
 
@@ -56,6 +57,40 @@ describe('dns-zone', function () {
         ),
         'This line has a ',
       )
+    })
+  })
+
+  describe('valueCleanup', function () {
+    it('strips double quotes from a quoted string', function () {
+      assert.equal(dz.valueCleanup('"quoted value"'), 'quoted value')
+    })
+
+    it('returns numeric strings as numbers', function () {
+      assert.strictEqual(dz.valueCleanup('3600'), 3600)
+    })
+
+    it('returns unquoted non-numeric strings as-is', function () {
+      assert.equal(dz.valueCleanup('example.com.'), 'example.com.')
+    })
+  })
+
+  describe('serialByDate', function () {
+    it('returns a 10-digit date-based serial', function () {
+      const serial = dz.serialByDate()
+      assert.ok(Number.isInteger(serial))
+      assert.ok(serial > 2020010100)
+      assert.match(serial.toString(), /^\d{10}$/)
+    })
+
+    it('uses provided increment', function () {
+      const s1 = dz.serialByDate(0)
+      const s5 = dz.serialByDate(5)
+      assert.equal(s5 - s1, 5)
+    })
+
+    it('pads single-digit increment', function () {
+      const serial = dz.serialByDate(3)
+      assert.equal(serial.toString().slice(-2), '03')
     })
   })
 

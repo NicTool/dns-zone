@@ -1,4 +1,5 @@
 import assert from 'assert'
+import { describe, it, before } from 'node:test'
 
 import ZONE from '../lib/zone.js'
 import * as RR from '@nictool/dns-resource-record'
@@ -24,19 +25,20 @@ describe('zone', function () {
   })
 
   describe('setSOA', function () {
+    let zone
     before(function () {
-      this.zone = new ZONE({ origin: 'example.com' })
+      zone = new ZONE({ origin: 'example.com' })
     })
 
     it('sets the zones SOA', function () {
-      this.zone.setSOA(testSOA)
-      assert.equal(this.zone.SOA.owner, 'example.com.')
+      zone.setSOA(testSOA)
+      assert.equal(zone.SOA.owner, 'example.com.')
     })
 
     it('rejects a second SOA', function () {
       assert.throws(
         () => {
-          this.zone.setSOA(testSOA)
+          zone.setSOA(testSOA)
         },
         {
           message: 'Exactly one SOA RR should be present at the top!, RFC 1035',
@@ -46,9 +48,10 @@ describe('zone', function () {
   })
 
   describe('addRR', function () {
+    let zone
     before(function () {
-      this.zone = new ZONE({ origin: 'example.com' })
-      this.zone.setSOA(testSOA)
+      zone = new ZONE({ origin: 'example.com' })
+      zone.setSOA(testSOA)
     })
 
     const ns1 = new RR.NS({
@@ -60,9 +63,9 @@ describe('zone', function () {
     })
 
     it('adds ns1 to a zone', function () {
-      this.zone.addRR(ns1)
+      zone.addRR(ns1)
 
-      const matches = this.zone.getRR(ns1)
+      const matches = zone.getRR(ns1)
       assert.equal(matches.length, 1)
       assert.deepEqual(matches[0], ns1)
     })
@@ -75,9 +78,9 @@ describe('zone', function () {
         type: 'NS',
         dname: 'ns2.example.com.',
       })
-      this.zone.addRR(ns2)
+      zone.addRR(ns2)
 
-      const matches = this.zone.getRR(ns2)
+      const matches = zone.getRR(ns2)
       assert.equal(matches.length, 1)
       assert.deepEqual(matches[0], ns2)
     })
@@ -85,7 +88,7 @@ describe('zone', function () {
     it('rejects identical ns1', function () {
       assert.throws(
         () => {
-          this.zone.addRR(ns1)
+          zone.addRR(ns1)
         },
         {
           message: 'multiple identical RRs are not allowed, RFC 2181',
@@ -96,7 +99,7 @@ describe('zone', function () {
     it('rejects matching RRset with different TTL', function () {
       assert.throws(
         () => {
-          this.zone.addRR(
+          zone.addRR(
             new RR.NS({
               owner: 'example.com.',
               ttl: 7200,
@@ -121,9 +124,9 @@ describe('zone', function () {
     })
 
     it('adds A record to a zone', function () {
-      this.zone.addRR(a1)
+      zone.addRR(a1)
 
-      const matches = this.zone.getRR(a1)
+      const matches = zone.getRR(a1)
       assert.equal(matches.length, 1)
       assert.deepEqual(matches[0], a1)
     })
@@ -136,9 +139,9 @@ describe('zone', function () {
         type: 'A',
         address: '192.0.2.128',
       })
-      this.zone.addRR(a2)
+      zone.addRR(a2)
 
-      const matches = this.zone.getRR(a2)
+      const matches = zone.getRR(a2)
       assert.equal(matches.length, 1)
       assert.deepEqual(matches[0], a2)
     })
@@ -146,7 +149,7 @@ describe('zone', function () {
     it('rejects identical a1', function () {
       assert.throws(
         () => {
-          this.zone.addRR(a1)
+          zone.addRR(a1)
         },
         {
           message: 'multiple identical RRs are not allowed, RFC 2181',
@@ -163,8 +166,8 @@ describe('zone', function () {
     })
 
     it('adds cname1 to a zone', function () {
-      this.zone.addRR(cn1)
-      const matches = this.zone.getRR(cn1)
+      zone.addRR(cn1)
+      const matches = zone.getRR(cn1)
       assert.equal(matches.length, 1)
       assert.deepEqual(matches[0], cn1)
     })
@@ -172,7 +175,7 @@ describe('zone', function () {
     it('fails to add CNAME with matching owner', function () {
       assert.throws(
         () => {
-          this.zone.addRR(
+          zone.addRR(
             new RR.CNAME({
               owner: 'www2.example.com.',
               ttl: 3600,
@@ -191,7 +194,7 @@ describe('zone', function () {
     it('fails to add CNAME with matching owner and incompatible type', function () {
       assert.throws(
         () => {
-          this.zone.addRR(
+          zone.addRR(
             new RR.CNAME({
               owner: 'example.com.',
               ttl: 3600,
@@ -210,7 +213,7 @@ describe('zone', function () {
     it('fails to add AAAA adjacent to CNAME', function () {
       assert.throws(
         () => {
-          this.zone.addRR(
+          zone.addRR(
             new RR.AAAA({
               owner: 'www2.example.com.',
               ttl: 3600,
