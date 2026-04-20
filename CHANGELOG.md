@@ -4,10 +4,8 @@
 
 ### [1.2.2] - 2026-04-20
 
-#### Changed
-
-- separage coverage file, push to main
-
+- bind: constrain regex to limit backtracking
+- ci: separage coverage file, push to main
 
 ### [1.2.1] - 2026-04-20
 
