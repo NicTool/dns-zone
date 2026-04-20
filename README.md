@@ -1,5 +1,5 @@
-[![Module Tests](https://github.com/NicTool/dns-zone/actions/workflows/ci.yml/badge.svg)](https://github.com/NicTool/dns-zone/actions/workflows/ci.yml)
-[![Coverage Status](https://coveralls.io/repos/github/NicTool/dns-zone/badge.svg?branch=main)](https://coveralls.io/github/NicTool/dns-zone?branch=main)
+[![Tests][test-img]][test-uri]
+[![Coverage][cov-img]][cov-uri]
 
 # dns-zone
 
@@ -122,7 +122,7 @@ const rrs = await tinydns.parseData(dataText)
 const rrs = await maradns.parseZoneFile(csv2Text, { origin: 'example.com.' })
 ```
 
-Each RR is a [`@nictool/dns-resource-record`](https://github.com/NicTool/dns-resource-record) instance; use `rr.toBind()`, `rr.toTinydns()`, `rr.toMaraDNS()` to emit in other formats.
+Each RR is a [`@nictool/dns-resource-record`][dns-rr] instance; use `rr.toBind()`, `rr.toTinydns()`, `rr.toMaraDNS()` to emit in other formats.
 
 Zone-level validation:
 
@@ -148,9 +148,15 @@ Violations are collected on `zone.errors` and also printed by the CLI (with `-v`
 
 ## RELATED PACKAGES
 
-- [`@nictool/dns-resource-record`](https://github.com/NicTool/dns-resource-record) — record-level parsing, validation, and format conversion
+- [`@nictool/dns-resource-record`][dns-rr] — record-level parsing, validation, and format conversion
 - [`@nictool/dns-nameserver`](https://github.com/NicTool/dns-nameserver) — nameserver config parsers (BIND, Knot, MaraDNS, NSD, tinydns)
 
 ## LICENSE
 
 BSD-3-Clause — see [LICENSE](LICENSE).
+
+[dns-rr]: https://github.com/NicTool/dns-resource-record
+[test-img]: https://github.com/NicTool/dns-zone/actions/workflows/ci.yml/badge.svg
+[test-uri]: https://github.com/NicTool/dns-zone/actions/workflows/ci.yml
+[cov-img]: https://coveralls.io/repos/github/NicTool/dns-zone/badge.svg
+[cov-uri]: https://coveralls.io/github/NicTool/dns-zone
