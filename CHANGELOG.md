@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+### [1.2.1] - 2026-04-20
+
+- fix(package.json): syntax
+
 ### [1.2.0] - 2026-04-19
 
 - feat(index): add tokenizeQuoted, ~10x faster char/quote/comments
@@ -222,3 +226,4 @@
 [1.1.7]: https://github.com/NicTool/dns-zone/releases/tag/v1.1.7
 [1.1.8]: https://github.com/NicTool/dns-zone/releases/tag/v1.1.8
 [1.2.0]: https://github.com/NicTool/dns-zone/releases/tag/v1.2.0
+[1.2.1]: https://github.com/NicTool/dns-zone/releases/tag/v1.2.1

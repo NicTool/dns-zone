@@ -1,11 +1,11 @@
 {
   "name": "@nictool/dns-zone",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "DNS Zone",
   "main": "index.js",
   "type": "module",
   "bin": {
-    "dns-zone": "./bin/dns-zone.js"
+    "dns-zone": "bin/dns-zone.js"
   },
   "files": [
     "bin",
