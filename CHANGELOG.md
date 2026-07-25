@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+### [1.2.3] - 2026-07-25
+
 ### [1.2.2] - 2026-04-20
 
 - bind: constrain regex to limit backtracking
@@ -233,3 +235,4 @@
 [1.2.0]: https://github.com/NicTool/dns-zone/releases/tag/v1.2.0
 [1.2.1]: https://github.com/NicTool/dns-zone/releases/tag/v1.2.1
 [1.2.2]: https://github.com/NicTool/dns-zone/releases/tag/v1.2.2
+[1.2.3]: https://github.com/NicTool/dns-zone/releases/tag/v1.2.3
