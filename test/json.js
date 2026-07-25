@@ -38,7 +38,7 @@ describe('json', function () {
       const rrs = await bind.parseZoneFile(buf.toString(), { file: './test/fixtures/bind/example.net' })
       const ndjson = rrs
         .filter((r) => r.get)
-        .map((r) => JSON.stringify(Object.fromEntries(r)))
+        .map((r) => JSON.stringify(r))
         .join('\n')
       const roundTripped = await json.parseZoneFile(ndjson)
       assert.equal(roundTripped.length, rrs.filter((r) => r.get).length)

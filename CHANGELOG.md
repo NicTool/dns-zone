@@ -4,6 +4,9 @@
 
 ### [1.2.3] - 2026-07-25
 
+- 
+- chore: updates for dns-rr 1.7+ compat
+
 ### [1.2.2] - 2026-04-20
 
 - bind: constrain regex to limit backtracking
