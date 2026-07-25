@@ -180,6 +180,24 @@ describe('maradns', function () {
       )
     })
 
+    it('parses NAPTR line', async () => {
+      const r = await mara.parseZoneFile(
+        `www.example.com. NAPTR 100 100 's';'http+I2R';'' _http._tcp.example.com. ~\n`,
+      )
+      assert.equal(r[0].get('order'), 100)
+      assert.equal(r[0].get('preference'), 100)
+      assert.equal(r[0].get('flags'), 'S')
+      assert.equal(r[0].get('service'), 'http+I2R')
+      assert.equal(r[0].get('replacement'), '_http._tcp.example.com.')
+    })
+
+    it('throws on a malformed NAPTR line', async () => {
+      await assert.rejects(
+        mara.parseZoneFile(`www.example.com. NAPTR 100 100 's';'http+I2R' _http._tcp.example.com. ~\n`),
+        /unable to parse NAPTR/,
+      )
+    })
+
     it('parses HINFO line', async () => {
       const r = await mara.parseZoneFile(`example.com. HINFO 'Intel Pentium III';'CentOS Linux 3.7' ~\n`)
       // console.dir(r, { depth: null })

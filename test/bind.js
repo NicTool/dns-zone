@@ -260,7 +260,7 @@ describe('bind', function () {
           'key tag': 60485,
           algorithm: 5,
           'digest type': 1,
-          digest: '2BB183AF5F22588179A53B0A 98631FAD1A292118',
+          digest: '2BB183AF5F22588179A53B0A98631FAD1A292118',
         }),
       )
     })
@@ -414,7 +414,10 @@ describe('bind', function () {
           ttl: 86400,
           class: 'IN',
           type: 'TXT',
-          data: 'v=DKIM1;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoyUzGOTSOmakY8BcxXgi0mN/nFegLBPs7aaGQUtjHfa8yUrt9T2j6GSXgdjLuG3R43WjePQv3RHzc+bwwOkdw0XDOXiztn5mhrlaflbVr5PMSTrv64/cpFQKLtgQx8Vgqp7Dh3jw13rLomRTqJFgMrMHdhIibZEa69gtuAfDqoeXo6QDSGk5JuBAeRHEH27FriHulg5ob4F4lmh7fMFVsDGkQEF6jaIVYqvRjDyyQed3R3aTJX3fpb3QrtRqvfn/LAf+3kzW58AjsERpsNCSTD2RquxbnyoR/1wdGKb8cUlD/EXvqtvpVnOzHeSeMEqex3kQI8HOGsEehWZlKd+GqwIDAQAB',
+          data: [
+            'v=DKIM1;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoyUzGOTSOmakY8BcxXgi0mN/nFegLBPs7aaGQUtjHfa8yUrt9T2j6GSXgdjLuG3R43WjePQv3RHzc+bwwOkdw0XDOXiztn5mhrlaflbVr5PMSTrv64/cpFQKLtgQx8Vgqp7Dh3jw13rLomRTqJFgMrMHdhIibZEa69gtuAfDqoeXo6QDSGk5JuBAeRHEH27FriHulg5ob',
+            '4F4lmh7fMFVsDGkQEF6jaIVYqvRjDyyQed3R3aTJX3fpb3QrtRqvfn/LAf+3kzW58AjsERpsNCSTD2RquxbnyoR/1wdGKb8cUlD/EXvqtvpVnOzHeSeMEqex3kQI8HOGsEehWZlKd+GqwIDAQAB',
+          ],
         }),
       )
     })
@@ -633,6 +636,50 @@ describe('bind', function () {
       const file = './test/fixtures/bind/mutual-a'
       const buf = await fs.readFile(file)
       await assert.rejects(bind.includeIncludes(buf.toString(), { file }), /\$INCLUDE cycle detected/)
+    })
+  })
+
+  describe('RR line parser', function () {
+    it('parses an owner that looks like a TTL', async () => {
+      const r = await bind.parseZoneFile(`1  1814400  IN  PTR  localhost.\n`)
+      assert.equal(r[0].get('owner'), '1.')
+      assert.equal(r[0].get('ttl'), 1814400)
+    })
+
+    it('inherits the owner when a line begins with whitespace', async () => {
+      const r = await bind.parseZoneFile(`a.example.com. 3600 IN A 1.2.3.4\n\t3600 IN A 5.6.7.8\n`)
+      assert.equal(r[1].get('owner'), 'a.example.com.')
+      assert.equal(r[1].get('address'), '5.6.7.8')
+    })
+
+    it('accepts class before TTL (RFC 1035 §5.1)', async () => {
+      const r = await bind.parseZoneFile(`a.example.com. IN 3600 A 1.2.3.4\n`)
+      assert.equal(r[0].get('ttl'), 3600)
+      assert.equal(r[0].get('class'), 'IN')
+    })
+
+    it('accepts a lower case class and type', async () => {
+      const r = await bind.parseZoneFile(`a.example.com. 3600 in a 1.2.3.4\n`)
+      assert.equal(r[0].get('type'), 'A')
+      assert.equal(r[0].get('class'), 'IN')
+    })
+
+    it('omits TTL and class', async () => {
+      const r = await bind.parseZoneFile(`SRI-NIC.ARPA. HINFO DEC-2060 TOPS20\n`, { ttl: 3600 })
+      assert.equal(r[0].get('type'), 'HINFO')
+    })
+
+    it('throws on a line with no RR type', async () => {
+      await assert.rejects(bind.parseZoneFile(`a.example.com. 3600 IN 1.2.3.4\n`), /parse failure/)
+    })
+
+    // CodeQL js/polynomial-redos: the regex this replaced went quadratic here
+    it('parses adversarial input in linear time', async () => {
+      const started = Date.now()
+      for (const line of ['$A\t' + '!'.repeat(20000), 'a. 3600 IN A ' + '0'.repeat(20000)]) {
+        await bind.parseZoneFile(line).catch(() => {})
+      }
+      assert.ok(Date.now() - started < 1000, 'parsing should not backtrack')
     })
   })
 })

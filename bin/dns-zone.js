@@ -313,8 +313,8 @@ function toJSON(zoneArray) {
   for (const rr of zoneArray) {
     if (isBlank(rr)) continue
     if (!rr.get) continue // skip $TTL, $ORIGIN directives
-    if (rr.get('comment')) rr.delete('comment')
-    process.stdout.write(JSON.stringify(Object.fromEntries(rr)) + '\n')
+    if (rr.get('comment')) delete rr.comment
+    process.stdout.write(JSON.stringify(rr) + '\n')
   }
 }
 
