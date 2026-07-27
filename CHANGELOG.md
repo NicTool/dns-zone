@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+### [1.2.4] - 2026-07-27
+
+- moved the to[format] zone generators into lib/export
+
 ### [1.2.3] - 2026-07-25
 
 - fix: replace regex with parsers
@@ -240,3 +244,4 @@
 [1.2.1]: https://github.com/NicTool/dns-zone/releases/tag/v1.2.1
 [1.2.2]: https://github.com/NicTool/dns-zone/releases/tag/v1.2.2
 [1.2.3]: https://github.com/NicTool/dns-zone/releases/tag/v1.2.3
+[1.2.4]: https://github.com/NicTool/dns-zone/releases/tag/v1.2.4

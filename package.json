@@ -1,6 +1,6 @@
 {
   "name": "@nictool/dns-zone",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "DNS Zone",
   "main": "index.js",
   "type": "module",

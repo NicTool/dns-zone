@@ -264,13 +264,13 @@ function output(zoneArray) {
   // console.error(zoneArray)
   switch (opts.export.toLowerCase()) {
     case 'json':
-      return toJSON(zoneArray)
+      return process.stdout.write(dz.toJSON(zoneArray))
     case 'bind':
-      return toBind(zoneArray, bind.zoneOpts.origin)
+      return process.stdout.write(dz.toBind(zoneArray, bind.zoneOpts))
     case 'tinydns':
-      return toTinydns(zoneArray)
+      return process.stdout.write(dz.toTinydns(zoneArray))
     case 'maradns':
-      return toMaraDNS(zoneArray)
+      return process.stdout.write(dz.toMaraDNS(zoneArray))
     default:
       toHuman(zoneArray)
   }
@@ -282,40 +282,6 @@ function isBlank(rr) {
     return true
   }
   return false
-}
-
-function toBind(zoneArray, origin) {
-  for (const rr of zoneArray) {
-    if (isBlank(rr)) continue
-    if (!rr.toBind) {
-      process.stdout.write(`${Object.keys(rr)[0]} ${Object.values(rr)[0]}\n`)
-      continue
-    }
-    process.stdout.write(rr.toBind(bind.zoneOpts))
-    bind.zoneOpts.previousOwner = rr.get('owner')
-  }
-}
-
-function toTinydns(zoneArray) {
-  for (const rr of zoneArray) {
-    if (rr === os.EOL) continue
-    if (rr.$TTL || rr.$ORIGIN) continue
-    try {
-      process.stdout.write(rr.toTinydns())
-    } catch (e) {
-      console.error(rr)
-      throw e
-    }
-  }
-}
-
-function toJSON(zoneArray) {
-  for (const rr of zoneArray) {
-    if (isBlank(rr)) continue
-    if (!rr.get) continue // skip $TTL, $ORIGIN directives
-    if (rr.get('comment')) delete rr.comment
-    process.stdout.write(JSON.stringify(rr) + '\n')
-  }
 }
 
 function toHuman(zoneArray) {
@@ -359,21 +325,6 @@ function toHuman(zoneArray) {
     line += '\n'
 
     process.stdout.write(line)
-  }
-}
-
-function toMaraDNS(zoneArray) {
-  for (const rr of zoneArray) {
-    if (rr === os.EOL) continue
-    if (rr.$TTL) {
-      process.stdout.write(`/ttl ${rr.$TTL}\n`)
-      continue
-    }
-    if (rr.$ORIGIN) {
-      process.stdout.write(`/origin ${rr.$ORIGIN}\n`)
-      continue
-    }
-    process.stdout.write(rr.toMaraDNS())
   }
 }
 
