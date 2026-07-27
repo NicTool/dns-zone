@@ -4,7 +4,7 @@ import bind from './lib/bind.js'
 import json from './lib/json.js'
 import maradns from './lib/maradns.js'
 import tinydns from './lib/tinydns.js'
-import * as zoneExport from './lib/export.js'
+import zoneExport from './lib/export.js'
 
 export { bind, json, maradns, tinydns }
 export { toBind, toTinydns, toMaraDNS, toJSON } from './lib/export.js'

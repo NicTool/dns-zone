@@ -76,3 +76,34 @@ describe('toJSON', () => {
     assert.equal(JSON.parse(lines[0]).address, '10.1.2.3')
   })
 })
+
+describe('directives with a falsy value', () => {
+  // $TTL 0 is legal (RFC 2308): cache nothing. A truthy test dropped it and
+  // then synthesized a replacement from opts, changing the zone's meaning.
+  it('keeps a $TTL 0 rather than dropping it', () => {
+    const text = toBind([{ $TTL: 0 }, ...rrs], { origin: 'x.org.', ttl: 300 })
+
+    assert.match(text, /^\$TTL 0$/m)
+    assert.doesNotMatch(text, /^\$TTL 300$/m, 'the given directive must not be duplicated')
+  })
+
+  it('keeps a /ttl 0 in csv2 too', () => {
+    assert.match(toMaraDNS([{ $TTL: 0 }, ...rrs], { origin: 'x.org.' }), /^\/ttl 0$/m)
+  })
+})
+
+describe('toJSON', () => {
+  it('strips the comment from its output', () => {
+    const withComment = rr('A', { address: '10.1.2.3', comment: '; note' })
+
+    assert.doesNotMatch(toJSON([withComment]), /note/)
+  })
+
+  it("leaves the caller's record untouched", () => {
+    // These are exported now, so a caller may keep using the records it passed.
+    const withComment = rr('A', { address: '10.1.2.3', comment: '; note' })
+    toJSON([withComment])
+
+    assert.equal(withComment.get('comment'), '; note')
+  })
+})

@@ -5,6 +5,32 @@ import { describe, it } from 'node:test'
 import * as dz from '../index.js'
 
 describe('dns-zone', function () {
+  describe('public exports', function () {
+    // These are the package's API surface; losing one is a breaking change.
+    for (const name of ['bind', 'json', 'maradns', 'tinydns', 'zoneExport']) {
+      it(`exports ${name}`, function () {
+        assert.strictEqual(typeof dz[name], 'object')
+      })
+    }
+
+    for (const name of ['toBind', 'toTinydns', 'toMaraDNS', 'toJSON']) {
+      it(`exports ${name}`, function () {
+        assert.strictEqual(typeof dz[name], 'function')
+        assert.strictEqual(typeof dz.zoneExport[name], 'function')
+      })
+    }
+
+    it('exposes zoneExport as a plain object, like the parser modules', function () {
+      // A namespace import would add a stray `default` key here.
+      assert.deepStrictEqual(Object.keys(dz.zoneExport).sort(), [
+        'toBind',
+        'toJSON',
+        'toMaraDNS',
+        'toTinydns',
+      ])
+    })
+  })
+
   describe('hasUnquoted', function () {
     it('returns true when char is in string unquoted', function () {
       assert.strictEqual(dz.hasUnquoted('this is a ( string of text', '"', '('), true)
