@@ -4,7 +4,7 @@
 
 ### [1.2.4] - 2026-07-27
 
-- moved the to[format] zone generators into lib/export.js
+- moved the to[format] zone generators into lib/export
 
 ### [1.2.3] - 2026-07-25
 

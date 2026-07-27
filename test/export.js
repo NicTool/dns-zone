@@ -90,6 +90,20 @@ describe('directives with a falsy value', () => {
   it('keeps a /ttl 0 in csv2 too', () => {
     assert.match(toMaraDNS([{ $TTL: 0 }, ...rrs], { origin: 'x.org.' }), /^\/ttl 0$/m)
   })
+
+  it('emits a $TTL 0 the caller asked for in opts', () => {
+    // Detecting a given directive and synthesizing a requested one are separate
+    // checks; both have to allow 0.
+    assert.match(toBind(rrs, { origin: 'x.org.', ttl: 0 }), /^\$TTL 0$/m)
+  })
+
+  it('emits a /ttl 0 the caller asked for in opts', () => {
+    assert.match(toMaraDNS(rrs, { origin: 'x.org.', ttl: 0 }), /^\/ttl 0$/m)
+  })
+
+  it('still omits $TTL when no ttl is given at all', () => {
+    assert.doesNotMatch(toBind(rrs, { origin: 'x.org.' }), /\$TTL/)
+  })
 })
 
 describe('toJSON', () => {
