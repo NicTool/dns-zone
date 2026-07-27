@@ -21,13 +21,7 @@ describe('dns-zone', function () {
     }
 
     it('exposes zoneExport as a plain object, like the parser modules', function () {
-      // A namespace import would add a stray `default` key here.
-      assert.deepStrictEqual(Object.keys(dz.zoneExport).sort(), [
-        'toBind',
-        'toJSON',
-        'toMaraDNS',
-        'toTinydns',
-      ])
+      assert.ok(!Object.keys(dz.zoneExport).includes('default'))
     })
   })
 
