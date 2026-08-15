@@ -1,5 +1,7 @@
 import assert from 'assert'
+import fs from 'node:fs/promises'
 import os from 'os'
+import path from 'node:path'
 import { describe, it } from 'node:test'
 
 import * as dz from '../index.js'
@@ -22,6 +24,62 @@ describe('dns-zone', function () {
 
     it('exposes zoneExport as a plain object, like the parser modules', function () {
       assert.ok(!Object.keys(dz.zoneExport).includes('default'))
+    })
+
+    it('exports ZONE, so validation needs no lib/ deep import', function () {
+      assert.strictEqual(typeof dz.ZONE, 'function')
+    })
+
+    it('exports validateZone', function () {
+      assert.strictEqual(typeof dz.validateZone, 'function')
+    })
+  })
+
+  describe('validateZone', function () {
+    const soa = `@	IN	SOA	ns1.example.com. hostmaster.example.com. 1 7200 3600 1209600 3600
+@	IN	NS	ns1.example.com.`
+
+    it('returns the parsed records and no errors for a valid zone', async function () {
+      const { RR, errors } = await dz.validateZone(`$ORIGIN example.com.\n$TTL 3600\n${soa}\n`)
+      assert.deepEqual(errors, [])
+      assert.ok(RR.length > 0)
+    })
+
+    it('reports a CNAME sharing an owner with another type', async function () {
+      const zone = `$ORIGIN example.com.
+$TTL 3600
+${soa}
+@	IN	CNAME	other.example.net.
+@	IN	TXT	"v=spf1 -all"
+`
+      const { errors } = await dz.validateZone(zone)
+      assert.equal(errors.length, 1)
+      assert.match(errors[0].error.message, /CNAME not allowed/)
+    })
+
+    it('parses the format named in opts', async function () {
+      const { RR, errors } = await dz.validateZone(
+        await fs.readFile(path.join('test', 'fixtures', 'tinydns', 'data'), 'utf8'),
+        { format: 'tinydns' },
+      )
+      assert.deepEqual(errors, [])
+      assert.ok(RR.length > 0)
+    })
+
+    it('ignores blank lines and comments the parser was asked to keep', async function () {
+      const zone = `$ORIGIN example.com.\n$TTL 3600\n; a comment\n\n${soa}\n`
+      const { RR, errors } = await dz.validateZone(zone, { showBlank: true, showComment: true })
+      assert.deepEqual(errors, [])
+      assert.ok(RR.some((r) => typeof r === 'string' && r.includes('a comment')))
+    })
+
+    it('accepts $TTL 0, RFC 2308', async function () {
+      const { errors } = await dz.validateZone(`$ORIGIN example.com.\n$TTL 0\n${soa}\n`)
+      assert.deepEqual(errors, [])
+    })
+
+    it('throws on an unknown format', async function () {
+      await assert.rejects(dz.validateZone('', { format: 'nope' }), /unknown zone format/)
     })
   })
 

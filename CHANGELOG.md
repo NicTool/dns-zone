@@ -2,6 +2,15 @@
 
 ### Unreleased
 
+### [1.3.0] - 2026-08-15
+
+- feat(index): export ZONE so zone validation doesn't need a deep import (#31)
+- feat(index): add validateZone(str, opts), parse + coexistence
+- fix(zone): skip blank/comment lines instead of reporting them as validation errors
+- fix(zone): honor $TTL 0, RFC 2308
+- docs(README): note why the parsers do not apply zone-level rules
+- deps(all): bump versions
+
 ### [1.2.4] - 2026-07-27
 
 - moved the to[format] zone generators into lib/export
@@ -245,3 +254,4 @@
 [1.2.2]: https://github.com/NicTool/dns-zone/releases/tag/v1.2.2
 [1.2.3]: https://github.com/NicTool/dns-zone/releases/tag/v1.2.3
 [1.2.4]: https://github.com/NicTool/dns-zone/releases/tag/v1.2.4
+[1.3.0]: https://github.com/NicTool/dns-zone/releases/tag/v1.3.0

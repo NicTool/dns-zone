@@ -24,6 +24,27 @@ describe('zone', function () {
     assert.ok(zone instanceof ZONE)
   })
 
+  describe('document elements', function () {
+    it('skips blank line and comment markers', function () {
+      const zone = new ZONE({ RR: ['', ' \t', '; a comment', testSOA] })
+      assert.deepEqual(zone.errors, [])
+      assert.equal(zone.SOA.owner, 'example.com.')
+    })
+
+    it('applies the $ORIGIN and $TTL directives', function () {
+      const zone = new ZONE({ RR: [{ $ORIGIN: 'example.com.' }, { $TTL: 3600 }, testSOA] })
+      assert.deepEqual(zone.errors, [])
+      assert.equal(zone.origin, 'example.com.')
+      assert.equal(zone.ttl, 3600)
+    })
+
+    it('applies $TTL 0, RFC 2308', function () {
+      const zone = new ZONE({ RR: [{ $TTL: 0 }, testSOA] })
+      assert.deepEqual(zone.errors, [])
+      assert.strictEqual(zone.ttl, 0)
+    })
+  })
+
   describe('setSOA', function () {
     let zone
     before(function () {

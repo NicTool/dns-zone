@@ -5,10 +5,30 @@ import json from './lib/json.js'
 import maradns from './lib/maradns.js'
 import tinydns from './lib/tinydns.js'
 import zoneExport from './lib/export.js'
+import ZONE from './lib/zone.js'
 
 export { bind, json, maradns, tinydns }
 export { toBind, toTinydns, toMaraDNS, toJSON } from './lib/export.js'
-export { zoneExport }
+export { zoneExport, ZONE }
+
+export async function validateZone(str, opts = {}) {
+  const { format = 'bind', ...ctx } = opts
+
+  // resolved per call: lib/*.js import this module, so the parser bindings are
+  // still in the TDZ while index.js is evaluating
+  const parse = {
+    bind: bind.parseZoneFile,
+    json: json.parseZoneFile,
+    maradns: maradns.parseZoneFile,
+    tinydns: tinydns.parseData,
+  }[format]
+  if (!parse) throw new Error(`unknown zone format: ${format}`)
+
+  const RR = await parse(str, ctx)
+  const { errors } = new ZONE({ origin: ctx.origin, ttl: ctx.ttl, RR })
+
+  return { RR, errors }
+}
 
 export function valueCleanup(str) {
   if (str.startsWith('"') && str.endsWith('"')) {

@@ -124,10 +124,28 @@ const rrs = await maradns.parseZoneFile(csv2Text, { origin: 'example.com.' })
 
 Each RR is a [`@nictool/dns-resource-record`][dns-rr] instance; use `rr.toBind()`, `rr.toTinydns()`, `rr.toMaraDNS()` to emit in other formats.
 
-Zone-level validation:
+The parsers validate each record. They do **not** apply the zone-level coexistence rules below. That is deliberate:
+
+- converting a broken zone is a supported workflow
+- a tinydns `data` file or a maradns csv2 holds every zone
+
+Use `validateZone` or `ZONE` to check a zone against the rules.
+
+Parse and validate in one call:
 
 ```js
-import ZONE from '@nictool/dns-zone/lib/zone.js'
+import { validateZone } from '@nictool/dns-zone'
+
+const { RR, errors } = await validateZone(zoneText, { origin: 'example.com.', ttl: 3600 })
+if (errors.length) console.error(errors)
+```
+
+`format` selects the parser (`bind` (default), `json`, `maradns`, `tinydns`); the remaining options are passed through to it.
+
+To validate records you already have, use the class directly:
+
+```js
+import { ZONE } from '@nictool/dns-zone'
 
 const z = new ZONE({ origin: 'example.com.', RR: rrs })
 if (z.errors.length) console.error(z.errors)
