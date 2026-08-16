@@ -61,7 +61,7 @@ try {
       zoneArray = checkZone(await maradns.parseZoneFile(r.data), 'maradns')
       break
     default:
-      zoneArray = checkZone(await bind.parseZoneFile(r.data), 'bind')
+      zoneArray = checkZone(await bind.parseZoneFile(r.data), 'rfc1035')
   }
   output(zoneArray)
 } catch (e) {
@@ -271,6 +271,7 @@ function output(zoneArray) {
   switch (opts.export.toLowerCase()) {
     case 'json':
       return process.stdout.write(dz.toJSON(zoneArray))
+    case 'rfc1035':
     case 'bind':
       return process.stdout.write(dz.toBind(zoneArray, bind.zoneOpts))
     case 'tinydns':

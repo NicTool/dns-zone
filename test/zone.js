@@ -59,12 +59,10 @@ describe('zone', function () {
     })
 
     it('groups records by zone when a file holds several', function () {
-      const zones = splitByZone([
-        soaFor('example.com.'),
-        aFor('a.example.com.'),
-        soaFor('example.net.'),
-        aFor('a.example.net.'),
-      ])
+      const zones = splitByZone(
+        [soaFor('example.com.'), aFor('a.example.com.'), soaFor('example.net.'), aFor('a.example.net.')],
+        { manyZones: true },
+      )
       assert.equal(zones.length, 2)
       assert.deepEqual(
         zones.map((z) => [z.apex, z.RR.length]),
@@ -76,35 +74,34 @@ describe('zone', function () {
     })
 
     it('puts the SOA first in every group', function () {
-      const zones = splitByZone([
-        aFor('a.example.com.'),
-        soaFor('example.com.'),
-        aFor('a.example.net.'),
-        soaFor('example.net.'),
-      ])
+      const zones = splitByZone(
+        [aFor('a.example.com.'), soaFor('example.com.'), aFor('a.example.net.'), soaFor('example.net.')],
+        { manyZones: true },
+      )
       for (const zone of zones) assert.equal(zone.RR[0].get('type'), 'SOA')
     })
 
     it('assigns a record to the most specific enclosing zone', function () {
-      const zones = splitByZone([
-        soaFor('example.com.'),
-        soaFor('_tcp.example.com.'),
-        aFor('host._tcp.example.com.'),
-      ])
+      const zones = splitByZone(
+        [soaFor('example.com.'), soaFor('_tcp.example.com.'), aFor('host._tcp.example.com.')],
+        { manyZones: true },
+      )
       const child = zones.find((z) => z.apex === '_tcp.example.com.')
       assert.equal(child.RR.length, 2)
       assert.equal(zones.find((z) => z.apex === 'example.com.').RR.length, 1)
     })
 
-    it('keeps records together when the format holds one zone', function () {
+    it('keeps records together by default, so an extra SOA stays an error', function () {
       const RRs = [soaFor('example.com.'), soaFor('example.net.')]
-      const zones = splitByZone(RRs, { manyZones: false })
+      const zones = splitByZone(RRs)
       assert.equal(zones.length, 1)
       assert.deepEqual(zones[0].RR, RRs)
     })
 
     it('drops records enclosed by no zone in the file', function () {
-      const zones = splitByZone([soaFor('example.com.'), soaFor('example.net.'), aFor('a.example.org.')])
+      const zones = splitByZone([soaFor('example.com.'), soaFor('example.net.'), aFor('a.example.org.')], {
+        manyZones: true,
+      })
       assert.deepEqual(
         zones.map((z) => z.RR.length),
         [1, 1],

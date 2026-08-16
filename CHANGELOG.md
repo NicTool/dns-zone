@@ -4,6 +4,7 @@
 
 ### [1.3.0] - 2026-08-15
 
+- docs: name the zone file format RFC 1035, with BIND as an alias
 - feat(index): export ZONE so zone validation doesn't need a deep import (#31)
 - feat(index): add validateZone(str, opts), parse + coexistence
 - fix(zone): skip blank/comment lines instead of reporting them as validation errors

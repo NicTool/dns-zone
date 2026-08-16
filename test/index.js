@@ -37,7 +37,7 @@ describe('dns-zone', function () {
 
   describe('holdsManyZones', function () {
     // only a per-server database format may carry more than one zone
-    const cases = { bind: false, maradns: false, tinydns: true, json: true }
+    const cases = { rfc1035: false, bind: false, maradns: false, tinydns: true, json: true }
 
     for (const [format, expected] of Object.entries(cases)) {
       it(`${format} -> ${expected}`, function () {
@@ -91,6 +91,14 @@ ${soa}
     it('accepts $TTL 0, RFC 2308', async function () {
       const { errors } = await dz.validateZone(`$ORIGIN example.com.\n$TTL 0\n${soa}\n`)
       assert.deepEqual(errors, [])
+    })
+
+    it('accepts rfc1035 as the name for the bind format', async function () {
+      const zone = `$ORIGIN example.com.\n$TTL 3600\n${soa}\n`
+      const asRfc1035 = await dz.validateZone(zone, { format: 'rfc1035' })
+      const asBind = await dz.validateZone(zone, { format: 'bind' })
+      assert.deepEqual(asRfc1035.errors, [])
+      assert.deepEqual(asRfc1035.RR, asBind.RR)
     })
 
     it('rejects a second SOA in a BIND file, which describes one zone', async function () {

@@ -13,16 +13,18 @@ export { zoneExport, ZONE, splitByZone }
 
 /**
  * A tinydns data file is a per-server database, so it holds every zone the
- * server answers for, and JSON mirrors whatever it was dumped from. A BIND
- * zone file (RFC 1035) and a maradns csv2 (mararc maps one zone to one file)
- * each describe a single zone, so a second SOA there is an error rather than
- * another zone.
+ * server answers for. JSON mirrors whatever it was dumped from. An RFC
+ * 1035 zone file and a maradns csv2 (mararc maps one zone to one file) each
+ * describe a single zone, so a second SOA there is an error.
  *
  * The parsers are reached through thunks: lib/*.js import this module, so the
  * bindings are still in the TDZ while index.js is evaluating.
  */
+const rfc1035 = { manyZones: false, parse: (str, ctx) => bind.parseZoneFile(str, ctx) }
+
 const formats = {
-  bind: { manyZones: false, parse: (str, ctx) => bind.parseZoneFile(str, ctx) },
+  rfc1035,
+  bind: rfc1035, // the format's older name, still accepted
   json: { manyZones: true, parse: (str, ctx) => json.parseZoneFile(str, ctx) },
   maradns: { manyZones: false, parse: (str, ctx) => maradns.parseZoneFile(str, ctx) },
   tinydns: { manyZones: true, parse: (str, ctx) => tinydns.parseData(str, ctx) },
