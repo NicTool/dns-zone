@@ -14,7 +14,7 @@ import * as bind from '../lib/bind.js'
 import * as json from '../lib/json.js'
 import * as maradns from '../lib/maradns.js'
 import * as tinydns from '../lib/tinydns.js'
-import ZONE from '../lib/zone.js'
+import ZONE, { splitByZone } from '../lib/zone.js'
 
 const rr = new RR.A(null)
 
@@ -51,17 +51,17 @@ try {
   let zoneArray
   switch (r.type) {
     case 'json':
-      zoneArray = checkZone(await json.parseZoneFile(r.data))
+      zoneArray = checkZone(await json.parseZoneFile(r.data), 'json')
       break
     case 'tinydns':
-      zoneArray = checkZone(await tinydns.parseData(r.data))
+      zoneArray = checkZone(await tinydns.parseData(r.data), 'tinydns')
       break
     case 'maradns':
       maradns.zoneOpts.serial = await dz.serialByFileStat(opts.file)
-      zoneArray = checkZone(await maradns.parseZoneFile(r.data))
+      zoneArray = checkZone(await maradns.parseZoneFile(r.data), 'maradns')
       break
     default:
-      zoneArray = checkZone(await bind.parseZoneFile(r.data))
+      zoneArray = checkZone(await bind.parseZoneFile(r.data), 'rfc1035')
   }
   output(zoneArray)
 } catch (e) {
@@ -69,18 +69,24 @@ try {
   process.exitCode = 1
 }
 
-function checkZone(zoneArray) {
-  const z = new ZONE({
-    ttl: optsObj.ttl,
-    origin: optsObj.origin,
-    RR: zoneArray,
-  })
-  if (z.errors.length) {
-    for (const { rr, error } of z.errors) {
-      console.error(error.message)
+function checkZone(zoneArray, format) {
+  const zones = splitByZone(zoneArray, { manyZones: dz.holdsManyZones(format) })
+  const errors = []
+  for (const zone of zones) {
+    const z = new ZONE({
+      ttl: optsObj.ttl,
+      origin: optsObj.origin,
+      RR: zone.RR,
+    })
+    errors.push(...z.errors.map((e) => ({ ...e, zone: zone.apex })))
+  }
+
+  if (errors.length) {
+    for (const { rr, error, zone } of errors) {
+      console.error(zones.length > 1 ? `${zone}: ${error.message}` : error.message)
       if (opts.verbose) console.error(rr)
     }
-    throw new Error(`zone validation failed: ${z.errors.length} error(s)`)
+    throw new Error(`zone validation failed: ${errors.length} error(s)`)
   }
   return zoneArray
 }
@@ -265,6 +271,7 @@ function output(zoneArray) {
   switch (opts.export.toLowerCase()) {
     case 'json':
       return process.stdout.write(dz.toJSON(zoneArray))
+    case 'rfc1035':
     case 'bind':
       return process.stdout.write(dz.toBind(zoneArray, bind.zoneOpts))
     case 'tinydns':

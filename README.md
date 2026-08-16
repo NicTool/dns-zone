@@ -7,7 +7,7 @@ Import, export, and validate DNS zone data across common nameserver formats.
 
 ## SYNOPSIS
 
-Parse and emit DNS zone data in BIND, tinydns, and maradns formats. Normalize (expand `@`, inherit TTLs, fully-qualify names), validate (RFC 1034/1035/2181/4035 coexistence rules), and convert between formats.
+Parse and emit DNS zone data in RFC 1035, tinydns, and maradns formats. Normalize (expand `@`, inherit TTLs, fully-qualify names), validate (RFC 1034/1035/2181/4035 coexistence rules), and convert between formats.
 
 ## INSTALLATION
 
@@ -18,15 +18,17 @@ npm install @nictool/dns-zone      # library
 
 ## SUPPORTED FORMATS
 
-| Format  | Import |    Export     |
-| ------- | :----: | :-----------: |
-| BIND    |  yes   |      yes      |
-| tinydns |  yes   |      yes      |
-| maradns |  yes   |      yes      |
-| JSON    |  yes   |      yes      |
-| human   |  n/a   | yes (default) |
+| Format   | Identifier        | Import |    Export     |
+| -------- | ----------------- | :----: | :-----------: |
+| RFC 1035 | `rfc1035`, `bind` |  yes   |      yes      |
+| tinydns  | `tinydns`         |  yes   |      yes      |
+| maradns  | `maradns`         |  yes   |      yes      |
+| JSON     | `json`            |  yes   |      yes      |
+| human    | —                 |  n/a   | yes (default) |
 
-BIND `$INCLUDE` directives are followed (paths are confined to the source file's directory).
+RFC 1035 is the zone file format BIND popularized and is supported by many name servers including Knot, NSD, and PowerDNS. `bind` is a finger-friendly alias for `rfc1035`.
+
+RFC 1035 `$INCLUDE` directives are followed (paths are confined to the source file's directory).
 
 ## CLI
 
@@ -39,9 +41,9 @@ BIND `$INCLUDE` directives are followed (paths are confined to the source file's
 
 I/O
 
-  -i, --import <json | bind | maradns | tinydns>   zone data format
-  -e, --export <json | bind | maradns | tinydns>   zone data format
-  -f, --file <file path | - (stdin)>               source of DNS zone data
+  -i, --import <json | rfc1035 | maradns | tinydns>   zone data format
+  -e, --export <json | rfc1035 | maradns | tinydns>   zone data format
+  -f, --file <file path | - (stdin)>                  source of zone data
 
 Zone Settings
 
@@ -67,7 +69,7 @@ Misc
 Default human output:
 
 ```
-➜ cat example.com | dns-zone -i bind -f - --origin=example.com.
+➜ cat example.com | dns-zone -i rfc1035 -f - --origin=example.com.
 $ORIGIN example.com.
 $TTL 3600
 example.com.          3600  SOA    ns.example.com. username.example.com. 2020091025 7200 3600 1209600 3600
@@ -88,10 +90,10 @@ Zisi.edu:venera.isi.edu:action\.domains.isi.edu:20:7200:600:3600000:60:60::
 +a.isi.edu:26.3.0.103:60::
 ```
 
-Render BIND relative to origin (hide ttl/class/origin/same-owner):
+Render RFC 1035 relative to origin (hide ttl/class/origin/same-owner):
 
 ```
-➜ dns-zone -i bind -e bind -f isi.edu --origin=isi.edu. \
+➜ dns-zone -i rfc1035 -e rfc1035 -f isi.edu --origin=isi.edu. \
     --hide-ttl --hide-class --hide-origin --hide-same-owner
 @        SOA venera  action\.domains 20  7200    600 3600000 60
          NS  a
@@ -122,20 +124,49 @@ const rrs = await tinydns.parseData(dataText)
 const rrs = await maradns.parseZoneFile(csv2Text, { origin: 'example.com.' })
 ```
 
-Each RR is a [`@nictool/dns-resource-record`][dns-rr] instance; use `rr.toBind()`, `rr.toTinydns()`, `rr.toMaraDNS()` to emit in other formats.
+Each RR is a [`@nictool/dns-resource-record`][dns-rr] instance; use `rr.to[Bind|Tinydns|MaraDNS}])` to emit in other formats.
 
-Zone-level validation:
+The parsers validate each record. They do **not** apply the zone-level coexistence rules below. That is deliberate:
+
+- converting a broken zone is a supported workflow
+- a tinydns `data` file holds every zone
+
+Use `validateZone` or `ZONE` to check a zone against the rules.
+
+Parse and validate in one call:
 
 ```js
-import ZONE from '@nictool/dns-zone/lib/zone.js'
+import { validateZone } from '@nictool/dns-zone'
+
+const { RR, errors } = await validateZone(zoneText, { origin: 'example.com.', ttl: 3600 })
+if (errors.length) console.error(errors)
+```
+
+`format` selects the parser (`rfc1035`, `json`, `maradns`, `tinydns`); the remaining options are passed through.
+
+```js
+const { errors } = await validateZone(data, { format: 'tinydns' })
+// [ { zone: 'example.com.', rr: …, error: … } ]
+```
+
+An RFC 1035 zone file and a maradns csv2 each describe a single zone.
+
+For multi-zone formats (tinydns, JSON), `splitByZone(RR, { manyZones: true })` partitions and exports. Records are assigned to the most specific zone that encloses them.
+
+To validate records you already have, use the class directly:
+
+```js
+import { ZONE } from '@nictool/dns-zone'
 
 const z = new ZONE({ origin: 'example.com.', RR: rrs })
 if (z.errors.length) console.error(z.errors)
 ```
 
+`ZONE` models one zone; pass it the records of a single zone.
+
 ## VALIDATION
 
-`ZONE` enforces the following rules on the records you feed it:
+`ZONE` enforces the following zone rules:
 
 - single SOA per zone (RFC 1035)
 - single zone class across all records

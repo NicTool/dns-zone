@@ -5,10 +5,53 @@ import json from './lib/json.js'
 import maradns from './lib/maradns.js'
 import tinydns from './lib/tinydns.js'
 import zoneExport from './lib/export.js'
+import ZONE, { splitByZone } from './lib/zone.js'
 
 export { bind, json, maradns, tinydns }
 export { toBind, toTinydns, toMaraDNS, toJSON } from './lib/export.js'
-export { zoneExport }
+export { zoneExport, ZONE, splitByZone }
+
+/**
+ * A tinydns data file is a per-server database, so it holds every zone the
+ * server answers for. JSON mirrors whatever it was dumped from. An RFC
+ * 1035 zone file and a maradns csv2 each describe a single zone.
+ *
+ * The parsers are reached through thunks: lib/*.js import this module, so the
+ * bindings are still in the TDZ while index.js is evaluating.
+ */
+const rfc1035 = { manyZones: false, parse: (str, ctx) => bind.parseZoneFile(str, ctx) }
+
+const formats = {
+  rfc1035,
+  bind: rfc1035, // the format's older name, still accepted
+  json: { manyZones: true, parse: (str, ctx) => json.parseZoneFile(str, ctx) },
+  maradns: { manyZones: false, parse: (str, ctx) => maradns.parseZoneFile(str, ctx) },
+  tinydns: { manyZones: true, parse: (str, ctx) => tinydns.parseData(str, ctx) },
+}
+
+function formatFor(format) {
+  if (!Object.hasOwn(formats, format)) throw new Error(`unknown zone format: ${format}`)
+  return formats[format]
+}
+
+export function holdsManyZones(format) {
+  return formatFor(format).manyZones
+}
+
+export async function validateZone(str, opts = {}) {
+  const { format = 'bind', ...ctx } = opts
+  const { parse, manyZones } = formatFor(format)
+
+  const RR = await parse(str, ctx)
+
+  const errors = []
+  for (const zone of splitByZone(RR, { manyZones })) {
+    const { errors: found } = new ZONE({ origin: ctx.origin, ttl: ctx.ttl, RR: zone.RR })
+    errors.push(...found.map((e) => ({ ...e, zone: zone.apex })))
+  }
+
+  return { RR, errors }
+}
 
 export function valueCleanup(str) {
   if (str.startsWith('"') && str.endsWith('"')) {

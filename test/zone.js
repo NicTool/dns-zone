@@ -1,7 +1,7 @@
 import assert from 'assert'
 import { describe, it, before } from 'node:test'
 
-import ZONE from '../lib/zone.js'
+import ZONE, { splitByZone } from '../lib/zone.js'
 import * as RR from '@nictool/dns-resource-record'
 
 const testSOA = new RR.SOA({
@@ -22,6 +22,118 @@ describe('zone', function () {
   it('creates a zone object', function () {
     const zone = new ZONE({ origin: 'example.com' })
     assert.ok(zone instanceof ZONE)
+  })
+
+  describe('splitByZone', function () {
+    const soaFor = (owner) =>
+      new RR.SOA({
+        owner,
+        ttl: 3600,
+        class: 'IN',
+        type: 'SOA',
+        mname: `ns1.${owner}`,
+        rname: `hostmaster.${owner}`,
+        serial: 1,
+        refresh: 16384,
+        retry: 2048,
+        expire: 1048576,
+        minimum: 2560,
+      })
+
+    const aFor = (owner) => new RR.A({ owner, ttl: 3600, class: 'IN', type: 'A', address: '192.0.2.1' })
+
+    it('leaves a single-zone array untouched', function () {
+      const RRs = [testSOA, aFor('a.example.com.')]
+      const zones = splitByZone(RRs)
+      assert.equal(zones.length, 1)
+      assert.equal(zones[0].apex, 'example.com.')
+      assert.deepEqual(zones[0].RR, RRs)
+    })
+
+    it('leaves an array with no SOA untouched', function () {
+      const RRs = [aFor('a.example.com.')]
+      const zones = splitByZone(RRs)
+      assert.equal(zones.length, 1)
+      assert.equal(zones[0].apex, undefined)
+      assert.deepEqual(zones[0].RR, RRs)
+    })
+
+    it('groups records by zone when a file holds several', function () {
+      const zones = splitByZone(
+        [soaFor('example.com.'), aFor('a.example.com.'), soaFor('example.net.'), aFor('a.example.net.')],
+        { manyZones: true },
+      )
+      assert.equal(zones.length, 2)
+      assert.deepEqual(
+        zones.map((z) => [z.apex, z.RR.length]),
+        [
+          ['example.com.', 2],
+          ['example.net.', 2],
+        ],
+      )
+    })
+
+    it('puts the SOA first even when the file holds one zone', function () {
+      const zones = splitByZone([aFor('a.example.com.'), soaFor('example.com.')], { manyZones: true })
+      assert.equal(zones.length, 1)
+      assert.equal(zones[0].RR[0].get('type'), 'SOA')
+    })
+
+    it('puts the SOA first in every group', function () {
+      const zones = splitByZone(
+        [aFor('a.example.com.'), soaFor('example.com.'), aFor('a.example.net.'), soaFor('example.net.')],
+        { manyZones: true },
+      )
+      for (const zone of zones) assert.equal(zone.RR[0].get('type'), 'SOA')
+    })
+
+    it('assigns a record to the most specific enclosing zone', function () {
+      const zones = splitByZone(
+        [soaFor('example.com.'), soaFor('_tcp.example.com.'), aFor('host._tcp.example.com.')],
+        { manyZones: true },
+      )
+      const child = zones.find((z) => z.apex === '_tcp.example.com.')
+      assert.equal(child.RR.length, 2)
+      assert.equal(zones.find((z) => z.apex === 'example.com.').RR.length, 1)
+    })
+
+    it('keeps records together by default, so an extra SOA stays an error', function () {
+      const RRs = [soaFor('example.com.'), soaFor('example.net.')]
+      const zones = splitByZone(RRs)
+      assert.equal(zones.length, 1)
+      assert.deepEqual(zones[0].RR, RRs)
+    })
+
+    it('drops records enclosed by no zone in the file', function () {
+      const zones = splitByZone([soaFor('example.com.'), soaFor('example.net.'), aFor('a.example.org.')], {
+        manyZones: true,
+      })
+      assert.deepEqual(
+        zones.map((z) => z.RR.length),
+        [1, 1],
+      )
+    })
+  })
+
+  describe('document elements', function () {
+    it('skips blank line and comment markers', function () {
+      const zone = new ZONE({ RR: ['', ' \t', '; a comment', testSOA] })
+      assert.deepEqual(zone.errors, [])
+      assert.equal(zone.SOA.owner, 'example.com.')
+    })
+
+    it('applies the $ORIGIN and $TTL directives', function () {
+      const zone = new ZONE({ RR: [{ $ORIGIN: 'example.com.' }, { $TTL: 3600 }, testSOA] })
+      assert.deepEqual(zone.errors, [])
+      assert.equal(zone.origin, 'example.com.')
+      assert.equal(zone.ttl, 3600)
+    })
+
+    it('applies $TTL 0, RFC 2308', function () {
+      const zone = new ZONE({ RR: [{ $TTL: 0 }, testSOA] })
+      assert.deepEqual(zone.errors, [])
+      assert.strictEqual(zone.ttl, 0)
+    })
   })
 
   describe('setSOA', function () {

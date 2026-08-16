@@ -208,6 +208,26 @@ bounce.theartfarm.com.\t+86400\tCNAME\tcustom-email-domain.stripe.com. ~
     assert.strictEqual(stderr, '')
   })
 
+  it('accepts rfc1035 wherever bind is accepted', async function () {
+    const binPath = path.resolve('bin', 'dns-zone.js')
+    const argsFor = (format) => [
+      binPath,
+      '-i',
+      format,
+      '-f',
+      './test/fixtures/bind/example.com',
+      '-o',
+      'example.com',
+      '-e',
+      format,
+    ]
+    const rfc1035 = await execFile('node', argsFor('rfc1035'))
+    const bind = await execFile('node', argsFor('bind'))
+    assert.ok(rfc1035.stdout.includes('SOA'))
+    assert.strictEqual(rfc1035.stdout, bind.stdout)
+    assert.strictEqual(rfc1035.stderr, '')
+  })
+
   it('exports tinydns data as JSON (-e json)', async function () {
     const binPath = path.resolve('bin', 'dns-zone.js')
     const args = [binPath, '-i', 'tinydns', '-f', './test/fixtures/tinydns/data', '-e', 'json']
@@ -250,6 +270,18 @@ bounce.theartfarm.com.\t+86400\tCNAME\tcustom-email-domain.stripe.com. ~
     const { stdout, stderr } = await execFile('node', args)
     assert.ok(stdout.includes('/ttl') || stdout.includes('/origin') || stdout.includes('example.com'))
     assert.strictEqual(stderr, '')
+  })
+
+  it('rejects a second SOA in a BIND zone file, RFC 1035', async function () {
+    const binPath = path.resolve('bin', 'dns-zone.js')
+    const args = [binPath, '-i', 'bind', '-f', path.resolve('test', 'fixtures', 'bind', 'two-soa')]
+    try {
+      await execFile('node', args)
+      assert.fail('should have exited with non-zero code')
+    } catch (e) {
+      assert.ok(e.code !== 0)
+      assert.match(e.stderr, /Exactly one SOA/)
+    }
   })
 
   it('prints usage to stderr when -f flag is missing', async function () {
