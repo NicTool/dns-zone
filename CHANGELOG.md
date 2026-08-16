@@ -8,6 +8,7 @@
 - feat(index): add validateZone(str, opts), parse + coexistence
 - fix(zone): skip blank/comment lines instead of reporting them as validation errors
 - fix(zone): honor $TTL 0, RFC 2308
+- fix(dns-zone): tinydns data no longer reports errors on subsequent SOAs
 - docs(README): note why the parsers do not apply zone-level rules
 - deps(all): bump versions
 

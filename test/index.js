@@ -35,6 +35,21 @@ describe('dns-zone', function () {
     })
   })
 
+  describe('holdsManyZones', function () {
+    // only a per-server database format may carry more than one zone
+    const cases = { bind: false, maradns: false, tinydns: true, json: true }
+
+    for (const [format, expected] of Object.entries(cases)) {
+      it(`${format} -> ${expected}`, function () {
+        assert.strictEqual(dz.holdsManyZones(format), expected)
+      })
+    }
+
+    it('throws on an unknown format', function () {
+      assert.throws(() => dz.holdsManyZones('nope'), /unknown zone format/)
+    })
+  })
+
   describe('validateZone', function () {
     const soa = `@	IN	SOA	ns1.example.com. hostmaster.example.com. 1 7200 3600 1209600 3600
 @	IN	NS	ns1.example.com.`
@@ -78,9 +93,48 @@ ${soa}
       assert.deepEqual(errors, [])
     })
 
+    it('rejects a second SOA in a BIND file, which describes one zone', async function () {
+      const other = 'ns1.example.net. hostmaster.example.net. 1 7200 3600 1209600 3600'
+      const zone = `$ORIGIN example.com.\n$TTL 3600\n${soa}\n$ORIGIN example.net.\n@\tIN\tSOA\t${other}\n`
+      const { errors } = await dz.validateZone(zone)
+      assert.equal(errors.length, 1)
+      assert.match(errors[0].error.message, /Exactly one SOA/)
+    })
+
+    describe('multi-zone input', function () {
+      const soaLine = (zone, serial) =>
+        `Z${zone}:ns1.${zone}.:hostmaster.${zone}:${serial}:57600:7200:604800:3600:86400::`
+
+      it('validates each zone in the file independently', async function () {
+        const data = [soaLine('allguitar.com', 1), soaLine('horsenetwork.com', 2)].join('\n')
+        const { RR, errors } = await dz.validateZone(data, { format: 'tinydns' })
+        assert.equal(RR.length, 2)
+        assert.deepEqual(errors, [])
+      })
+
+      it('reports a violation against the zone it belongs to', async function () {
+        const data = [
+          soaLine('allguitar.com', 1),
+          '+a.allguitar.com:192.0.2.1:3600::',
+          '+a.allguitar.com:192.0.2.1:3600::',
+          soaLine('horsenetwork.com', 2),
+        ].join('\n')
+        const { errors } = await dz.validateZone(data, { format: 'tinydns' })
+        assert.equal(errors.length, 1)
+        assert.equal(errors[0].zone, 'allguitar.com.')
+        assert.match(errors[0].error.message, /multiple identical RRs/)
+      })
+    })
+
     it('throws on an unknown format', async function () {
       await assert.rejects(dz.validateZone('', { format: 'nope' }), /unknown zone format/)
     })
+
+    for (const format of ['toString', 'constructor', 'valueOf']) {
+      it(`throws on inherited property ${format}`, async function () {
+        await assert.rejects(dz.validateZone('', { format }), /unknown zone format/)
+      })
+    }
   })
 
   describe('hasUnquoted', function () {

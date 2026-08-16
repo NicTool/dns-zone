@@ -5,27 +5,51 @@ import json from './lib/json.js'
 import maradns from './lib/maradns.js'
 import tinydns from './lib/tinydns.js'
 import zoneExport from './lib/export.js'
-import ZONE from './lib/zone.js'
+import ZONE, { splitByZone } from './lib/zone.js'
 
 export { bind, json, maradns, tinydns }
 export { toBind, toTinydns, toMaraDNS, toJSON } from './lib/export.js'
-export { zoneExport, ZONE }
+export { zoneExport, ZONE, splitByZone }
+
+/**
+ * A tinydns data file is a per-server database, so it holds every zone the
+ * server answers for, and JSON mirrors whatever it was dumped from. A BIND
+ * zone file (RFC 1035) and a maradns csv2 (mararc maps one zone to one file)
+ * each describe a single zone, so a second SOA there is an error rather than
+ * another zone.
+ *
+ * The parsers are reached through thunks: lib/*.js import this module, so the
+ * bindings are still in the TDZ while index.js is evaluating.
+ */
+const formats = {
+  bind: { manyZones: false, parse: (str, ctx) => bind.parseZoneFile(str, ctx) },
+  json: { manyZones: true, parse: (str, ctx) => json.parseZoneFile(str, ctx) },
+  maradns: { manyZones: false, parse: (str, ctx) => maradns.parseZoneFile(str, ctx) },
+  tinydns: { manyZones: true, parse: (str, ctx) => tinydns.parseData(str, ctx) },
+}
+
+function formatFor(format) {
+  // own-property test: `format: 'toString'` would otherwise find an inherited
+  // function and run it as the parser
+  if (!Object.hasOwn(formats, format)) throw new Error(`unknown zone format: ${format}`)
+  return formats[format]
+}
+
+export function holdsManyZones(format) {
+  return formatFor(format).manyZones
+}
 
 export async function validateZone(str, opts = {}) {
   const { format = 'bind', ...ctx } = opts
-
-  // resolved per call: lib/*.js import this module, so the parser bindings are
-  // still in the TDZ while index.js is evaluating
-  const parse = {
-    bind: bind.parseZoneFile,
-    json: json.parseZoneFile,
-    maradns: maradns.parseZoneFile,
-    tinydns: tinydns.parseData,
-  }[format]
-  if (!parse) throw new Error(`unknown zone format: ${format}`)
+  const { parse, manyZones } = formatFor(format)
 
   const RR = await parse(str, ctx)
-  const { errors } = new ZONE({ origin: ctx.origin, ttl: ctx.ttl, RR })
+
+  const errors = []
+  for (const zone of splitByZone(RR, { manyZones })) {
+    const { errors: found } = new ZONE({ origin: ctx.origin, ttl: ctx.ttl, RR: zone.RR })
+    errors.push(...found.map((e) => ({ ...e, zone: zone.apex })))
+  }
 
   return { RR, errors }
 }

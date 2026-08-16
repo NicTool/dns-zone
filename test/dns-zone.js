@@ -252,6 +252,18 @@ bounce.theartfarm.com.\t+86400\tCNAME\tcustom-email-domain.stripe.com. ~
     assert.strictEqual(stderr, '')
   })
 
+  it('rejects a second SOA in a BIND zone file, RFC 1035', async function () {
+    const binPath = path.resolve('bin', 'dns-zone.js')
+    const args = [binPath, '-i', 'bind', '-f', path.resolve('test', 'fixtures', 'bind', 'two-soa')]
+    try {
+      await execFile('node', args)
+      assert.fail('should have exited with non-zero code')
+    } catch (e) {
+      assert.ok(e.code !== 0)
+      assert.match(e.stderr, /Exactly one SOA/)
+    }
+  })
+
   it('prints usage to stderr when -f flag is missing', async function () {
     const binPath = path.resolve('bin', 'dns-zone.js')
     const args = [binPath, '-i', 'bind']

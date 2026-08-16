@@ -122,12 +122,12 @@ const rrs = await tinydns.parseData(dataText)
 const rrs = await maradns.parseZoneFile(csv2Text, { origin: 'example.com.' })
 ```
 
-Each RR is a [`@nictool/dns-resource-record`][dns-rr] instance; use `rr.toBind()`, `rr.toTinydns()`, `rr.toMaraDNS()` to emit in other formats.
+Each RR is a [`@nictool/dns-resource-record`][dns-rr] instance; use `rr.to[Bind|Tinydns|MaraDNS}])` to emit in other formats.
 
 The parsers validate each record. They do **not** apply the zone-level coexistence rules below. That is deliberate:
 
 - converting a broken zone is a supported workflow
-- a tinydns `data` file or a maradns csv2 holds every zone
+- a tinydns `data` file holds every zone
 
 Use `validateZone` or `ZONE` to check a zone against the rules.
 
@@ -140,7 +140,14 @@ const { RR, errors } = await validateZone(zoneText, { origin: 'example.com.', tt
 if (errors.length) console.error(errors)
 ```
 
-`format` selects the parser (`bind` (default), `json`, `maradns`, `tinydns`); the remaining options are passed through to it.
+`format` selects the parser (`bind` (default), `json`, `maradns`, `tinydns`); the remaining options are passed through.
+
+```js
+const { errors } = await validateZone(data, { format: 'tinydns' })
+// [ { zone: 'example.com.', rr: …, error: … } ]
+```
+
+A RFC 1035 zone file (BIND) and a maradns csv2 each describe a single zone. For multi-zone formats (tinydns, JSON), `splitByZone(RR)` does the partitioning and is exported if you want the groups yourself; a record is assigned to the most specific zone that encloses it. Pass `{ manyZones: false }` to keep a single-zone format's records together.
 
 To validate records you already have, use the class directly:
 
@@ -151,9 +158,11 @@ const z = new ZONE({ origin: 'example.com.', RR: rrs })
 if (z.errors.length) console.error(z.errors)
 ```
 
+`ZONE` models one zone; pass it the records of a single zone.
+
 ## VALIDATION
 
-`ZONE` enforces the following rules on the records you feed it:
+`ZONE` enforces the following zone rules:
 
 - single SOA per zone (RFC 1035)
 - single zone class across all records
