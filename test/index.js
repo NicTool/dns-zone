@@ -101,6 +101,13 @@ ${soa}
       assert.deepEqual(asRfc1035.RR, asBind.RR)
     })
 
+    it('still requires the SOA first in an RFC 1035 file', async function () {
+      const zone = `$ORIGIN example.com.\n$TTL 3600\na\tIN\tA\t192.0.2.1\n${soa}\n`
+      const { errors } = await dz.validateZone(zone)
+      assert.equal(errors.length, 1)
+      assert.match(errors[0].error.message, /SOA must be set first/)
+    })
+
     it('rejects a second SOA in a BIND file, which describes one zone', async function () {
       const other = 'ns1.example.net. hostmaster.example.net. 1 7200 3600 1209600 3600'
       const zone = `$ORIGIN example.com.\n$TTL 3600\n${soa}\n$ORIGIN example.net.\n@\tIN\tSOA\t${other}\n`
@@ -118,6 +125,19 @@ ${soa}
         const { RR, errors } = await dz.validateZone(data, { format: 'tinydns' })
         assert.equal(RR.length, 2)
         assert.deepEqual(errors, [])
+      })
+
+      it('accepts records preceding their SOA, whatever the zone count', async function () {
+        const a = '+a.allguitar.com:192.0.2.1:3600::'
+        const one = await dz.validateZone([a, soaLine('allguitar.com', 1)].join('\n'), {
+          format: 'tinydns',
+        })
+        const two = await dz.validateZone(
+          [a, soaLine('allguitar.com', 1), soaLine('horsenetwork.com', 2)].join('\n'),
+          { format: 'tinydns' },
+        )
+        assert.deepEqual(one.errors, [])
+        assert.deepEqual(two.errors, [])
       })
 
       it('reports a violation against the zone it belongs to', async function () {

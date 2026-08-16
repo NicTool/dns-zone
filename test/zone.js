@@ -73,6 +73,12 @@ describe('zone', function () {
       )
     })
 
+    it('puts the SOA first even when the file holds one zone', function () {
+      const zones = splitByZone([aFor('a.example.com.'), soaFor('example.com.')], { manyZones: true })
+      assert.equal(zones.length, 1)
+      assert.equal(zones[0].RR[0].get('type'), 'SOA')
+    })
+
     it('puts the SOA first in every group', function () {
       const zones = splitByZone(
         [aFor('a.example.com.'), soaFor('example.com.'), aFor('a.example.net.'), soaFor('example.net.')],

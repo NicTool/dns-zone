@@ -4,13 +4,13 @@
 
 ### [1.3.0] - 2026-08-15
 
-- docs: name the zone file format RFC 1035, with BIND as an alias
 - feat(index): export ZONE so zone validation doesn't need a deep import (#31)
 - feat(index): add validateZone(str, opts), parse + coexistence
 - fix(zone): skip blank/comment lines instead of reporting them as validation errors
 - fix(zone): honor $TTL 0, RFC 2308
 - fix(dns-zone): tinydns data no longer reports errors on subsequent SOAs
 - docs(README): note why the parsers do not apply zone-level rules
+- docs: name the zone file format RFC 1035, with BIND as an alias
 - deps(all): bump versions
 
 ### [1.2.4] - 2026-07-27

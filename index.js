@@ -14,8 +14,7 @@ export { zoneExport, ZONE, splitByZone }
 /**
  * A tinydns data file is a per-server database, so it holds every zone the
  * server answers for. JSON mirrors whatever it was dumped from. An RFC
- * 1035 zone file and a maradns csv2 (mararc maps one zone to one file) each
- * describe a single zone, so a second SOA there is an error.
+ * 1035 zone file and a maradns csv2 each describe a single zone.
  *
  * The parsers are reached through thunks: lib/*.js import this module, so the
  * bindings are still in the TDZ while index.js is evaluating.
@@ -31,8 +30,6 @@ const formats = {
 }
 
 function formatFor(format) {
-  // own-property test: `format: 'toString'` would otherwise find an inherited
-  // function and run it as the parser
   if (!Object.hasOwn(formats, format)) throw new Error(`unknown zone format: ${format}`)
   return formats[format]
 }
