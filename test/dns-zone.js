@@ -161,6 +161,7 @@ bounce.theartfarm.com.\t+86400\tCNAME\tcustom-email-domain.stripe.com. ~
 ^14.12.11.10.in-addr.arpa:b.example.net:86400::
 ^15.12.11.10.in-addr.arpa:c.example.net:86400::
 :www.example.com:35:\\000\\144\\000\\144\\001S\\010http+I2R\\000\\027_http._tcp.example.com.\\000:86400::
+:example.com:40:\\020\\001\\002\\113\\151\\164\\143\\150\\145\\156\\040\\163\\151\\156\\153\\100\\040\\144\\141\\164\\141:86400::
 +x.example.net:10.3.28.79:86400::
 ^79.28.3.10.in-addr.arpa:x.example.net:86400::
 +x.example.net:10.3.28.80:86400::

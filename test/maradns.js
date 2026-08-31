@@ -128,10 +128,54 @@ describe('maradns', function () {
       )
     })
 
-    it.skip('parses CNAME line', async () => {
-      const r = await mara.parseZoneFile(`\n`)
-      // console.dir(r, { depth: null })
-      assert.deepStrictEqual(r[0], new RR.CNAME({}))
+    it('parses CNAME line', async () => {
+      const r = await mara.parseZoneFile(`alias.example.net. CNAME target.example.net. ~\n`)
+      assert.deepStrictEqual(
+        r[0],
+        new RR.CNAME({
+          owner: 'alias.example.net.',
+          ttl: 86400,
+          type: 'CNAME',
+          cname: 'target.example.net.',
+        }),
+      )
+    })
+
+    it('parses DNAME line', async () => {
+      const r = await mara.parseZoneFile(`sub.example.net. DNAME target.example.net. ~\n`)
+      assert.deepStrictEqual(
+        r[0],
+        new RR.DNAME({
+          owner: 'sub.example.net.',
+          ttl: 86400,
+          type: 'DNAME',
+          target: 'target.example.net.',
+        }),
+      )
+    })
+
+    it('parses URI line, unquoting the target', async () => {
+      const r = await mara.parseZoneFile(
+        `_http._tcp.example.com. URI 10 1 'https://example.com/' ~\n`,
+      )
+      assert.deepStrictEqual(
+        r[0],
+        new RR.URI({
+          owner: '_http._tcp.example.com.',
+          ttl: 86400,
+          type: 'URI',
+          priority: 10,
+          weight: 1,
+          target: 'https://example.com/',
+        }),
+      )
+    })
+
+    it('keeps a percent-encoded URI target intact', async () => {
+      const r = await mara.parseZoneFile(
+        `_http._tcp.example.com. URI 10 1 'https://example.com/a%20b?x=1' ~\n`,
+      )
+      assert.equal(r[0].target, 'https://example.com/a%20b?x=1')
     })
 
     it('parses FQDN4 line', async () => {
@@ -255,14 +299,17 @@ describe('maradns', function () {
       )
     })
 
-    it.skip('parses RAW line', async () => {
+    it('parses RAW line', async () => {
       const r = await mara.parseZoneFile(`example.com. RAW 40 \x10\x01\x02'Kitchen sink'\x40' data' ~\n`)
-      assert.deepStrictEqual(r[0], {
-        owner: 'example.com.',
-        type: 'RAW',
-        typeid: 40,
-        rdata: `\x10\x01\x02'Kitchen sink'\x40' data'`,
-      })
+      assert.deepStrictEqual(
+        r[0],
+        new RR.UNKNOWN({
+          owner: 'example.com.',
+          ttl: 86400,
+          typeId: 40,
+          rdata: '1001024b69746368656e2073696e6b402064617461',
+        }),
+      )
     })
 
     it('parses TXT line', async () => {
@@ -395,6 +442,6 @@ describe('maradns', function () {
     mara.zoneOpts.serial = Math.round(stat.mtime.getTime() / 1000)
     const rrs = await mara.parseZoneFile(buf.toString())
     // console.dir(rrs, { depth: null })
-    assert.equal(rrs.length, 40)
+    assert.equal(rrs.length, 41)
   })
 })
