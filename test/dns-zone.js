@@ -153,7 +153,7 @@ bounce.theartfarm.com.\t+86400\tCNAME\tcustom-email-domain.stripe.com. ~
 'example.net:This is some text:86400::
 'example.com:This is an example text field:86400::
 :example.net:99:v=spf1 +mx a\\072colo.example.com\\05728 -all:86400::
-:example.com:99:v=spf1 +mx a\\072colo.example.com\\05728 \\134x7eall:86400::
+:example.com:99:v=spf1 +mx a\\072colo.example.com\\05728 ~all:86400::
 +a.example.net:10.11.12.13:86400::
 +b.example.net:10.11.12.14:86400::
 +c.example.net:10.11.12.15:86400::
