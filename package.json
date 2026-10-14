@@ -51,7 +51,7 @@
     "globals": "^17.13.0"
   },
   "dependencies": {
-    "@nictool/dns-resource-record": "^1.9.0",
+    "@nictool/dns-resource-record": "^2.0.0",
     "command-line-args": "^6.0.2",
     "command-line-usage": "^7.0.4"
   },

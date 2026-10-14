@@ -4,6 +4,7 @@
 
 ### [1.4.0] - 2026-10-13
 
+- dep(dns-rr): updated to 2.0.0
 - dep(dns-rr): tinydns output writes SPF, NAPTR and TXT over 127 bytes as generic wire lines
   - tinydns `'` TXT lines import as 127-byte strings, as tinydns serves them
 - fix(maradns): TXT/SPF `\xNN` escapes decode, and the BIND line handed to dns-rr is escaped per RFC 1035 §5.1

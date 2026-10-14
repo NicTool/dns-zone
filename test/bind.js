@@ -240,7 +240,7 @@ describe('bind', function () {
           protocol: 3,
           algorithm: 5,
           publickey:
-            'AQPSKmynfzW4kyBv015MUG2DeIQ3 Cbl+BBZH4b/0PY1kxkmvHjcZc8no kfzj31GajIQKY+5CptLr3buXA10h WqTkF7H6RfoRqXQeogmMHfpftf6z Mv1LyBUgia7za6ZEzOJBOztyvhjL 742iU/TpPSEDhm2SNKLijfUppn1U aNvv4w==',
+            'AQPSKmynfzW4kyBv015MUG2DeIQ3Cbl+BBZH4b/0PY1kxkmvHjcZc8nokfzj31GajIQKY+5CptLr3buXA10hWqTkF7H6RfoRqXQeogmMHfpftf6zMv1LyBUgia7za6ZEzOJBOztyvhjL742iU/TpPSEDhm2SNKLijfUppn1UaNvv4w==',
         }),
       )
     })
@@ -315,7 +315,7 @@ describe('bind', function () {
 
     it('parses NAPTR line', async () => {
       const r = await bind.parseZoneFile(
-        `cid.urn.arpa.   86400    IN    NAPTR 100    10    ""    ""    "!^urn:cid:.+@([^\\.]+\\.)(.*)$!\x02!i"   .\n`,
+        `cid.urn.arpa.   86400    IN    NAPTR 100    10    ""    ""    "!^urn:cid:.+@([^\\\\.]+\\\\.)(.*)$!\\002!i"   .\n`,
       )
       // console.dir(r, { depth: null })
       assert.deepStrictEqual(
@@ -433,7 +433,7 @@ describe('bind', function () {
           ttl: 3600,
           class: 'IN',
           type: 'SMIMEA',
-          'certificate association data': 'd2abde240d7cd3ee6b4b28c54df034b9 7983a1d16e8a410e4561cb106618e971',
+          'certificate association data': 'd2abde240d7cd3ee6b4b28c54df034b97983a1d16e8a410e4561cb106618e971',
           'certificate usage': 0,
           'matching type': 1,
           selector: 0,
@@ -443,7 +443,7 @@ describe('bind', function () {
 
     it('parses SSHFP line', async () => {
       const r = await bind.parseZoneFile(
-        `mail.example.com.   86400    IN    SSHFP 1  1   ed8c6e16fdae4f633eee6a7b8f64fdd356bbb32841d535565d777014c9ea4c26`,
+        `mail.example.com.   86400    IN    SSHFP 1  2   ed8c6e16fdae4f633eee6a7b8f64fdd356bbb32841d535565d777014c9ea4c26`,
       )
       assert.deepStrictEqual(
         r[0],
@@ -454,7 +454,7 @@ describe('bind', function () {
           type: 'SSHFP',
           algorithm: 1,
           fingerprint: 'ed8c6e16fdae4f633eee6a7b8f64fdd356bbb32841d535565d777014c9ea4c26',
-          fptype: 1,
+          fptype: 2,
         }),
       )
     })
@@ -489,7 +489,7 @@ describe('bind', function () {
           ttl: 3600,
           class: 'IN',
           type: 'TLSA',
-          'certificate association data': 'd2abde240d7cd3ee6b4b28c54df034b9 7983a1d16e8a410e4561cb106618e971',
+          'certificate association data': 'd2abde240d7cd3ee6b4b28c54df034b97983a1d16e8a410e4561cb106618e971',
           'certificate usage': 0,
           'matching type': 1,
           selector: 0,
