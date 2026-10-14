@@ -2,6 +2,15 @@
 
 ### Unreleased
 
+### [1.4.0] - 2026-10-13
+
+- dep(dns-rr): tinydns output writes SPF, NAPTR and TXT over 127 bytes as generic wire lines
+  - tinydns `'` TXT lines import as 127-byte strings, as tinydns serves them
+- fix(maradns): TXT/SPF `\xNN` escapes decode, and the BIND line handed to dns-rr is escaped per RFC 1035 §5.1
+- fix(maradns): TXT, SPF and HINFO split chunks on an unquoted `;` and read `\'` and octal escapes (csv2_txt)
+- fix(maradns): RAW records of any type import through that type's wire decoder; previously all but CAA were dropped
+- fix(maradns): CNAME, WKS and the other csv2 types are recognized; an unknown type word throws
+
 ### [1.3.0] - 2026-08-15
 
 - feat(index): export ZONE so zone validation doesn't need a deep import (#31)
@@ -257,3 +266,4 @@
 [1.2.3]: https://github.com/NicTool/dns-zone/releases/tag/v1.2.3
 [1.2.4]: https://github.com/NicTool/dns-zone/releases/tag/v1.2.4
 [1.3.0]: https://github.com/NicTool/dns-zone/releases/tag/v1.3.0
+[1.4.0]: https://github.com/NicTool/dns-zone/releases/tag/v1.4.0
