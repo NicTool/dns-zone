@@ -62,7 +62,7 @@ mail3.example.com.    3600  A
       const { stdout, stderr } = await execFile('node', args)
       assert.strictEqual(
         stdout,
-        `theartfarm.com.\t SOA\tns3.theartfarm.com.\thostmaster.theartfarm.com.\t2022032700\t16384\t2048\t1048576\t2560 ~
+        `theartfarm.com.\t+86400\tSOA\tns3.theartfarm.com.\thostmaster.theartfarm.com.\t2022032700\t16384\t2048\t1048576\t2560 ~
 theartfarm.com.\t+14400\tNS\tns3.theartfarm.com. ~
 theartfarm.com.\t+14400\tNS\tns1.theartfarm.com. ~
 theartfarm.com.\t+14400\tNS\tns2.theartfarm.com. ~
@@ -90,17 +90,17 @@ mail.theartfarm.com.\t+28800\tA\t66.128.51.165 ~
 toaster.theartfarm.com.\t+3600\tCNAME\tmail.theartfarm.com. ~
 ns3.theartfarm.com.\t+28800\tA\t138.210.133.60 ~
 lo.mail.theartfarm.com.\t+86400\tA\t127.0.0.6 ~
-mar2013._domainkey.theartfarm.com.\t+3600\tTXT\t'v=DKIM1;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA5Q41fZ8CqpSgzSWpDY88oGq+bXKHdROGHmyjY6+b8qLUmdoHgpcaBUhL2zhZChvx5uayVJRV/gWxPZtODsozOqPk6fl8Mn1VH1MBsuQdShnC0a/Tcm8bPW0NE2viHysUamvL+X5Ea9H2GyVGKpe6rdKrmUiCzZyRYwTYqLvC9HhkTNWjR3TuP5mA2rmBO8IBPBFkdaz7W' 'veNaiR8ImegA+wv1uCYcQLwcz3bn/U2yK2UzFGsJLZ1KCTqr8WMPTuy1zc5zClHpZZMmCl3uk02bE59RVa7zzyZwVEGeRcjouq0rh5JCl057rMK2cwA2wu//8svN+pGZAKJCnuFlpC0bwIDAQAB' ~
+mar2013._domainkey.theartfarm.com.\t+3600\tTXT\t'v=DKIM1;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA5Q41fZ8CqpSgzSWpDY88oGq+bXKHdROGHmyjY6+b8qLUmdoHgpcaBUhL2zhZChvx5uayVJRV/';'gWxPZtODsozOqPk6fl8Mn1VH1MBsuQdShnC0a/Tcm8bPW0NE2viHysUamvL+X5Ea9H2GyVGKpe6rdKrmUiCzZyRYwTYqLvC9HhkTNWjR3TuP5mA2rmBO8IBPBFkdaz7';'WveNaiR8ImegA+wv1uCYcQLwcz3bn/U2yK2UzFGsJLZ1KCTqr8WMPTuy1zc5zClHpZZMmCl3uk02bE59RVa7zzyZwVEGeRcjouq0rh5JCl057rMK2cwA2wu//8svN+p';'GZAKJCnuFlpC0bwIDAQAB' ~
 _dmarc.theartfarm.com.\t+86400\tTXT\t'v=DMARC1; p=reject; rua=mailto:dmarc-feedback@theartfarm.com; ruf=mailto:dmarc-feedback@theartfarm.com; pct=100' ~
 _dmarc.dmarc.theartfarm.com.\t+86400\tTXT\t'v=DMARC1; p=reject; pct=100' ~
 dmarc.theartfarm.com.\t+86400\tTXT\t'v=spf1 include:mx.theartfarm.com -all' ~
 dmarc.theartfarm.com.\t+86400\tA\t66.128.51.165 ~
-mx.theartfarm.com.\t+86400\tTXT\t'v=spf1 ip4:66.128.51.160/27 ip4:192.48.85.146/29 ip4:173.45.131.0/27 ip4:204.11.99.0/27 ip6:2605:7900:20:a::/64 ip6:2605:ae00:329::0/64 -all' ~
+mx.theartfarm.com.\t+86400\tTXT\t'v=spf1 ip4:66.128.51.160/27 ip4:192.48.85.146/29 ip4:173.45.131.0/27 ip4:204.11.99.0/27 ip6:2605:7900:20:a::/64 ip6:2605:ae00:3';'29::0/64 -all' ~
 htpta.theartfarm.com.\t+86400\tCNAME\tvhost0.theartfarm.com. ~
 vhost0.theartfarm.com.\t+86400\tTXT\t'v=spf1 include:mx.theartfarm.com -all' ~
 ns3.theartfarm.com.\t+86400\tTXT\t'v=spf1 a ip4:138.210.133.60 ip4:46.105.8.147 -all' ~
 wordpress.theartfarm.com.\t+86400\tCNAME\twww.theartfarm.com. ~
-apr2019._domainkey.mail.theartfarm.com.\t+86400\tTXT\t'v=DKIM1;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoW91trHF9nBzY3DeFtauDbPbr904YNBgW7mh/8s5Fcmsi3TPB1bSqyBcr2BjYGqCG1KPFBvs+IRZNMDgHJ4wMSdC+4Pt6wXkMJpElNg4DjuP7q2UALJsOQ/H54VtH8TWVMOekmc4W3um8ZqxePGJkWd2UGV+YT00dR8jLne5d+9MXo3CayOe3L7rK9uEvm0u8dLYLJaTm' 'PdKI+8LWEIuxC4KeRsaB/10M7NIaR73C5wB0HlTOm7MQW3806rTdlFYpO9Rtx2uV3stqCIfUYK9qeGLJFXHjLxh0nki4ztVIZdPi9TkZnj+juS5k8GTADSGy7PWawUnbhjEDyd4JX5YxwIDAQAB' ~
+apr2019._domainkey.mail.theartfarm.com.\t+86400\tTXT\t'v=DKIM1;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoW91trHF9nBzY3DeFtauDbPbr904YNBgW7mh/8s5Fcmsi3TPB1bSqyBcr2BjYGqCG1KPFBvs+';'IRZNMDgHJ4wMSdC+4Pt6wXkMJpElNg4DjuP7q2UALJsOQ/H54VtH8TWVMOekmc4W3um8ZqxePGJkWd2UGV+YT00dR8jLne5d+9MXo3CayOe3L7rK9uEvm0u8dLYLJaT';'mPdKI+8LWEIuxC4KeRsaB/10M7NIaR73C5wB0HlTOm7MQW3806rTdlFYpO9Rtx2uV3stqCIfUYK9qeGLJFXHjLxh0nki4ztVIZdPi9TkZnj+juS5k8GTADSGy7PWawU';'nbhjEDyd4JX5YxwIDAQAB' ~
 ns1.theartfarm.com.\t+86400\tA\t173.45.131.5 ~
 ns1.theartfarm.com.\t+86400\tA\t204.11.99.5 ~
 mx-out.theartfarm.com.\t+86400\tA\t66.128.51.178 ~
@@ -148,27 +148,27 @@ bounce.theartfarm.com.\t+86400\tCNAME\tcustom-email-domain.stripe.com. ~
 +g.example.net:10.11.9.8:86400::
 @example.net::mail.example.net:10:86400::
 +mail.example.net:10.22.23.24:86400::
-:a.example.net:28:\\375\\115\\141\\162\\141\\104\\116\\123\\000\\001\\000\\002\\000\\003\\000\\004:86400::
-:_http._tcp.example.net:33:\\000\\000\\000\\000\\000\\120\\001a\\007example\\003net\\000:86400::
+:a.example.net:28:\\375MaraDNS\\000\\001\\000\\002\\000\\003\\000\\004:86400::
+:_http._tcp.example.net:33:\\000\\000\\000\\000\\000P\\001a\\007example\\003net\\000:86400::
 'example.net:This is some text:86400::
 'example.com:This is an example text field:86400::
-:example.net:99:v=spf1 +mx a\\072colo.example.com\\05728 -all:86400::
-:example.com:99:v=spf1 +mx a\\072colo.example.com\\05728 ~all:86400::
+:example.net:99:%v=spf1 +mx a\\072colo.example.com/28 -all:86400::
+:example.com:99:%v=spf1 +mx a\\072colo.example.com/28 ~all:86400::
 +a.example.net:10.11.12.13:86400::
 +b.example.net:10.11.12.14:86400::
 +c.example.net:10.11.12.15:86400::
 ^13.12.11.10.in-addr.arpa:a.example.net:86400::
 ^14.12.11.10.in-addr.arpa:b.example.net:86400::
 ^15.12.11.10.in-addr.arpa:c.example.net:86400::
-:www.example.com:35:\\000\\144\\000\\144\\001S\\010http+I2R\\000\\027_http._tcp.example.com.\\000:86400::
-:example.com:40:\\020\\001\\002\\113\\151\\164\\143\\150\\145\\156\\040\\163\\151\\156\\153\\100\\040\\144\\141\\164\\141:86400::
+:www.example.com:35:\\000d\\000d\\001S\\010http+I2R\\000\\005_http\\004_tcp\\007example\\003com\\000:86400::
+:example.com:40:\\020\\001\\002Kitchen sink@ data:86400::
 +x.example.net:10.3.28.79:86400::
 ^79.28.3.10.in-addr.arpa:x.example.net:86400::
 +x.example.net:10.3.28.80:86400::
 ^80.28.3.10.in-addr.arpa:x.example.net:86400::
-:x.example.net:28:\\375\\115\\141\\162\\141\\104\\116\\123\\000\\000\\000\\013\\000\\014\\000\\015:86400::
+:x.example.net:28:\\375MaraDNS\\000\\000\\000\\013\\000\\014\\000\\015:86400::
 ^d.0.0.0.c.0.0.0.b.0.0.0.0.0.0.0.3.5.e.4.4.4.1.6.2.7.1.6.d.4.d.f.ip6.arpa:x.example.net:86400::
-:x.example.net:28:\\375\\115\\141\\162\\141\\104\\116\\123\\000\\000\\000\\013\\000\\014\\000\\016:86400::
+:x.example.net:28:\\375MaraDNS\\000\\000\\000\\013\\000\\014\\000\\016:86400::
 ^e.0.0.0.c.0.0.0.b.0.0.0.0.0.0.0.3.5.e.4.4.4.1.6.2.7.1.6.d.4.d.f.ip6.arpa:x.example.net:86400::
 :example.com:13:\\021Intel Pentium III\\020CentOS Linux 3.7:86400::
 `,

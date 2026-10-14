@@ -155,9 +155,7 @@ describe('maradns', function () {
     })
 
     it('parses URI line, unquoting the target', async () => {
-      const r = await mara.parseZoneFile(
-        `_http._tcp.example.com. URI 10 1 'https://example.com/' ~\n`,
-      )
+      const r = await mara.parseZoneFile(`_http._tcp.example.com. URI 10 1 'https://example.com/' ~\n`)
       assert.deepStrictEqual(
         r[0],
         new RR.URI({
@@ -239,6 +237,48 @@ describe('maradns', function () {
       await assert.rejects(
         mara.parseZoneFile(`www.example.com. NAPTR 100 100 's';'http+I2R' _http._tcp.example.com. ~\n`),
         /unable to parse NAPTR/,
+      )
+    })
+
+    it('parses CNAME and WKS lines as their own types', async () => {
+      const r = await mara.parseZoneFile(
+        `www.example.com. CNAME web.example.com. ~\nhost.example.com. WKS 192.0.2.1 6 21,25 ~\n`,
+      )
+      assert.equal(r[0].get('type'), 'CNAME')
+      assert.equal(r[0].get('cname'), 'web.example.com.')
+      assert.equal(r[1].get('type'), 'WKS')
+      assert.equal(r[1].get('bit map'), '21 25')
+    })
+
+    it('rejects a type it does not know instead of reading it as A', async () => {
+      await assert.rejects(
+        mara.parseZoneFile(`example.com. CAA 0 issue 'ca.example' ~\n`),
+        /unsupported csv2 type: CAA/,
+      )
+    })
+
+    it('decodes RAW rdata through the type it names', async () => {
+      const caa = new RR.CAA({
+        owner: 'example.com.',
+        ttl: 60,
+        type: 'CAA',
+        flags: 0,
+        tag: 'issue',
+        value: 'ca.example',
+      })
+      const r = await mara.parseZoneFile(caa.toMaraDNS())
+      assert.deepEqual(r[0].toJSON(), caa.toJSON())
+    })
+
+    it('rejects RAW rdata its type cannot represent', async () => {
+      await assert.rejects(
+        mara.parseZoneFile(`a.example.com. +60 RAW 1 \\x01\\x02 ~\n`),
+        /A: rdata is truncated/,
+      )
+      // a trailing byte the MX decoder would silently drop
+      await assert.rejects(
+        mara.parseZoneFile(`a.example.com. +60 RAW 15 \\x00\\x0a\\x00\\xff ~\n`),
+        /MX: 1 rdata bytes after the last field/,
       )
     })
 
@@ -325,6 +365,31 @@ describe('maradns', function () {
           data: 'v=DKIM1;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoyUzGOTSOmakY8BcxXgi0mN/nFegLBPs7aaGQUtjHfa8yUrt9T2j6GSXgdjLuG3R43WjePQv3RHzc+bwwOkdw0XDOXiztn5mhrlaflbVr5PMSTrv64/cpFQKLtgQx8Vgqp7Dh3jw13rLomRTqJFgMrMHdhIibZEa69gtuAfDqoeXo6QDSGk5JuBAeRHEH27FriHulg5ob4F4lmh7fMFVsDGkQEF6jaIVYqvRjDyyQed3R3aTJX3fpb3QrtRqvfn/LAf+3kzW58AjsERpsNCSTD2RquxbnyoR/1wdGKb8cUlD/EXvqtvpVnOzHeSeMEqex3kQI8HOGsEehWZlKd+GqwIDAQAB',
         }),
       )
+    })
+
+    it('splits TXT chunks on an unquoted ; (csv2_txt)', async () => {
+      const r = await mara.parseZoneFile(`p.example.com. TXT 'chunk one';'chunk;two' ~\n`)
+      assert.deepEqual(r[0].get('data'), ['chunk one', 'chunk;two'])
+    })
+
+    it("reads csv2 \\', \\xNN and octal escapes outside quotes", async () => {
+      const r = await mara.parseZoneFile(
+        `h.example.com. TXT 'perl -e '\\''print'\\' 'ls '\\x7c' more'\\041 ~\n`,
+      )
+      assert.equal(r[0].get('data'), "perl -e 'print'ls | more!")
+    })
+
+    it('round trips HINFO with payload quotes through csv2', async () => {
+      const hinfo = new RR.HINFO({
+        owner: 'h.example.com.',
+        ttl: 60,
+        type: 'HINFO',
+        cpu: '"x"',
+        os: "it's #1",
+      })
+      const r = await mara.parseZoneFile(hinfo.toMaraDNS())
+      assert.equal(r[0].get('cpu'), '"x"')
+      assert.equal(r[0].get('os'), "it's #1")
     })
 
     it('parses TXT line, quoted', async () => {

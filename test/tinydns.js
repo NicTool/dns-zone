@@ -109,14 +109,14 @@ describe('tinydns', function () {
     })
 
     it('parses : generic SPF (type 99) record', async () => {
-      const r = await tinydns.parseData(':example.net:99:v=spf1 +mx -all:86400::')
+      const r = await tinydns.parseData(':example.net:99:\\017v=spf1 +mx -all:86400::')
       assert.equal(r.length, 1)
       assert.equal(r[0].get('type'), 'SPF')
     })
 
     it('parses : generic SSHFP (type 44) record', async () => {
       const r = await tinydns.parseData(
-        ':mail.example.com:44:\\001\\001\\035ed8c6e16fdae4f633eee6a7b8f64fdd356bbb32841d53:86400::',
+        ':mail.example.com:44:\\001\\001\\355\\214\\156\\026\\375\\256\\117\\143\\076\\356\\152\\173\\217\\144\\375\\323\\126\\273\\263\\050:86400::',
       )
       assert.equal(r.length, 1)
       assert.equal(r[0].get('type'), 'SSHFP')
@@ -154,7 +154,7 @@ describe('tinydns', function () {
 
     it('parses : generic DS (type 43) record', async () => {
       const r = await tinydns.parseData(
-        ':dskey.example.com:43:\\354\\105\\005\\0012BB183AF5F22588179A53B0A98631FAD1A292118:3600::',
+        ':dskey.example.com:43:\\354\\105\\005\\001\\053\\261\\203\\257\\137\\042\\130\\201\\171\\245\\073\\012\\230\\143\\037\\255\\032\\051\\041\\030:3600::',
       )
       assert.equal(r.length, 1)
       assert.equal(r[0].get('type'), 'DS')
@@ -170,7 +170,7 @@ describe('tinydns', function () {
 
     it('parses : generic TLSA (type 52) record', async () => {
       const r = await tinydns.parseData(
-        ':_443._tcp.example.com:52:\\000\\000\\001d2abde240d7cd3ee6b4b28c54df034b97983a1d16e8a410e4561cb106618e971:3600::',
+        ':_443._tcp.example.com:52:\\000\\000\\001\\322\\253\\336\\044\\015\\174\\323\\356\\153\\113\\050\\305\\115\\360\\064\\271\\171\\203\\241\\321\\156\\212\\101\\016\\105\\141\\313\\020\\146\\030\\351\\161:3600::',
       )
       assert.equal(r.length, 1)
       assert.equal(r[0].get('type'), 'TLSA')
@@ -178,7 +178,7 @@ describe('tinydns', function () {
 
     it('parses : generic SMIMEA (type 53) record', async () => {
       const r = await tinydns.parseData(
-        ':_443._tcp.www.example.com:53:\\000\\000\\001d2abde240d7cd3ee6b4b28c54df034b97983a1d16e8a410e4561cb106618e971:3600::',
+        ':_443._tcp.www.example.com:53:\\000\\000\\001\\322\\253\\336\\044\\015\\174\\323\\356\\153\\113\\050\\305\\115\\360\\064\\271\\171\\203\\241\\321\\156\\212\\101\\016\\105\\141\\313\\020\\146\\030\\351\\161:3600::',
       )
       assert.equal(r.length, 1)
       assert.equal(r[0].get('type'), 'SMIMEA')
